@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>AURELIA UA</title>
+  <defs>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#F0D060"/>
+      <stop offset="50%"  stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#A07820"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background: dark rounded square -->
+  <rect width="64" height="64" rx="14" fill="#09090B"/>
+
+  <!-- Thin decorative border ring -->
+  <rect x="3" y="3" width="58" height="58" rx="11" fill="none" stroke="url(#gold-grad)" stroke-width="1"/>
+
+  <!-- Monogram: stylised "A" for AURELIA -->
+  <!-- Left diagonal leg -->
+  <line x1="16" y1="48" x2="32" y2="14" stroke="url(#gold-grad)" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Right diagonal leg -->
+  <line x1="48" y1="48" x2="32" y2="14" stroke="url(#gold-grad)" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Crossbar -->
+  <line x1="21" y1="36" x2="43" y2="36" stroke="url(#gold-grad)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Small gold dot accent at apex -->
+  <circle cx="32" cy="13" r="2.2" fill="#D4AF37"/>
+</svg>
+

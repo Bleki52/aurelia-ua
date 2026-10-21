@@ -1,0 +1,72 @@
+{
+  "name": "AURELIA UA — Гаманець карток та Акції",
+  "short_name": "AURELIA UA",
+  "description": "Приватний гаманець QR-карток лояльності та порівняння цін супермаркетів України",
+  "lang": "uk",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#09090B",
+  "theme_color": "#09090B",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "shopping",
+    "finance",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "Мої QR-Картки",
+      "short_name": "Картки",
+      "url": "./index.html",
+      "description": "Швидкий доступ до карток лояльності біля каси",
+      "icons": [
+        {
+          "src": "assets/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Ціни та Акції",
+      "short_name": "Акції",
+      "url": "./catalog.html",
+      "description": "Порівняння цін та знижок супермаркетів міста",
+      "icons": [
+        {
+          "src": "assets/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Розумний Кошик",
+      "short_name": "Кошик",
+      "url": "./basket.html",
+      "description": "Розрахунок чека та максимальної економії",
+      "icons": [
+        {
+          "src": "assets/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

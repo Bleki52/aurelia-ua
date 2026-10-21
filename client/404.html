@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURELIA UA — Сторінку не знайдено (404)</title>
+  <meta name="description" content="Запитувану сторінку не знайдено в додатку AURELIA UA. Перейдіть до карток лояльності або каталогу знижок.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090B">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <!-- Прелоадер -->
+  <div id="preloader" class="preloader" aria-hidden="true">
+    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <p class="preloader-title">AURELIA UA</p>
+    <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
+  </div>
+
+  <!-- Шапка сайту -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
+        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
+        <span class="brand-name">AURELIA</span>
+        <span class="brand-tag">UA</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Основна навігація">
+        <ul class="nav-desktop-list">
+          <li><a href="index.html" class="nav-link">Картки</a></li>
+          <li><a href="catalog.html" class="nav-link">Каталог акцій</a></li>
+          <li><a href="basket.html" class="nav-link">Кошик</a></li>
+          <li><a href="admin.html" class="nav-link">Адмін-панель</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden" aria-label="Встановити додаток AURELIA UA">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-download"></use>
+          </svg>
+          <span class="btn-pwa-text">Встановити</span>
+        </button>
+
+        <button type="button" id="theme-toggle-btn" class="btn-icon" aria-label="Перемкнути тему оформлення">
+          <svg class="icon icon-stroke" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-sun"></use>
+          </svg>
+        </button>
+
+        <a href="index.html" class="btn-auth">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-qr"></use>
+          </svg>
+          <span>Гаманець</span>
+        </a>
+
+        <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобільне меню -->
+    <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <ul class="mobile-nav-list">
+        <li>
+          <a href="index.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-qr"></use>
+            </svg>
+            <span>Картки лояльності</span>
+          </a>
+        </li>
+        <li>
+          <a href="catalog.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-filter"></use>
+            </svg>
+            <span>Каталог акцій</span>
+          </a>
+        </li>
+        <li>
+          <a href="basket.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-cart"></use>
+            </svg>
+            <span>Кошик порівняння</span>
+          </a>
+        </li>
+        <li>
+          <a href="admin.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-edit"></use>
+            </svg>
+            <span>Адміністративна панель</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Основний контент помилки 404 -->
+  <main id="main-content">
+    <section class="error-page-container reveal-item" aria-labelledby="error-heading">
+      <div class="error-code-badge" aria-hidden="true">404</div>
+      <h1 id="error-heading">Сторінку не знайдено</h1>
+      <p class="error-message">
+        Адреса, за якою ви перейшли, застаріла або тимчасово недоступна. Ваші картки лояльності та актуальні акції супермаркетів у повній безпеці.
+      </p>
+      <div class="error-actions">
+        <a href="index.html" class="btn btn-primary">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-qr"></use>
+          </svg>
+          <span>Мої картки лояльності</span>
+        </a>
+        <a href="catalog.html" class="btn btn-secondary">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-search"></use>
+          </svg>
+          <span>Каталог акцій</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Підвал сайту -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
+          <span class="brand-name">AURELIA UA</span>
+        </div>
+        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
+      </div>
+
+      <div class="footer-links-grid">
+        <div>
+          <h3 class="footer-heading">Мережі</h3>
+          <ul class="footer-list">
+            <li><a href="catalog.html">Сільпо</a></li>
+            <li><a href="catalog.html">АТБ-Маркет</a></li>
+            <li><a href="catalog.html">NOVUS</a></li>
+            <li><a href="catalog.html">VARUS</a></li>
+            <li><a href="catalog.html">METRO</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Навігація</h3>
+          <ul class="footer-list">
+            <li><a href="index.html">Мої картки</a></li>
+            <li><a href="catalog.html">Каталог акцій</a></li>
+            <li><a href="basket.html">Кошик порівняння</a></li>
+            <li><a href="admin.html">Адміністративна зона</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Інформація</h3>
+          <ul class="footer-list">
+            <li><a href="404.html">Довідка та статус</a></li>
+            <li><a href="index.html">Політика конфіденційності</a></li>
+            <li><a href="index.html">Умови використання</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
+        <p>Підтримка автономного режиму PWA Offline.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

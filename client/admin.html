@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURELIA UA — Адміністративна панель</title>
+  <meta name="description" content="Адміністративна панель AURELIA UA для управління базою акційних товарів та цінами супермаркетів України.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090B">
+  <script src="js/api.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</head>
+<body>
+  <!-- Прелоадер -->
+  <div id="preloader" class="preloader" aria-hidden="true">
+    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <p class="preloader-title">AURELIA UA</p>
+    <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
+  </div>
+
+  <!-- Шапка сайту -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
+        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
+        <span class="brand-name">AURELIA</span>
+        <span class="brand-tag">ADMIN</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Основна навігація">
+        <ul class="nav-desktop-list">
+          <li><a href="index.html" class="nav-link">Картки</a></li>
+          <li><a href="catalog.html" class="nav-link">Каталог акцій</a></li>
+          <li><a href="basket.html" class="nav-link">Кошик</a></li>
+          <li><a href="admin.html" class="nav-link is-active" aria-current="page">Адмін-панель</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden" aria-label="Встановити додаток AURELIA UA">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-download"></use>
+          </svg>
+          <span class="btn-pwa-text">Встановити</span>
+        </button>
+
+        <button type="button" id="theme-toggle-btn" class="btn-icon" aria-label="Перемкнути тему оформлення">
+          <svg class="icon icon-stroke" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-sun"></use>
+          </svg>
+        </button>
+
+        <button type="button" id="auth-open-btn" class="btn-auth">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-check"></use>
+          </svg>
+          <span id="auth-btn-label">Адміністратор</span>
+        </button>
+
+        <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобільне меню -->
+    <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <ul class="mobile-nav-list">
+        <li>
+          <a href="index.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-qr"></use>
+            </svg>
+            <span>Картки лояльності</span>
+          </a>
+        </li>
+        <li>
+          <a href="catalog.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-filter"></use>
+            </svg>
+            <span>Каталог акцій</span>
+          </a>
+        </li>
+        <li>
+          <a href="basket.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-cart"></use>
+            </svg>
+            <span>Кошик порівняння</span>
+          </a>
+        </li>
+        <li>
+          <a href="admin.html" class="mobile-nav-link is-active" aria-current="page">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-edit"></use>
+            </svg>
+            <span>Адміністративна панель</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="mobile-nav-footer">
+        <button type="button" id="mobile-auth-btn" class="btn btn-secondary btn-full">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-check"></use>
+          </svg>
+          <span>Особистий кабінет</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Основний контент -->
+  <main id="main-content">
+    <div class="page-header reveal-item">
+      <h1>Адміністративна панель AURELIA UA</h1>
+      <p class="page-subtitle">Керування каталогом акційних товарів та актуалізація цін за мережами супермаркетів</p>
+    </div>
+
+    <!-- Панель показників / статистики -->
+    <section class="admin-stats-grid reveal-item" aria-label="Статистика каталогу">
+      <article class="stat-card">
+        <span class="stat-num" id="stat-total-products">12</span>
+        <span class="stat-label">Активних акційних позицій</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-num">5</span>
+        <span class="stat-label">Підключених мереж магазинів</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-num" id="stat-avg-discount">25%</span>
+        <span class="stat-label">Середня економія за каталогом</span>
+      </article>
+    </section>
+
+    <!-- Панель швидких дій -->
+    <section class="admin-actions-bar reveal-item" aria-label="Дії з товарами">
+      <div class="search-box-wrapper">
+        <label for="admin-search-input" class="visually-hidden">Пошук товару в адмінці</label>
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/sprite.svg#icon-search"></use>
+        </svg>
+        <input type="search" id="admin-search-input" class="search-input" placeholder="Пошук товару за назвою чи категорією...">
+      </div>
+
+      <div class="admin-city-wrapper">
+        <label for="admin-city-select" class="form-label admin-city-label">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-location"></use>
+          </svg>
+          <span>Місто:</span>
+        </label>
+        <select id="admin-city-select" class="form-select admin-city-select">
+          <option value="all">Усі міста України</option>
+          <option value="ivano-frankivsk" selected>Івано-Франківськ</option>
+          <option value="lviv">Львів</option>
+          <option value="ternopil">Тернопіль</option>
+          <option value="lutsk">Луцьк</option>
+          <option value="chernivtsi">Чернівці</option>
+          <option value="rivne">Рівне</option>
+          <option value="uzhhorod">Ужгород</option>
+          <option value="khmelnytskyi">Хмельницький</option>
+          <option value="kyiv">Київ</option>
+        </select>
+      </div>
+
+      <div class="admin-btns-group">
+        <button type="button" id="btn-admin-sync-promos" class="btn btn-secondary">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-filter"></use>
+          </svg>
+          <span id="sync-promos-label">Синхронізувати ціни</span>
+        </button>
+
+        <button type="button" id="btn-admin-add-product" class="btn btn-primary">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-plus"></use>
+          </svg>
+          <span>Додати акційний товар</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- CRUD Таблиця акцій -->
+    <section class="admin-table-section reveal-item" aria-labelledby="admin-table-heading">
+      <h2 id="admin-table-heading" class="visually-hidden">Список акційних позицій</h2>
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Товар</th>
+              <th scope="col">Категорія</th>
+              <th scope="col">Місто</th>
+              <th scope="col">Актуальні ціни мереж</th>
+              <th scope="col">Дії</th>
+            </tr>
+          </thead>
+          <tbody id="admin-products-tbody">
+            <!-- Динамічно наповнюється з admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Додавання / Редагування товару (#admin-product-modal) -->
+  <div id="admin-product-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-product-modal-title">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h2 id="admin-product-modal-title" class="modal-title">Додати товар</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно редагування">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <form id="admin-product-form" class="modal-body admin-product-form-body" novalidate>
+        <div class="form-row">
+          <div class="form-group form-group-grow">
+            <label for="admin-prod-title" class="form-label">Назва товару</label>
+            <input type="text" id="admin-prod-title" name="title" class="form-input" placeholder="Наприклад: Кава Lavazza Qualita Oro 250 г" required>
+            <span class="field-error" id="admin-title-error"></span>
+          </div>
+
+          <div class="form-group form-group-sm">
+            <label for="admin-prod-city" class="form-label">Місто прив'язки</label>
+            <select id="admin-prod-city" name="city" class="form-select" required>
+              <option value="all">Усі міста</option>
+              <option value="ivano-frankivsk" selected>Івано-Франківськ</option>
+              <option value="lviv">Львів</option>
+              <option value="ternopil">Тернопіль</option>
+              <option value="lutsk">Луцьк</option>
+              <option value="chernivtsi">Чернівці</option>
+              <option value="rivne">Рівне</option>
+              <option value="uzhhorod">Ужгород</option>
+              <option value="khmelnytskyi">Хмельницький</option>
+              <option value="kyiv">Київ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-prod-main-category" class="form-label">Головна категорія</label>
+            <select id="admin-prod-main-category" name="mainCategory" class="form-select" required>
+              <option value="Продукти" selected>Продукти</option>
+              <option value="Краса та Гігієна">Краса та Гігієна</option>
+              <option value="Дім та Побут">Дім та Побут</option>
+              <option value="Зоотовари">Зоотовари</option>
+            </select>
+            <span class="field-error" id="admin-main-category-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-prod-sub-category" class="form-label">Підкатегорія</label>
+            <select id="admin-prod-sub-category" name="subCategory" class="form-select" required>
+              <option value="Кава та Чай">Кава та Чай</option>
+              <option value="Молочні та Сири">Молочні та Сири</option>
+              <option value="М'ясо та Риба">М'ясо та Риба</option>
+              <option value="Солодощі">Солодощі</option>
+              <option value="Бакалія">Бакалія</option>
+              <option value="Напої">Напої</option>
+              <option value="Овочі та Фрукти">Овочі та Фрукти</option>
+            </select>
+            <span class="field-error" id="admin-sub-category-error"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-prod-unit" class="form-label">Одиниця виміру</label>
+            <input type="text" id="admin-prod-unit" name="unit" class="form-input" placeholder="шт, кг, уп, л" required>
+            <span class="field-error" id="admin-unit-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-prod-promo-tag" class="form-label">Мітка акції / знижки</label>
+            <input type="text" id="admin-prod-promo-tag" name="promoTag" class="form-input" placeholder="наприклад: -25%, 1+1, Суперціна">
+          </div>
+        </div>
+
+        <h3 class="admin-section-subtitle">Порівняльні ціни за 18 мережами (грн)</h3>
+        <p class="admin-section-hint">Вкажіть актуальну ціну, звичайну ціну (до знижки) та посилання на офіційний сайт для кожної доступної мережі.</p>
+
+        <!-- Кластер 1: Національні супермаркети -->
+        <div class="admin-cluster-box">
+          <h4 class="admin-cluster-heading">Національні супермаркети</h4>
+          <div class="admin-stores-price-grid">
+            <!-- Сільпо -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-silpo"></use>
+                </svg>
+                <span>Сільпо</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-silpo" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-silpo" name="price_silpo" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-silpo" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-silpo" name="oldprice_silpo" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-silpo" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-silpo" name="url_silpo" class="form-input" placeholder="https://silpo.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- АТБ -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-atb"></use>
+                </svg>
+                <span>АТБ-Маркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-atb" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-atb" name="price_atb" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-atb" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-atb" name="oldprice_atb" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-atb" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-atb" name="url_atb" class="form-input" placeholder="https://atbmarket.com/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- NOVUS -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-novus"></use>
+                </svg>
+                <span>NOVUS</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-novus" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-novus" name="price_novus" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-novus" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-novus" name="oldprice_novus" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-novus" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-novus" name="url_novus" class="form-input" placeholder="https://novus.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- METRO -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-metro"></use>
+                </svg>
+                <span>METRO</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-metro" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-metro" name="price_metro" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-metro" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-metro" name="oldprice_metro" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-metro" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-metro" name="url_metro" class="form-input" placeholder="https://metro.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- VARUS -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-varus"></use>
+                </svg>
+                <span>VARUS</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-varus" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-varus" name="price_varus" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-varus" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-varus" name="oldprice_varus" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-varus" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-varus" name="url_varus" class="form-input" placeholder="https://varus.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- АШАН -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-auchan"></use>
+                </svg>
+                <span>АШАН</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-auchan" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-auchan" name="price_auchan" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-auchan" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-auchan" name="oldprice_auchan" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-auchan" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-auchan" name="url_auchan" class="form-input" placeholder="https://auchan.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Епіцентр Food -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-epicentrk_food"></use>
+                </svg>
+                <span>Епіцентр Food</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-epicentrk_food" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-epicentrk_food" name="price_epicentrk_food" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-epicentrk_food" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-epicentrk_food" name="oldprice_epicentrk_food" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-epicentrk_food" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-epicentrk_food" name="url_epicentrk_food" class="form-input" placeholder="https://epicentrk.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Велмарт -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-velmart"></use>
+                </svg>
+                <span>Велмарт</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-velmart" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-velmart" name="price_velmart" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-velmart" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-velmart" name="oldprice_velmart" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-velmart" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-velmart" name="url_velmart" class="form-input" placeholder="https://velmart.ua/...">
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        <!-- Кластер 2: Локальні та біля дому -->
+        <div class="admin-cluster-box">
+          <h4 class="admin-cluster-heading">Локальні та біля дому</h4>
+          <div class="admin-stores-price-grid">
+            <!-- Траш! -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-thrash"></use>
+                </svg>
+                <span>Траш! ТРАШ!</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-thrash" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-thrash" name="price_thrash" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-thrash" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-thrash" name="oldprice_thrash" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-thrash" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-thrash" name="url_thrash" class="form-input" placeholder="https://thrash.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Сімі -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-simi"></use>
+                </svg>
+                <span>Сімі</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-simi" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-simi" name="price_simi" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-simi" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-simi" name="oldprice_simi" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-simi" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-simi" name="url_simi" class="form-input" placeholder="https://simi.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Близенько -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-blyzenko"></use>
+                </svg>
+                <span>Близенько</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-blyzenko" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-blyzenko" name="price_blyzenko" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-blyzenko" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-blyzenko" name="oldprice_blyzenko" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-blyzenko" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-blyzenko" name="url_blyzenko" class="form-input" placeholder="https://blyzenko.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Тайстра -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-taistra"></use>
+                </svg>
+                <span>Тайстра</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-taistra" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-taistra" name="price_taistra" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-taistra" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-taistra" name="oldprice_taistra" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-taistra" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-taistra" name="url_taistra" class="form-input" placeholder="https://taistra.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Арсен -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-arsen"></use>
+                </svg>
+                <span>Арсен</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-arsen" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-arsen" name="price_arsen" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-arsen" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-arsen" name="oldprice_arsen" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-arsen" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-arsen" name="url_arsen" class="form-input" placeholder="https://arsen.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Рукавичка -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-rukavychka"></use>
+                </svg>
+                <span>Рукавичка</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-rukavychka" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-rukavychka" name="price_rukavychka" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-rukavychka" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-rukavychka" name="oldprice_rukavychka" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-rukavychka" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-rukavychka" name="url_rukavychka" class="form-input" placeholder="https://rukavychka.ua/...">
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        <!-- Кластер 3: Краса, Дім та Щоденні -->
+        <div class="admin-cluster-box">
+          <h4 class="admin-cluster-heading">Краса, Дім та Щоденні</h4>
+          <div class="admin-stores-price-grid">
+            <!-- EVA -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-eva"></use>
+                </svg>
+                <span>EVA</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-eva" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-eva" name="price_eva" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-eva" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-eva" name="oldprice_eva" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-eva" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-eva" name="url_eva" class="form-input" placeholder="https://eva.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Prostor -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-prostor"></use>
+                </svg>
+                <span>Prostor</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-prostor" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-prostor" name="price_prostor" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-prostor" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-prostor" name="oldprice_prostor" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-prostor" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-prostor" name="url_prostor" class="form-input" placeholder="https://prostor.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Аврора -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-avrora"></use>
+                </svg>
+                <span>Аврора Мультимаркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-avrora" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-avrora" name="price_avrora" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-avrora" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-avrora" name="oldprice_avrora" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-avrora" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-avrora" name="url_avrora" class="form-input" placeholder="https://avrora.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Епіцентр К -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#logo-epicentr"></use>
+                </svg>
+                <span>Епіцентр К</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-epicentr" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-epicentr" name="price_epicentr" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-epicentr" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-epicentr" name="oldprice_epicentr" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-epicentr" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-epicentr" name="url_epicentr" class="form-input" placeholder="https://epicentrk.ua/...">
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
+          <button type="submit" class="btn btn-primary" id="admin-submit-btn">Зберегти товар</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Підвал сайту -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
+          <span class="brand-name">AURELIA UA</span>
+        </div>
+        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
+      </div>
+
+      <div class="footer-links-grid">
+        <div>
+          <h3 class="footer-heading">Мережі</h3>
+          <ul class="footer-list">
+            <li><a href="catalog.html">Сільпо</a></li>
+            <li><a href="catalog.html">АТБ-Маркет</a></li>
+            <li><a href="catalog.html">NOVUS</a></li>
+            <li><a href="catalog.html">VARUS</a></li>
+            <li><a href="catalog.html">METRO</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Навігація</h3>
+          <ul class="footer-list">
+            <li><a href="index.html">Мої картки</a></li>
+            <li><a href="catalog.html">Каталог акцій</a></li>
+            <li><a href="basket.html">Кошик порівняння</a></li>
+            <li><a href="admin.html">Адміністративна зона</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Інформація</h3>
+          <ul class="footer-list">
+            <li><a href="404.html">Довідка та статус</a></li>
+            <li><a href="index.html">Політика конфіденційності</a></li>
+            <li><a href="index.html">Умови використання</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
+        <p>Підтримка автономного режиму PWA Offline.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

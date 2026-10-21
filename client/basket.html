@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURELIA UA — Розумний кошик та економія</title>
+  <meta name="description" content="Порівняйте загальну вартість вашого кошика в супермаркетах Сільпо, АТБ, NOVUS, VARUS та METRO. Дізнайтеся, де купувати найвигідніше.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090B">
+  <script src="js/api.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <!-- Прелоадер -->
+  <div id="preloader" class="preloader" aria-hidden="true">
+    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <p class="preloader-title">AURELIA UA</p>
+    <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
+  </div>
+
+  <!-- Шапка сайту -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
+        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
+        <span class="brand-name">AURELIA</span>
+        <span class="brand-tag">UA</span>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Основна навігація">
+        <ul class="nav-desktop-list">
+          <li><a href="index.html" class="nav-link">Картки</a></li>
+          <li><a href="catalog.html" class="nav-link">Каталог акцій</a></li>
+          <li><a href="basket.html" class="nav-link is-active" aria-current="page">Кошик</a></li>
+          <li><a href="admin.html" class="nav-link">Адмін-панель</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-city-modal-trigger" class="btn-city-selector" aria-label="Обрати місто" aria-haspopup="dialog">
+          <svg class="icon icon-location" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-location"></use>
+          </svg>
+          <span id="header-city-name">Івано-Франківськ</span>
+        </button>
+
+        <button type="button" id="btn-stores-modal-trigger" class="btn-stores-selector" aria-label="Обрати мої мережі">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-sliders"></use>
+          </svg>
+          <span>Мої мережі</span>
+          <span class="stores-count-badge" id="header-stores-count">18</span>
+        </button>
+
+        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden" aria-label="Встановити додаток AURELIA UA">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-download"></use>
+          </svg>
+          <span class="btn-pwa-text">Встановити</span>
+        </button>
+
+        <button type="button" id="theme-toggle-btn" class="btn-icon" aria-label="Перемкнути тему оформлення">
+          <svg class="icon icon-stroke" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-sun"></use>
+          </svg>
+        </button>
+
+        <button type="button" id="auth-open-btn" class="btn-auth">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-check"></use>
+          </svg>
+          <span id="auth-btn-label">Увійти</span>
+        </button>
+
+        <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобільне меню -->
+    <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <ul class="mobile-nav-list">
+        <li>
+          <a href="index.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-qr"></use>
+            </svg>
+            <span>Картки лояльності</span>
+          </a>
+        </li>
+        <li>
+          <a href="catalog.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-filter"></use>
+            </svg>
+            <span>Каталог акцій</span>
+          </a>
+        </li>
+        <li>
+          <a href="basket.html" class="mobile-nav-link is-active" aria-current="page">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-cart"></use>
+            </svg>
+            <span>Кошик порівняння</span>
+          </a>
+        </li>
+        <li>
+          <a href="admin.html" class="mobile-nav-link">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-edit"></use>
+            </svg>
+            <span>Адміністративна панель</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="mobile-nav-footer">
+        <button type="button" id="mobile-auth-btn" class="btn btn-secondary btn-full">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-check"></use>
+          </svg>
+          <span>Особистий кабінет</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Основний контент -->
+  <main id="main-content">
+    <div class="page-header reveal-item">
+      <h1>Розумний кошик та калькулятор економії</h1>
+      <p class="page-subtitle">Миттєве порівняння загального чека вашого списку покупок у Сільпо, АТБ, NOVUS, VARUS та METRO</p>
+    </div>
+
+    <!-- Макет розумного кошика -->
+    <div class="basket-layout">
+      <!-- Ліва колонка: Список товарів у кошику -->
+      <section class="basket-items-section reveal-item" aria-labelledby="basket-list-heading">
+        <div class="card-top">
+          <h2 id="basket-list-heading">Обрані товари (<span id="basket-count-badge">0</span>)</h2>
+          <button type="button" id="btn-clear-basket" class="btn btn-secondary" aria-label="Очистити весь кошик">
+            <svg class="icon icon-sm" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-trash"></use>
+            </svg>
+            <span>Очистити кошик</span>
+          </button>
+        </div>
+
+        <div class="basket-items-list" id="basket-items-container">
+          <!-- Динамічно наповнюється з app.js -->
+        </div>
+      </section>
+
+      <!-- Права колонка: Порівняльний табель вартості чека (Scorecard) -->
+      <aside class="basket-scorecard-section reveal-item" aria-labelledby="scorecard-heading">
+        <div class="scorecard-wrapper">
+          <div class="scorecard-header">
+            <h2 id="scorecard-heading" class="modal-title">Розумний оптимізатор чека</h2>
+            <p class="page-subtitle">Розраховано за актуальними акційними цінами кожної мережі вашого міста</p>
+          </div>
+
+          <!-- Перемикач режимів: Оптимальний маршрут vs Порівняння мереж -->
+          <div class="optimizer-tabs" role="tablist" aria-label="Режими оптимізації кошика">
+            <button type="button" role="tab" id="tab-btn-optimal" class="optimizer-tab-btn is-active" aria-selected="true" aria-controls="optimizer-optimal-view">
+              <svg class="icon icon-sm" aria-hidden="true">
+                <use href="assets/sprite.svg#icon-check"></use>
+              </svg>
+              <span>Оптимальний маршрут</span>
+            </button>
+            <button type="button" role="tab" id="tab-btn-stores" class="optimizer-tab-btn" aria-selected="false" aria-controls="optimizer-stores-view">
+              <svg class="icon icon-sm" aria-hidden="true">
+                <use href="assets/sprite.svg#icon-filter"></use>
+              </svg>
+              <span>Порівняння мереж</span>
+            </button>
+          </div>
+
+          <!-- Режим А: Оптимальний маршрут (Split-Store Best Deal) -->
+          <div id="optimizer-optimal-view" class="optimizer-view is-active" role="tabpanel" aria-labelledby="tab-btn-optimal">
+            <div id="optimal-route-container">
+              <!-- Динамічно наповнюється з app.js -->
+            </div>
+          </div>
+
+          <!-- Режим Б: Порівняння чеків по мережах міста (Single-Store Leaderboard) -->
+          <div id="optimizer-stores-view" class="optimizer-view" role="tabpanel" aria-labelledby="tab-btn-stores">
+            <!-- Банер переможця економії -->
+            <div class="savings-banner" id="savings-banner-box">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/sprite.svg#icon-check"></use>
+              </svg>
+              <div class="savings-text-group">
+                <span class="file-hint">Найвигідніший єдиний чек:</span>
+                <span class="savings-highlight" id="savings-text-desc">Завантаження розрахунку...</span>
+              </div>
+            </div>
+
+            <!-- Табель вартості за кожною мережею -->
+            <div class="scorecard-grid" id="scorecard-list-container">
+              <!-- Динамічно наповнюється з app.js -->
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <a href="index.html" class="btn btn-primary btn-full">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/sprite.svg#icon-qr"></use>
+              </svg>
+              <span>Відкрити картки для оплати</span>
+            </a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Авторизація (#auth-modal) -->
+  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="auth-modal-title" class="modal-title">Вхід до AURELIA UA</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно входу">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <form id="auth-form" class="modal-body" novalidate>
+        <div class="form-group">
+          <label for="auth-email-input" class="form-label">Електронна пошта</label>
+          <input type="email" id="auth-email-input" name="email" class="form-input" placeholder="user@example.com" required>
+          <span class="field-error" id="auth-email-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password-input" class="form-label">Пароль</label>
+          <input type="password" id="auth-password-input" name="password" class="form-input" placeholder="Введіть ваш пароль" required>
+          <span class="field-error" id="auth-password-error"></span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
+          <button type="submit" class="btn btn-primary">Увійти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Вибір міста (#city-modal) -->
+  <div id="city-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="city-modal-title">
+    <div class="modal-dialog city-modal-dialog">
+      <div class="modal-header">
+        <h2 id="city-modal-title" class="modal-title">Оберіть ваше місто</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно вибору міста">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="city-modal-subtitle">Ціни, наявність акцій та список доступних торговельних мереж синхронізуються безпосередньо з супермаркетами вашого міста.</p>
+
+        <!-- Кластер: Західна Україна -->
+        <div class="city-cluster">
+          <h3 class="city-cluster-title">
+            <span>Західна Україна</span>
+            <span class="cluster-badge">8 міст</span>
+          </h3>
+          <div class="city-list-grid">
+            <button type="button" class="city-select-btn is-active" data-city-id="ivano-frankivsk">
+              <span class="city-btn-name">Івано-Франківськ</span>
+              <span class="city-btn-meta">14 мереж • Сільпо Мазепи, METRO</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="lviv">
+              <span class="city-btn-name">Львів</span>
+              <span class="city-btn-meta">14 мереж • Кульпарківська, Ашан, METRO</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="ternopil">
+              <span class="city-btn-name">Тернопіль</span>
+              <span class="city-btn-meta">11 мереж • Сільпо Петлюри, Епіцентр</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="lutsk">
+              <span class="city-btn-name">Луцьк</span>
+              <span class="city-btn-meta">11 мереж • Сільпо Кравчука, METRO</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="chernivtsi">
+              <span class="city-btn-name">Чернівці</span>
+              <span class="city-btn-meta">12 мереж • Сільпо Головна, METRO</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="rivne">
+              <span class="city-btn-name">Рівне</span>
+              <span class="city-btn-meta">13 мереж • Сільпо Гагаріна, NOVUS, METRO</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="uzhhorod">
+              <span class="city-btn-name">Ужгород</span>
+              <span class="city-btn-meta">10 мереж • Сільпо Минайська, Епіцентр</span>
+            </button>
+            <button type="button" class="city-select-btn" data-city-id="khmelnytskyi">
+              <span class="city-btn-name">Хмельницький</span>
+              <span class="city-btn-meta">11 мереж • Сільпо Свободи, Таврія</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Кластер: Столиця -->
+        <div class="city-cluster">
+          <h3 class="city-cluster-title">
+            <span>Столиця</span>
+            <span class="cluster-badge">1 місто</span>
+          </h3>
+          <div class="city-list-grid">
+            <button type="button" class="city-select-btn" data-city-id="kyiv">
+              <span class="city-btn-name">Київ</span>
+              <span class="city-btn-meta">15 мереж • Всі національні гіпермаркети</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-full" data-close-modal>Закрити</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Вибір мереж лояльності (#stores-modal) -->
+  <div id="stores-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="stores-modal-title">
+    <div class="modal-dialog stores-modal-dialog">
+      <div class="modal-header">
+        <h2 id="stores-modal-title" class="modal-title">Мої Мережі</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно вибору мереж">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="stores-modal-subtitle">Оберіть торговельні мережі, якими ви користуєтеся. AURELIA UA персоналізує каталог, підрахунок кошика та відображення карток.</p>
+
+        <div class="stores-quick-actions">
+          <button type="button" class="btn-link" id="btn-stores-select-all">Обрати всі (18)</button>
+          <span class="quick-action-sep" aria-hidden="true">|</span>
+          <button type="button" class="btn-link" id="btn-stores-select-core">Тільки основні (5)</button>
+          <span class="quick-action-sep" aria-hidden="true">|</span>
+          <button type="button" class="btn-link" id="btn-stores-clear">Очистити</button>
+        </div>
+
+        <form id="stores-selector-form">
+          <!-- Кластер 1: Національні супермаркети -->
+          <div class="stores-cluster">
+            <h3 class="stores-cluster-title">
+              <span>Національні супермаркети</span>
+              <span class="cluster-badge">8 мереж</span>
+            </h3>
+            <div class="stores-toggle-grid">
+              <!-- Сільпо -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-silpo" class="store-toggle-input" value="silpo" checked>
+                <label for="store-toggle-silpo" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--silpo" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-silpo"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Сільпо</span>
+                    <span class="store-toggle-program">Власний Рахунок</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- АТБ -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-atb" class="store-toggle-input" value="atb" checked>
+                <label for="store-toggle-atb" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--atb" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-atb"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">АТБ-Маркет</span>
+                    <span class="store-toggle-program">Картка АТБ</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- NOVUS -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-novus" class="store-toggle-input" value="novus" checked>
+                <label for="store-toggle-novus" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--novus" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-novus"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">NOVUS</span>
+                    <span class="store-toggle-program">NOVUS Club</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- VARUS -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-varus" class="store-toggle-input" value="varus" checked>
+                <label for="store-toggle-varus" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--varus" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-varus"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">VARUS</span>
+                    <span class="store-toggle-program">VARUS Poshuk</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- METRO -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-metro" class="store-toggle-input" value="metro" checked>
+                <label for="store-toggle-metro" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--metro" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-metro"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">METRO</span>
+                    <span class="store-toggle-program">METRO Card</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- АШАН -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-auchan" class="store-toggle-input" value="auchan" checked>
+                <label for="store-toggle-auchan" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--auchan" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-auchan"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">АШАН</span>
+                    <span class="store-toggle-program">Auchan Club</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Епіцентр Food -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-epicentrk_food" class="store-toggle-input" value="epicentrk_food" checked>
+                <label for="store-toggle-epicentrk_food" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--epicentrk_food" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-epicentrk_food"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Епіцентр Food</span>
+                    <span class="store-toggle-program">Вигода</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Велмарт -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-velmart" class="store-toggle-input" value="velmart" checked>
+                <label for="store-toggle-velmart" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--velmart" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-velmart"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Велмарт</span>
+                    <span class="store-toggle-program">Велмарт Бонус</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Кластер 2: Локальні та біля дому -->
+          <div class="stores-cluster">
+            <h3 class="stores-cluster-title">
+              <span>Локальні та біля дому</span>
+              <span class="cluster-badge">6 мереж</span>
+            </h3>
+            <div class="stores-toggle-grid">
+              <!-- Траш! -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-thrash" class="store-toggle-input" value="thrash" checked>
+                <label for="store-toggle-thrash" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--thrash" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-thrash"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Траш! ТРАШ!</span>
+                    <span class="store-toggle-program">Власний Рахунок</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Сімі -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-simi" class="store-toggle-input" value="simi" checked>
+                <label for="store-toggle-simi" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--simi" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-simi"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Сімі</span>
+                    <span class="store-toggle-program">Сімі Клуб</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Близенько -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-blyzenko" class="store-toggle-input" value="blyzenko" checked>
+                <label for="store-toggle-blyzenko" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--blyzenko" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-blyzenko"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Близенько</span>
+                    <span class="store-toggle-program">Близенько Разом</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Тайстра -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-taistra" class="store-toggle-input" value="taistra" checked>
+                <label for="store-toggle-taistra" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--taistra" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-taistra"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Тайстра</span>
+                    <span class="store-toggle-program">Тайстра Бонус</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Арсен -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-arsen" class="store-toggle-input" value="arsen" checked>
+                <label for="store-toggle-arsen" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--arsen" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-arsen"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Арсен</span>
+                    <span class="store-toggle-program">Пакко Бонус</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Рукавичка -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-rukavychka" class="store-toggle-input" value="rukavychka" checked>
+                <label for="store-toggle-rukavychka" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--rukavychka" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-rukavychka"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Рукавичка</span>
+                    <span class="store-toggle-program">Родина Рукавичка</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Кластер 3: Краса, Дім та Щоденні -->
+          <div class="stores-cluster">
+            <h3 class="stores-cluster-title">
+              <span>Краса, Дім та Щоденні</span>
+              <span class="cluster-badge">4 мережі</span>
+            </h3>
+            <div class="stores-toggle-grid">
+              <!-- EVA -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-eva" class="store-toggle-input" value="eva" checked>
+                <label for="store-toggle-eva" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--eva" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-eva"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">EVA</span>
+                    <span class="store-toggle-program">EVA МОЗАЇКА</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Prostor -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-prostor" class="store-toggle-input" value="prostor" checked>
+                <label for="store-toggle-prostor" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--prostor" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-prostor"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Prostor</span>
+                    <span class="store-toggle-program">PROSTOR club</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Аврора -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-avrora" class="store-toggle-input" value="avrora" checked>
+                <label for="store-toggle-avrora" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--avrora" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-avrora"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Аврора Мультимаркет</span>
+                    <span class="store-toggle-program">Аврора Бонус</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Епіцентр -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-epicentr" class="store-toggle-input" value="epicentr" checked>
+                <label for="store-toggle-epicentr" class="store-toggle-label">
+                  <svg class="icon store-modal-logo store-pill--epicentr" aria-hidden="true">
+                    <use href="assets/sprite.svg#logo-epicentr"></use>
+                  </svg>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Епіцентр К</span>
+                    <span class="store-toggle-program">Вигода</span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary btn-full" id="btn-stores-save" data-close-modal>Зберегти вибір</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Підвал сайту -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
+          <span class="brand-name">AURELIA UA</span>
+        </div>
+        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
+      </div>
+
+      <div class="footer-links-grid">
+        <div>
+          <h3 class="footer-heading">Мережі</h3>
+          <ul class="footer-list">
+            <li><a href="catalog.html">Сільпо</a></li>
+            <li><a href="catalog.html">АТБ-Маркет</a></li>
+            <li><a href="catalog.html">NOVUS</a></li>
+            <li><a href="catalog.html">VARUS</a></li>
+            <li><a href="catalog.html">METRO</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Навігація</h3>
+          <ul class="footer-list">
+            <li><a href="index.html">Мої картки</a></li>
+            <li><a href="catalog.html">Каталог акцій</a></li>
+            <li><a href="basket.html">Кошик порівняння</a></li>
+            <li><a href="admin.html">Адміністративна зона</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer-heading">Інформація</h3>
+          <ul class="footer-list">
+            <li><a href="404.html">Довідка та статус</a></li>
+            <li><a href="index.html">Політика конфіденційності</a></li>
+            <li><a href="index.html">Умови використання</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
+        <p>Підтримка автономного режиму PWA Offline.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+
+    <!-- ═══════════════════════════════════════════
+         UI ICONS
+         ═══════════════════════════════════════════ -->
+
+    <!-- icon-qr : QR code -->
+    <symbol id="icon-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
+      <rect x="14" y="14" width="2" height="2" fill="currentColor" stroke="none"/>
+      <rect x="18" y="14" width="3" height="2" fill="currentColor" stroke="none"/>
+      <rect x="14" y="18" width="3" height="3" fill="currentColor" stroke="none"/>
+      <rect x="19" y="18" width="2" height="3" fill="currentColor" stroke="none"/>
+    </symbol>
+
+    <!-- icon-barcode : Linear barcode -->
+    <symbol id="icon-barcode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+      <line x1="3"  y1="4" x2="3"  y2="20"/>
+      <line x1="5"  y1="4" x2="5"  y2="20"/>
+      <line x1="7"  y1="4" x2="7"  y2="20" stroke-width="2.5"/>
+      <line x1="9"  y1="4" x2="9"  y2="20"/>
+      <line x1="11" y1="4" x2="11" y2="20"/>
+      <line x1="13" y1="4" x2="13" y2="20" stroke-width="2.5"/>
+      <line x1="15" y1="4" x2="15" y2="20"/>
+      <line x1="17" y1="4" x2="17" y2="20"/>
+      <line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5"/>
+      <line x1="21" y1="4" x2="21" y2="20"/>
+    </symbol>
+
+    <!-- icon-camera : Camera -->
+    <symbol id="icon-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </symbol>
+
+    <!-- icon-upload : Upload arrow from tray -->
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </symbol>
+
+    <!-- icon-download / icon-install : PWA Install / Download -->
+    <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </symbol>
+
+    <symbol id="icon-install" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </symbol>
+
+    <!-- icon-search : Magnifying glass -->
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </symbol>
+
+    <!-- icon-filter : Funnel -->
+    <symbol id="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+    </symbol>
+
+    <!-- icon-location : Location pin -->
+    <symbol id="icon-location" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </symbol>
+
+    <!-- icon-sliders : Store selector / settings control -->
+    <symbol id="icon-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="21" x2="4" y2="14"/>
+      <line x1="4" y1="10" x2="4" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="12"/>
+      <line x1="12" y1="8" x2="12" y2="3"/>
+      <line x1="20" y1="21" x2="20" y2="16"/>
+      <line x1="20" y1="12" x2="20" y2="3"/>
+      <line x1="1" y1="14" x2="7" y2="14"/>
+      <line x1="9" y1="8" x2="15" y2="8"/>
+      <line x1="17" y1="16" x2="23" y2="16"/>
+    </symbol>
+
+    <!-- icon-cart : Shopping cart -->
+    <symbol id="icon-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9"  cy="21" r="1"/>
+      <circle cx="20" cy="21" r="1"/>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+    </symbol>
+
+    <!-- icon-plus : Plus / add -->
+    <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </symbol>
+
+    <!-- icon-edit : Pencil / edit -->
+    <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </symbol>
+
+    <!-- icon-trash : Trash bin / delete -->
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/>
+      <path d="M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </symbol>
+
+    <!-- icon-close : ✕ close -->
+    <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="18" y1="6"  x2="6"  y2="18"/>
+      <line x1="6"  y1="6"  x2="18" y2="18"/>
+    </symbol>
+
+    <!-- icon-sun : Light mode sun -->
+    <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1"  x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1"  y1="12" x2="3"  y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+    </symbol>
+
+    <!-- icon-moon : Dark mode moon -->
+    <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </symbol>
+
+    <!-- icon-check : Checkmark / confirm -->
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+
+
+    <!-- ═══════════════════════════════════════════
+         MAIN MACRO-CATEGORY ICONS (Level 1)
+         ═══════════════════════════════════════════ -->
+
+    <!-- cat-all : All products (grid) -->
+    <symbol id="cat-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </symbol>
+
+    <!-- cat-groceries : Groceries / Food market -->
+    <symbol id="cat-groceries" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 0 1-8 0"/>
+    </symbol>
+
+    <!-- cat-beauty : Beauty & Hygiene (sparkling lotus) -->
+    <symbol id="cat-beauty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3c-1.5 3-4 6-4 9a4 4 0 0 0 8 0c0-3-2.5-6-4-9z"/>
+      <path d="M12 21a9 9 0 0 0 9-9c-2.5 0-5 2-6 5"/>
+      <path d="M12 21a9 9 0 0 1-9-9c2.5 0 5 2 6 5"/>
+    </symbol>
+
+    <!-- cat-home : Home & Living (home + sparkle) -->
+    <symbol id="cat-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 10.5L12 3l9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9.5z"/>
+      <path d="M9 22V12h6v10"/>
+    </symbol>
+
+    <!-- cat-pets : Pet Supplies (paw print) -->
+    <symbol id="cat-pets" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="15" rx="3.5" ry="3"/>
+      <circle cx="7" cy="9.5" r="1.8"/>
+      <circle cx="17" cy="9.5" r="1.8"/>
+      <circle cx="10" cy="6.5" r="1.8"/>
+      <circle cx="14" cy="6.5" r="1.8"/>
+    </symbol>
+
+
+    <!-- ═══════════════════════════════════════════
+         SUBCATEGORY LINE ICONS (Level 2)
+         Minimalist 1.5px stroke luxury design
+         ═══════════════════════════════════════════ -->
+
+    <!-- sub-dairy : Milk & Cheese -->
+    <symbol id="sub-dairy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 3h4v3H6z"/>
+      <path d="M5 6h6l2 4v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10l2-4z"/>
+      <line x1="3" y1="13" x2="13" y2="13"/>
+      <path d="M15 15l6-3v7l-6 2v-6z"/>
+      <circle cx="18" cy="17" r="1" fill="currentColor"/>
+    </symbol>
+
+    <!-- sub-meat : Meat & Fish -->
+    <symbol id="sub-meat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 5c-3 0-6 1.5-8 4l-4 4a5 5 0 1 0 7 7l4-4c2.5-2 4-5 4-8a3 3 0 0 0-3-3z"/>
+      <circle cx="9" cy="16" r="1.5" fill="currentColor"/>
+      <path d="M18 10l-4-4"/>
+    </symbol>
+
+    <!-- sub-coffee : Coffee & Tea -->
+    <symbol id="sub-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+      <path d="M3 8h15v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/>
+      <line x1="6" y1="2" x2="6" y2="5"/>
+      <line x1="10" y1="2" x2="10" y2="5"/>
+      <line x1="14" y1="2" x2="14" y2="5"/>
+      <line x1="2" y1="21" x2="20" y2="21"/>
+    </symbol>
+
+    <!-- sub-sweets : Sweets & Chocolate -->
+    <symbol id="sub-sweets" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="12" y1="4" x2="12" y2="20"/>
+      <circle cx="8" cy="8" r="1" fill="currentColor"/>
+      <circle cx="16" cy="8" r="1" fill="currentColor"/>
+      <circle cx="8" cy="16" r="1" fill="currentColor"/>
+      <circle cx="16" cy="16" r="1" fill="currentColor"/>
+    </symbol>
+
+    <!-- sub-grocery : Grocery & Cereals -->
+    <symbol id="sub-grocery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10z"/>
+      <path d="M8 7V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3"/>
+      <path d="M12 11v6"/>
+      <path d="M9.5 13.5l5-2"/>
+      <path d="M9.5 15.5l5-2"/>
+    </symbol>
+
+    <!-- sub-drinks : Beverages & Water -->
+    <symbol id="sub-drinks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 2h4v3H7z"/>
+      <path d="M6 5h6l1.5 5v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V10L6 5z"/>
+      <line x1="5" y1="14" x2="13" y2="14"/>
+      <path d="M17 9l3 1v9a2 2 0 0 1-2 2h-1"/>
+      <line x1="16" y1="13" x2="20" y2="13"/>
+    </symbol>
+
+    <!-- sub-produce : Fruits & Vegetables -->
+    <symbol id="sub-produce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 4c2-2 4-2 6-1-1 2-2 4-4 4"/>
+      <path d="M12 7c-4 0-7 3-7 7.5A6.5 6.5 0 0 0 11.5 21c1.5 0 2.5-1 3.5-1s2 1 3.5 1A6.5 6.5 0 0 0 22 14.5C22 10 19 7 15 7c-1 0-2 .5-3 1-1-.5-2-1-3-1z"/>
+    </symbol>
+
+    <!-- sub-skincare : Skincare & Serums -->
+    <symbol id="sub-skincare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 2h4v3h-4z"/>
+      <path d="M8 5h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>
+      <path d="M12 11c-1.5 2-2.5 3.5-2.5 4.8a2.5 2.5 0 0 0 5 0C14.5 14.5 13.5 13 12 11z"/>
+    </symbol>
+
+    <!-- sub-hair : Haircare -->
+    <symbol id="sub-hair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="6" width="16" height="4" rx="1"/>
+      <line x1="6" y1="10" x2="6" y2="18"/>
+      <line x1="9" y1="10" x2="9" y2="18"/>
+      <line x1="12" y1="10" x2="12" y2="18"/>
+      <line x1="15" y1="10" x2="15" y2="18"/>
+      <line x1="18" y1="10" x2="18" y2="18"/>
+      <path d="M2 8h2"/>
+    </symbol>
+
+    <!-- sub-makeup : Makeup & Cosmetics -->
+    <symbol id="sub-makeup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="11" width="10" height="11" rx="1"/>
+      <path d="M9 11V6l5-3v8"/>
+      <line x1="7" y1="15" x2="17" y2="15"/>
+    </symbol>
+
+    <!-- sub-hygiene : Hygiene & Soap -->
+    <symbol id="sub-hygiene" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="10" width="18" height="11" rx="4"/>
+      <circle cx="8" cy="5" r="2"/>
+      <circle cx="15" cy="4" r="1.5"/>
+      <circle cx="18" cy="7" r="1"/>
+    </symbol>
+
+    <!-- sub-cleaning : Household Cleaning -->
+    <symbol id="sub-cleaning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 3h4v3h-4z"/>
+      <path d="M9 6h6l-1 4h-4l-1-4z"/>
+      <path d="M8 10h8l1 11H7l1-11z"/>
+      <path d="M16 6l3 1-1 3"/>
+      <path d="M20 3l.5 1.5L22 5l-1.5.5L20 7l-.5-1.5L18 5l1.5-.5z"/>
+    </symbol>
+
+    <!-- sub-kitchen : Kitchen & Tableware -->
+    <symbol id="sub-kitchen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="10" cy="14" rx="7" ry="4"/>
+      <path d="M3 14v2a7 4 0 0 0 14 0v-2"/>
+      <line x1="17" y1="14" x2="22" y2="14" stroke-width="2"/>
+      <line x1="8" y1="4" x2="8" y2="7"/>
+      <line x1="12" y1="3" x2="12" y2="6"/>
+    </symbol>
+
+    <!-- sub-decor : Home Decor & Lighting -->
+    <symbol id="sub-decor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 11l2-7h6l2 7H7z"/>
+      <line x1="12" y1="11" x2="12" y2="20"/>
+      <line x1="8" y1="20" x2="16" y2="20"/>
+      <line x1="12" y1="2" x2="12" y2="4"/>
+    </symbol>
+
+    <!-- sub-cats : Pet Care for Cats -->
+    <symbol id="sub-cats" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 19a7 7 0 0 1 14 0"/>
+      <path d="M5 15L4 7l5 3 3-2 3 2 5-3-1 8"/>
+      <circle cx="9" cy="13" r="1" fill="currentColor"/>
+      <circle cx="15" cy="13" r="1" fill="currentColor"/>
+      <path d="M12 16l-1 1h2l-1-1z"/>
+    </symbol>
+
+    <!-- sub-dogs : Pet Care for Dogs -->
+    <symbol id="sub-dogs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 5v5l-3 4v4h14v-4l-3-4V5c-1-1-3-2-4-2s-3 1-4 2z"/>
+      <circle cx="9" cy="10" r="1" fill="currentColor"/>
+      <circle cx="15" cy="10" r="1" fill="currentColor"/>
+      <ellipse cx="12" cy="14" rx="2" ry="1.2" fill="currentColor"/>
+    </symbol>
+
+
+    <!-- ═══════════════════════════════════════════
+         SUPERMARKET LOGO BADGES (18 Ukrainian Retail Chains)
+         Each badge: 48×48 viewBox
+         ═══════════════════════════════════════════ -->
+
+    <!-- CLUSTER 1: НАЦІОНАЛЬНІ СУПЕРМАРКЕТИ -->
+
+    <!-- logo-silpo : Сільпо (Власний Рахунок) -->
+    <symbol id="logo-silpo" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#00A651"/>
+      <text x="24" y="33" font-family="Arial Black, sans-serif" font-size="26" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">S</text>
+      <ellipse cx="35" cy="11" rx="5" ry="3" fill="#80D39B" transform="rotate(-35 35 11)"/>
+    </symbol>
+
+    <!-- logo-atb : АТБ-Маркет -->
+    <symbol id="logo-atb" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#E31E24"/>
+      <text x="24" y="31" font-family="Arial Black, sans-serif" font-size="16" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1">АТБ</text>
+      <rect x="9" y="34" width="30" height="3" rx="1.5" fill="#FFFFFF" opacity="0.6"/>
+    </symbol>
+
+    <!-- logo-novus : NOVUS -->
+    <symbol id="logo-novus" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#003087"/>
+      <text x="24" y="30" font-family="Arial Black, sans-serif" font-size="11" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1.5">NOVUS</text>
+      <rect x="8" y="33" width="32" height="2.5" rx="1.25" fill="#D4AF37"/>
+    </symbol>
+
+    <!-- logo-metro : METRO Cash & Carry -->
+    <symbol id="logo-metro" viewBox="0 0 48 48">
+      <clipPath id="metro-clip">
+        <rect width="48" height="48" rx="10"/>
+      </clipPath>
+      <g clip-path="url(#metro-clip)">
+        <rect width="48" height="24" fill="#E31E24"/>
+        <rect y="24" width="48" height="24" fill="#003087"/>
+        <text x="24" y="19" font-family="Arial Black, sans-serif" font-size="11" font-weight="900"
+              text-anchor="middle" fill="#FFFFFF" letter-spacing="0.5">METRO</text>
+        <text x="24" y="42" font-family="Arial Black, sans-serif" font-size="18" font-weight="900"
+              text-anchor="middle" fill="#FFFFFF">M</text>
+      </g>
+    </symbol>
+
+    <!-- logo-varus : VARUS -->
+    <symbol id="logo-varus" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#F47920"/>
+      <text x="24" y="30" font-family="Arial Black, sans-serif" font-size="12" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1">VARUS</text>
+      <polyline points="14,35 24,40 34,35" fill="none" stroke="#FFFFFF" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+    </symbol>
+
+    <!-- logo-auchan : АШАН -->
+    <symbol id="logo-auchan" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#E30613"/>
+      <text x="24" y="27" font-family="Arial Black, sans-serif" font-size="10" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="0.8">АШАН</text>
+      <path d="M12 34 Q 24 28 36 34" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- logo-epicentrk-food : Епіцентр Food Market -->
+    <symbol id="logo-epicentrk-food" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#003399"/>
+      <text x="24" y="27" font-family="Arial Black, sans-serif" font-size="18" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">E</text>
+      <rect x="8" y="31" width="32" height="10" rx="3" fill="#F26522"/>
+      <text x="24" y="39" font-family="Arial, sans-serif" font-size="7.5" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="0.5">FOOD</text>
+    </symbol>
+
+    <!-- logo-velmart : Велмарт -->
+    <symbol id="logo-velmart" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#00A551"/>
+      <circle cx="24" cy="24" r="16" fill="#003E7E" opacity="0.4"/>
+      <text x="24" y="30" font-family="Arial Black, sans-serif" font-size="9" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="0.5">ВЕЛМАРТ</text>
+      <polygon points="20,13 28,13 24,19" fill="#FFDD00"/>
+    </symbol>
+
+
+    <!-- CLUSTER 2: ЛОКАЛЬНІ ТА БІЛЯ ДОМУ -->
+
+    <!-- logo-thrash : Траш! (Thrash!) -->
+    <symbol id="logo-thrash" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#5E17EB"/>
+      <text x="24" y="27" font-family="Arial Black, sans-serif" font-size="11" font-weight="900"
+            text-anchor="middle" fill="#FAFF00" letter-spacing="0.5">ТРАШ!</text>
+      <text x="24" y="39" font-family="Arial Black, sans-serif" font-size="8" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">Thrash!</text>
+    </symbol>
+
+    <!-- logo-simi : Сімі маркет -->
+    <symbol id="logo-simi" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#E61C24"/>
+      <circle cx="24" cy="24" r="16" fill="#FFD200"/>
+      <text x="24" y="31" font-family="Arial Black, sans-serif" font-size="13" font-weight="900"
+            text-anchor="middle" fill="#E61C24" letter-spacing="0.5">СІМІ</text>
+    </symbol>
+
+    <!-- logo-blyzenko : Близенько -->
+    <symbol id="logo-blyzenko" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#009E49"/>
+      <circle cx="24" cy="18" r="8" fill="#F37023"/>
+      <text x="24" y="36" font-family="Arial Black, sans-serif" font-size="6.5" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="0.3">БЛИЗЕНЬКО</text>
+    </symbol>
+
+    <!-- logo-taistra : Тайстра -->
+    <symbol id="logo-taistra" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#0E294A"/>
+      <circle cx="24" cy="19" r="8" fill="#00A859" opacity="0.85"/>
+      <text x="24" y="24" font-family="Arial Black, sans-serif" font-size="14" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">Т</text>
+      <text x="24" y="37" font-family="Arial Black, sans-serif" font-size="7.5" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="0.8">ТАЙСТРА</text>
+    </symbol>
+
+    <!-- logo-arsen : Арсен -->
+    <symbol id="logo-arsen" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#8B0021"/>
+      <text x="24" y="27" font-family="Arial Black, sans-serif" font-size="18" font-weight="900"
+            text-anchor="middle" fill="#D4AF37">А</text>
+      <text x="24" y="39" font-family="Arial Black, sans-serif" font-size="8" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1">АРСЕН</text>
+    </symbol>
+
+    <!-- logo-rukavychka : Рукавичка -->
+    <symbol id="logo-rukavychka" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#D8232A"/>
+      <!-- Mitten silhouette -->
+      <path d="M18 24 C18 18 22 14 26 14 C28 14 30 16 30 19 L30 25 L32 25 C34 25 35 26 35 28 C35 30 33 32 30 32 L20 32 C18 32 18 26 18 24 Z" fill="#FFFFFF" opacity="0.9"/>
+      <text x="24" y="42" font-family="Arial Black, sans-serif" font-size="6" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">РУКАВИЧКА</text>
+    </symbol>
+
+
+    <!-- CLUSTER 3: КРАСА, ДІМ ТА ЩОДЕННІ -->
+
+    <!-- logo-eva : EVA -->
+    <symbol id="logo-eva" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#D80064"/>
+      <text x="24" y="32" font-family="Arial Black, sans-serif" font-size="17" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1">eva</text>
+      <circle cx="37" cy="14" r="3.5" fill="#FF8D00"/>
+    </symbol>
+
+    <!-- logo-prostor : Prostor -->
+    <symbol id="logo-prostor" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#009AC7"/>
+      <text x="24" y="30" font-family="Arial Black, sans-serif" font-size="9.5" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF" letter-spacing="1">PROSTOR</text>
+      <circle cx="24" cy="36" r="2" fill="#FFFFFF"/>
+    </symbol>
+
+    <!-- logo-avrora : Аврора Мультимаркет -->
+    <symbol id="logo-avrora" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#FFD400"/>
+      <text x="24" y="27" font-family="Arial Black, sans-serif" font-size="9.5" font-weight="900"
+            text-anchor="middle" fill="#00458C" letter-spacing="0.5">АВРОРА</text>
+      <path d="M14 32 Q 24 38 34 32" fill="none" stroke="#00458C" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- logo-epicentr : Епіцентр К -->
+    <symbol id="logo-epicentr" viewBox="0 0 48 48">
+      <rect width="48" height="48" rx="10" fill="#003399"/>
+      <text x="24" y="31" font-family="Arial Black, sans-serif" font-size="24" font-weight="900"
+            text-anchor="middle" fill="#FFFFFF">E</text>
+      <rect x="10" y="35" width="28" height="2.5" fill="#FFFFFF"/>
+    </symbol>
+
+  </defs>
+</svg>
