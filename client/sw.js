@@ -1,12 +1,12 @@
 /**
  * ============================================================================
- * AURELIA UA — Offline-First Service Worker (v2)
+ * AURELIA UA — Offline-First Service Worker (v5)
  * Instant offline supermarket checkout, local caching & robust PWA runtime
  * ============================================================================
  */
 
-const CACHE_NAME = 'aurelia-ua-v2';
-const RUNTIME_API_CACHE = 'aurelia-ua-api-v2';
+const CACHE_NAME = 'aurelia-ua-v5';
+const RUNTIME_API_CACHE = 'aurelia-ua-api-v5';
 
 const PRECACHE_ASSETS = [
   './',

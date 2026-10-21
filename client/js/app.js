@@ -267,7 +267,7 @@
     }, { passive: true });
   }
 
-  /* ─── 5. Mobile Burger Navigation ────────────────────────────────────────── */
+  /* ─── 5. Mobile Burger Navigation & Mobile Drawer ──────────────────────── */
   function initBurgerMenu() {
     if (!DOM.burgerBtn || !DOM.mobileNav) return;
 
@@ -282,13 +282,55 @@
 
     DOM.burgerBtn.addEventListener('click', () => toggleMenu());
 
+    // Close button inside mobile drawer
+    const drawerCloseBtn = document.getElementById('mobile-drawer-close');
+    if (drawerCloseBtn) {
+      drawerCloseBtn.addEventListener('click', () => toggleMenu(true));
+    }
+
     // Close on mobile link clicks
     const links = DOM.mobileNav.querySelectorAll('.mobile-nav-link');
     links.forEach(l => l.addEventListener('click', () => toggleMenu(true)));
 
+    // Mobile stores button in drawer
+    const mobileStoresBtn = document.getElementById('mobile-stores-btn');
+    if (mobileStoresBtn && DOM.storesModal) {
+      mobileStoresBtn.addEventListener('click', () => {
+        toggleMenu(true);
+        syncStoresModalInputs();
+        updateStoresModalLiveBadges();
+        openModal(DOM.storesModal);
+      });
+    }
+
+    // Mobile auth button in drawer
+    const mobileAuthBtn = document.getElementById('mobile-auth-btn');
+    if (mobileAuthBtn && DOM.authModal) {
+      mobileAuthBtn.addEventListener('click', () => {
+        toggleMenu(true);
+        openModal(DOM.authModal);
+      });
+    }
+
     // Close on escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && DOM.mobileNav.classList.contains('is-open')) {
+        toggleMenu(true);
+      }
+    });
+
+    // Close on click outside mobile drawer
+    document.addEventListener('click', (e) => {
+      if (DOM.mobileNav.classList.contains('is-open')) {
+        if (!DOM.mobileNav.contains(e.target) && !DOM.burgerBtn.contains(e.target)) {
+          toggleMenu(true);
+        }
+      }
+    });
+
+    // Auto-close mobile drawer when resizing to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 960 && DOM.mobileNav.classList.contains('is-open')) {
         toggleMenu(true);
       }
     });
@@ -462,9 +504,14 @@
 
   /* ─── 6b. "Мої Мережі" (My Stores) Personalization Modal ─────────────────── */
   function updateStoresCountBadge() {
+    const count = AppState.selectedStores.length;
     if (DOM.headerStoresCount) {
-      DOM.headerStoresCount.textContent = AppState.selectedStores.length;
+      DOM.headerStoresCount.textContent = count;
     }
+    const mobileStoreBadges = document.querySelectorAll('.mobile-stores-count');
+    mobileStoreBadges.forEach(el => {
+      el.textContent = count;
+    });
   }
 
   function syncStoresModalInputs() {
@@ -1956,18 +2003,18 @@
   let deferredInstallPrompt = null;
 
   function initPwaInstallPrompt() {
+    const pwaButtons = document.querySelectorAll('.btn-pwa-install, #btn-pwa-install, #mobile-pwa-install');
+
     window.addEventListener('beforeinstallprompt', (e) => {
       // Prevent automatic mini-infobar on mobile Chrome
       e.preventDefault();
       deferredInstallPrompt = e;
 
-      if (DOM.btnPwaInstall) {
-        DOM.btnPwaInstall.classList.remove('is-hidden');
-      }
+      pwaButtons.forEach(btn => btn.classList.remove('is-hidden'));
     });
 
-    if (DOM.btnPwaInstall) {
-      DOM.btnPwaInstall.addEventListener('click', async () => {
+    pwaButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
         if (!deferredInstallPrompt) return;
 
         deferredInstallPrompt.prompt();
@@ -1980,16 +2027,14 @@
         }
 
         deferredInstallPrompt = null;
-        DOM.btnPwaInstall.classList.add('is-hidden');
+        pwaButtons.forEach(b => b.classList.add('is-hidden'));
       });
-    }
+    });
 
     window.addEventListener('appinstalled', () => {
       console.log('🎉 [PWA] Додаток AURELIA UA успішно встановлено на головний екран!');
       deferredInstallPrompt = null;
-      if (DOM.btnPwaInstall) {
-        DOM.btnPwaInstall.classList.add('is-hidden');
-      }
+      pwaButtons.forEach(b => b.classList.add('is-hidden'));
     });
   }
 

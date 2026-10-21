@@ -31,17 +31,17 @@
         <span class="brand-tag">ADMIN</span>
       </a>
 
-      <nav class="nav-desktop" aria-label="Основна навігація">
-        <ul class="nav-desktop-list">
-          <li><a href="index.html" class="nav-link">Картки</a></li>
-          <li><a href="catalog.html" class="nav-link">Каталог акцій</a></li>
-          <li><a href="basket.html" class="nav-link">Кошик</a></li>
+      <nav class="nav-desktop nav-menu" aria-label="Основна навігація">
+        <ul class="nav-desktop-list nav-menu-list">
+          <li><a href="index.html" class="nav-link">Гаманець</a></li>
+          <li><a href="catalog.html" class="nav-link">Ціни та Акції</a></li>
+          <li><a href="basket.html" class="nav-link">Розумний Кошик</a></li>
           <li><a href="admin.html" class="nav-link is-active" aria-current="page">Адмін-панель</a></li>
         </ul>
       </nav>
 
       <div class="header-actions">
-        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden" aria-label="Встановити додаток AURELIA UA">
+        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden header-hide-mobile" aria-label="Встановити додаток AURELIA UA">
           <svg class="icon icon-sm" aria-hidden="true">
             <use href="assets/sprite.svg#icon-download"></use>
           </svg>
@@ -54,11 +54,11 @@
           </svg>
         </button>
 
-        <button type="button" id="auth-open-btn" class="btn-auth">
+        <button type="button" id="auth-open-btn" class="btn-auth header-hide-mobile" aria-label="Панель адміністратора">
           <svg class="icon icon-sm" aria-hidden="true">
             <use href="assets/sprite.svg#icon-check"></use>
           </svg>
-          <span id="auth-btn-label">Адміністратор</span>
+          <span id="auth-btn-label" class="auth-btn-text">Адміністратор</span>
         </button>
 
         <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
@@ -71,13 +71,26 @@
 
     <!-- Мобільне меню -->
     <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <div class="mobile-drawer-header">
+        <span class="drawer-title">Меню та налаштування</span>
+      </div>
+
+      <div class="mobile-drawer-actions">
+        <button type="button" id="mobile-pwa-install" class="btn-drawer-action is-hidden" aria-label="Встановити додаток AURELIA UA">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-download"></use>
+          </svg>
+          <span>Встановити PWA</span>
+        </button>
+      </div>
+
       <ul class="mobile-nav-list">
         <li>
           <a href="index.html" class="mobile-nav-link">
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-qr"></use>
             </svg>
-            <span>Картки лояльності</span>
+            <span>Гаманець</span>
           </a>
         </li>
         <li>
@@ -85,7 +98,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-filter"></use>
             </svg>
-            <span>Каталог акцій</span>
+            <span>Ціни та Акції</span>
           </a>
         </li>
         <li>
@@ -93,7 +106,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-cart"></use>
             </svg>
-            <span>Кошик порівняння</span>
+            <span>Розумний Кошик</span>
           </a>
         </li>
         <li>
@@ -101,7 +114,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-edit"></use>
             </svg>
-            <span>Адміністративна панель</span>
+            <span>Адмін-панель</span>
           </a>
         </li>
       </ul>
@@ -191,7 +204,7 @@
     <!-- CRUD Таблиця акцій -->
     <section class="admin-table-section reveal-item" aria-labelledby="admin-table-heading">
       <h2 id="admin-table-heading" class="visually-hidden">Список акційних позицій</h2>
-      <div class="admin-table-container">
+      <div class="admin-table-container table-responsive">
         <table class="admin-table">
           <thead>
             <tr>
@@ -795,5 +808,33 @@
       </div>
     </div>
   </footer>
+
+  <!-- Нижня мобільна навігаційна панель -->
+  <nav class="mobile-bottom-nav" aria-label="Швидка мобільна навігація">
+    <a href="index.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-qr"></use>
+      </svg>
+      <span class="bottom-nav-label">Гаманець</span>
+    </a>
+    <a href="catalog.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-filter"></use>
+      </svg>
+      <span class="bottom-nav-label">Акції</span>
+    </a>
+    <a href="basket.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-cart"></use>
+      </svg>
+      <span class="bottom-nav-label">Кошик</span>
+    </a>
+    <a href="admin.html" class="bottom-nav-item is-active" aria-current="page">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-edit"></use>
+      </svg>
+      <span class="bottom-nav-label">Адмін</span>
+    </a>
+  </nav>
 </body>
 </html>

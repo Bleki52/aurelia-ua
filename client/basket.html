@@ -30,11 +30,11 @@
         <span class="brand-tag">UA</span>
       </a>
 
-      <nav class="nav-desktop" aria-label="Основна навігація">
-        <ul class="nav-desktop-list">
-          <li><a href="index.html" class="nav-link">Картки</a></li>
-          <li><a href="catalog.html" class="nav-link">Каталог акцій</a></li>
-          <li><a href="basket.html" class="nav-link is-active" aria-current="page">Кошик</a></li>
+      <nav class="nav-desktop nav-menu" aria-label="Основна навігація">
+        <ul class="nav-desktop-list nav-menu-list">
+          <li><a href="index.html" class="nav-link">Гаманець</a></li>
+          <li><a href="catalog.html" class="nav-link">Ціни та Акції</a></li>
+          <li><a href="basket.html" class="nav-link is-active" aria-current="page">Розумний Кошик</a></li>
           <li><a href="admin.html" class="nav-link">Адмін-панель</a></li>
         </ul>
       </nav>
@@ -44,18 +44,18 @@
           <svg class="icon icon-location" aria-hidden="true">
             <use href="assets/sprite.svg#icon-location"></use>
           </svg>
-          <span id="header-city-name">Івано-Франківськ</span>
+          <span id="header-city-name" class="city-name-text">Івано-Франківськ</span>
         </button>
 
-        <button type="button" id="btn-stores-modal-trigger" class="btn-stores-selector" aria-label="Обрати мої мережі">
+        <button type="button" id="btn-stores-modal-trigger" class="btn-stores-selector header-hide-mobile" aria-label="Обрати мої мережі">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-sliders"></use>
           </svg>
-          <span>Мої мережі</span>
+          <span class="stores-btn-text">Мої мережі</span>
           <span class="stores-count-badge" id="header-stores-count">18</span>
         </button>
 
-        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden" aria-label="Встановити додаток AURELIA UA">
+        <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden header-hide-mobile" aria-label="Встановити додаток AURELIA UA">
           <svg class="icon icon-sm" aria-hidden="true">
             <use href="assets/sprite.svg#icon-download"></use>
           </svg>
@@ -68,11 +68,11 @@
           </svg>
         </button>
 
-        <button type="button" id="auth-open-btn" class="btn-auth">
+        <button type="button" id="auth-open-btn" class="btn-auth header-hide-mobile" aria-label="Увійти в кабінет">
           <svg class="icon icon-sm" aria-hidden="true">
             <use href="assets/sprite.svg#icon-check"></use>
           </svg>
-          <span id="auth-btn-label">Увійти</span>
+          <span id="auth-btn-label" class="auth-btn-text">Увійти</span>
         </button>
 
         <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
@@ -85,13 +85,33 @@
 
     <!-- Мобільне меню -->
     <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <div class="mobile-drawer-header">
+        <span class="drawer-title">Меню та налаштування</span>
+      </div>
+
+      <div class="mobile-drawer-actions">
+        <button type="button" id="mobile-stores-btn" class="btn-drawer-action" aria-label="Обрати мої мережі">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-sliders"></use>
+          </svg>
+          <span>Мої мережі (<span class="mobile-stores-count">18</span>)</span>
+        </button>
+
+        <button type="button" id="mobile-pwa-install" class="btn-drawer-action is-hidden" aria-label="Встановити додаток AURELIA UA">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-download"></use>
+          </svg>
+          <span>Встановити PWA</span>
+        </button>
+      </div>
+
       <ul class="mobile-nav-list">
         <li>
           <a href="index.html" class="mobile-nav-link">
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-qr"></use>
             </svg>
-            <span>Картки лояльності</span>
+            <span>Гаманець</span>
           </a>
         </li>
         <li>
@@ -99,7 +119,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-filter"></use>
             </svg>
-            <span>Каталог акцій</span>
+            <span>Ціни та Акції</span>
           </a>
         </li>
         <li>
@@ -107,7 +127,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-cart"></use>
             </svg>
-            <span>Кошик порівняння</span>
+            <span>Розумний Кошик</span>
           </a>
         </li>
         <li>
@@ -115,7 +135,7 @@
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-edit"></use>
             </svg>
-            <span>Адміністративна панель</span>
+            <span>Адмін-панель</span>
           </a>
         </li>
       </ul>
@@ -707,5 +727,33 @@
       </div>
     </div>
   </footer>
+
+  <!-- Нижня мобільна навігаційна панель -->
+  <nav class="mobile-bottom-nav" aria-label="Швидка мобільна навігація">
+    <a href="index.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-qr"></use>
+      </svg>
+      <span class="bottom-nav-label">Гаманець</span>
+    </a>
+    <a href="catalog.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-filter"></use>
+      </svg>
+      <span class="bottom-nav-label">Акції</span>
+    </a>
+    <a href="basket.html" class="bottom-nav-item is-active" aria-current="page">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-cart"></use>
+      </svg>
+      <span class="bottom-nav-label">Кошик</span>
+    </a>
+    <a href="admin.html" class="bottom-nav-item">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/sprite.svg#icon-edit"></use>
+      </svg>
+      <span class="bottom-nav-label">Адмін</span>
+    </a>
+  </nav>
 </body>
 </html>
