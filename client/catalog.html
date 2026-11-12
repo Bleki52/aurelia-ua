@@ -8,8 +8,11 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090B">
+  <meta name="theme-color" content="#0B0B0D">
   <script src="js/api.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
@@ -25,9 +28,9 @@
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
-        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
         <span class="brand-name">AURELIA</span>
         <span class="brand-tag">UA</span>
+        <span class="brand-dot" aria-hidden="true"></span>
       </a>
 
       <nav class="nav-desktop nav-menu" aria-label="Основна навігація">
@@ -153,109 +156,180 @@
 
   <!-- Основний контент -->
   <main id="main-content">
-    <div class="page-header reveal-item">
-      <h1>Порівняння цін та акцій супермаркетів</h1>
-      <p class="page-subtitle">Актуальні знижки та порівняння вартості популярних товарів у Сільпо, АТБ, NOVUS, VARUS та METRO</p>
-      <div class="catalog-sync-bar">
-        <button type="button" id="btn-catalog-sync" class="btn btn-secondary catalog-sync-btn" aria-label="Оновити актуальні акції">
-          <svg class="icon" aria-hidden="true">
-            <use href="assets/sprite.svg#icon-filter"></use>
-          </svg>
-          <span id="catalog-sync-label">Оновити актуальні акції</span>
-        </button>
-        <span class="sync-status-badge" id="catalog-sync-status" aria-live="polite">Останнє оновлення: завантаження...</span>
+    <div class="page-header page-header-split reveal-item">
+      <div class="page-header-lead">
+        <p class="page-kicker">Ціновий реєстр мереж · Моніторинг акцій</p>
+        <h1>Порівняння Цін та Актуальні Пропозиції</h1>
+        <p class="page-subtitle">Актуальні знижки та порівняння вартості популярних товарів у Сільпо, АТБ, NOVUS, VARUS та METRO</p>
+      </div>
+      <div class="page-header-actions">
+        <div class="catalog-sync-bar">
+          <button type="button" id="btn-catalog-sync" class="btn btn-secondary catalog-sync-btn" aria-label="Оновити актуальні акції">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-filter"></use>
+            </svg>
+            <span id="catalog-sync-label">Оновити актуальні акції</span>
+          </button>
+          <span class="sync-status-badge" id="catalog-sync-status" aria-live="polite">Останнє оновлення: завантаження...</span>
+        </div>
       </div>
     </div>
 
-    <!-- Панель пошуку та фільтрації -->
-    <section class="toolbar-section reveal-item" aria-label="Панель фільтрів каталогу">
-      <div class="search-box-wrapper">
-        <label for="product-search-input" class="visually-hidden">Пошук акційного товару за назвою</label>
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/sprite.svg#icon-search"></use>
-        </svg>
-        <input type="search" id="product-search-input" class="search-input" placeholder="Пошук товару (наприклад: кава, сир, лосось)...">
-      </div>
-
-      <div class="toolbar-actions">
-        <label for="catalog-sort-select" class="visually-hidden">Сортувати акції</label>
-        <select id="catalog-sort-select" class="form-select">
-          <option value="cheap">За найнижчою ціною</option>
-          <option value="discount">За найбільшою знижкою</option>
-          <option value="multi-store">Тільки порівняння (2+ мережі)</option>
-          <option value="title">За назвою (А–Я)</option>
-        </select>
-      </div>
-    </section>
-
-    <!-- Дворівнева навігація за категоріями -->
-    <section class="nav-two-level-container reveal-item" aria-label="Категорії та підкатегорії акцій">
-      <!-- Рівень 1: Макрокатегорії -->
-      <div class="macro-categories-bar" id="macro-categories-bar" role="tablist" aria-label="Макрокатегорії">
-        <button type="button" class="macro-cat-btn is-active" data-main="all" role="tab" aria-selected="true">
-          <svg class="icon icon-stroke" aria-hidden="true">
-            <use href="assets/sprite.svg#cat-all"></use>
+    <!-- Архітектурна панель пошуку, категорій та фільтрів -->
+    <div class="catalog-filters-deck reveal-item">
+      <!-- Панель пошуку та сортування -->
+      <section class="toolbar-section" aria-label="Панель фільтрів каталогу">
+        <div class="search-box-wrapper">
+          <label for="product-search-input" class="visually-hidden">Пошук акційного товару за назвою</label>
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-search"></use>
           </svg>
-          <span>Усі акції</span>
-        </button>
-        <button type="button" class="macro-cat-btn" data-main="Продукти" role="tab" aria-selected="false">
-          <svg class="icon icon-stroke" aria-hidden="true">
-            <use href="assets/sprite.svg#cat-groceries"></use>
-          </svg>
-          <span>Продукти харчування</span>
-        </button>
-        <button type="button" class="macro-cat-btn" data-main="Краса та Гігієна" role="tab" aria-selected="false">
-          <svg class="icon icon-stroke" aria-hidden="true">
-            <use href="assets/sprite.svg#cat-beauty"></use>
-          </svg>
-          <span>Краса та догляд</span>
-        </button>
-        <button type="button" class="macro-cat-btn" data-main="Дім та Побут" role="tab" aria-selected="false">
-          <svg class="icon icon-stroke" aria-hidden="true">
-            <use href="assets/sprite.svg#cat-home"></use>
-          </svg>
-          <span>Товари для дому</span>
-        </button>
-        <button type="button" class="macro-cat-btn" data-main="Зоотовари" role="tab" aria-selected="false">
-          <svg class="icon icon-stroke" aria-hidden="true">
-            <use href="assets/sprite.svg#cat-pets"></use>
-          </svg>
-          <span>Зоотовари</span>
-        </button>
-      </div>
-
-      <!-- Рівень 2: Контекстні підкатегорії -->
-      <div class="sub-categories-wrapper" id="sub-categories-wrapper">
-        <div class="sub-categories-bar" id="sub-categories-bar" role="toolbar" aria-label="Підкатегорії">
-          <!-- Наповнюється динамічно через app.js -->
+          <input type="search" id="product-search-input" class="search-input" placeholder="Пошук товару, марки або категорії (напр. кава, масло, сир)...">
         </div>
-      </div>
-    </section>
 
-    <!-- Рядок навігації (Breadcrumb) та лічильник пропозицій -->
+        <div class="toolbar-actions">
+          <label for="catalog-sort-select" class="visually-hidden">Сортувати акції</label>
+          <select id="catalog-sort-select" class="form-select">
+            <option value="cheap">За найнижчою ціною</option>
+            <option value="discount">За найбільшою знижкою</option>
+            <option value="multi-store">Тільки порівняння (2+ мережі)</option>
+            <option value="title">За назвою (А–Я)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Дворівнева навігація за категоріями -->
+      <section class="nav-two-level-container" aria-label="Категорії та підкатегорії акцій">
+        <!-- Рівень 1: Макрокатегорії -->
+        <div class="macro-categories-bar" id="macro-categories-bar" role="tablist" aria-label="Макрокатегорії">
+          <button type="button" class="macro-cat-btn is-active" data-main="all" role="tab" aria-selected="true">
+            <svg class="icon icon-stroke" aria-hidden="true">
+              <use href="assets/sprite.svg#cat-all"></use>
+            </svg>
+            <span>Усі акції</span>
+          </button>
+          <button type="button" class="macro-cat-btn" data-main="Продукти" role="tab" aria-selected="false">
+            <svg class="icon icon-stroke" aria-hidden="true">
+              <use href="assets/sprite.svg#cat-groceries"></use>
+            </svg>
+            <span>Продукти харчування</span>
+          </button>
+          <button type="button" class="macro-cat-btn" data-main="Краса та Гігієна" role="tab" aria-selected="false">
+            <svg class="icon icon-stroke" aria-hidden="true">
+              <use href="assets/sprite.svg#cat-beauty"></use>
+            </svg>
+            <span>Краса та догляд</span>
+          </button>
+          <button type="button" class="macro-cat-btn" data-main="Дім та Побут" role="tab" aria-selected="false">
+            <svg class="icon icon-stroke" aria-hidden="true">
+              <use href="assets/sprite.svg#cat-home"></use>
+            </svg>
+            <span>Товари для дому</span>
+          </button>
+          <button type="button" class="macro-cat-btn" data-main="Зоотовари" role="tab" aria-selected="false">
+            <svg class="icon icon-stroke" aria-hidden="true">
+              <use href="assets/sprite.svg#cat-pets"></use>
+            </svg>
+            <span>Зоотовари</span>
+          </button>
+        </div>
+
+        <!-- Рівень 2: Контекстні підкатегорії -->
+        <div class="sub-categories-wrapper" id="sub-categories-wrapper">
+          <div class="sub-categories-bar" id="sub-categories-bar" role="toolbar" aria-label="Підкатегорії">
+            <!-- Наповнюється динамічно через app.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Фільтри за мережами супермаркетів -->
+      <section class="filter-section" aria-label="Фільтри за мережами">
+        <div class="filter-bar" id="store-filter-bar" role="toolbar" aria-label="Мережі супермаркетів">
+          <button type="button" class="filter-btn is-active" data-store="all">Всі мережі</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Рядок навігації (Breadcrumb), лічильник та легенда -->
     <div class="catalog-breadcrumb-bar reveal-item" id="catalog-breadcrumb-bar">
       <div class="breadcrumb-trail">
         <span id="breadcrumb-macro">Всі категорії</span>
         <span class="breadcrumb-sep" id="breadcrumb-sep" aria-hidden="true">›</span>
         <span id="breadcrumb-sub">Всі товари</span>
+        <span class="breadcrumb-dot" aria-hidden="true">·</span>
+        <span class="breadcrumb-count" id="breadcrumb-count">Знайдено: 0 акцій</span>
       </div>
-      <span class="breadcrumb-count" id="breadcrumb-count">Знайдено: 0 акцій</span>
+      <div class="catalog-legend-chips" aria-hidden="true">
+        <span class="legend-chip"><span class="legend-swatch swatch-best"></span> Найкраща вартість</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-promo"></span> Акційна ціна</span>
+      </div>
     </div>
 
-    <!-- Фільтри за мережами супермаркетів -->
-    <section class="filter-section reveal-item" aria-label="Фільтри за мережами">
-      <div class="filter-bar" id="store-filter-bar" role="toolbar" aria-label="Мережі супермаркетів">
-        <button type="button" class="filter-btn is-active" data-store="all">Всі мережі</button>
-      </div>
-    </section>
-
-    <!-- Сітка акційних товарів -->
+    <!-- Сітка порівняльних карток товарів -->
     <section class="products-section" aria-label="Список акційних товарів">
       <h2 class="visually-hidden">Акційні товари</h2>
       <div class="products-grid" id="catalog-products-container">
         <!-- Наповнюється динамічно через app.js на основі AureliaAPI.getProducts() -->
       </div>
     </section>
+
+    <!-- Аналітичні блоки телеметрії та перехід до кошика -->
+    <section class="catalog-telemetry-grid reveal-item" aria-label="Аналітика цінового моніторингу">
+      <article class="telemetry-card">
+        <span class="telemetry-icon-box" aria-hidden="true">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-filter"></use>
+          </svg>
+        </span>
+        <div>
+          <span class="telemetry-label">Середня розбіжність цін</span>
+          <strong class="telemetry-value">До 24% між мережами</strong>
+          <p class="telemetry-hint">У межах однієї міської локації</p>
+        </div>
+      </article>
+      <article class="telemetry-card">
+        <span class="telemetry-icon-box" aria-hidden="true">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-check"></use>
+          </svg>
+        </span>
+        <div>
+          <span class="telemetry-label">Синхронізація чеків</span>
+          <strong class="telemetry-value">Пряма телеметрія</strong>
+          <p class="telemetry-hint">Дані перевірено за офіційними джерелами</p>
+        </div>
+      </article>
+      <article class="telemetry-card">
+        <span class="telemetry-icon-box" aria-hidden="true">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-cart"></use>
+          </svg>
+        </span>
+        <div>
+          <span class="telemetry-label">Оптимальний маршрут</span>
+          <strong class="telemetry-value">Розумний Кошик</strong>
+          <p class="telemetry-hint">Автоматичний розподіл списку покупок</p>
+        </div>
+      </article>
+    </section>
+
+    <div class="catalog-basket-cta-bar reveal-item">
+      <div class="catalog-basket-cta-lead">
+        <span class="telemetry-icon-box" aria-hidden="true">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-cart"></use>
+          </svg>
+        </span>
+        <div>
+          <p class="page-kicker">Ваш оптимізований кошик</p>
+          <p class="catalog-cta-title">Порівняйте загальну вартість списку покупок у всіх мережах міста</p>
+        </div>
+      </div>
+      <a href="basket.html" class="btn btn-primary">
+        <span>Перейти до кошика</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
   </main>
 
   <!-- МОДАЛЬНЕ ВІКНО: Авторизація (#auth-modal) -->
@@ -404,9 +478,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-silpo" class="store-toggle-input" value="silpo" checked>
                 <label for="store-toggle-silpo" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--silpo" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-silpo"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Сільпо</span>
                     <span class="store-toggle-program">Власний Рахунок</span>
@@ -419,9 +495,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-atb" class="store-toggle-input" value="atb" checked>
                 <label for="store-toggle-atb" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--atb" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-atb"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">АТБ-Маркет</span>
                     <span class="store-toggle-program">Картка АТБ</span>
@@ -434,9 +512,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-novus" class="store-toggle-input" value="novus" checked>
                 <label for="store-toggle-novus" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--novus" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-novus"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">NOVUS</span>
                     <span class="store-toggle-program">NOVUS Club</span>
@@ -449,9 +529,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-varus" class="store-toggle-input" value="varus" checked>
                 <label for="store-toggle-varus" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--varus" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-varus"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">VARUS</span>
                     <span class="store-toggle-program">VARUS Poshuk</span>
@@ -464,9 +546,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-metro" class="store-toggle-input" value="metro" checked>
                 <label for="store-toggle-metro" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--metro" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-metro"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">METRO</span>
                     <span class="store-toggle-program">METRO Card</span>
@@ -479,9 +563,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-auchan" class="store-toggle-input" value="auchan" checked>
                 <label for="store-toggle-auchan" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--auchan" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-auchan"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">АШАН</span>
                     <span class="store-toggle-program">Auchan Club</span>
@@ -494,9 +580,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-epicentrk_food" class="store-toggle-input" value="epicentrk_food" checked>
                 <label for="store-toggle-epicentrk_food" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--epicentrk_food" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-epicentrk_food"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Епіцентр Food</span>
                     <span class="store-toggle-program">Вигода</span>
@@ -509,9 +597,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-velmart" class="store-toggle-input" value="velmart" checked>
                 <label for="store-toggle-velmart" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--velmart" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-velmart"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Велмарт</span>
                     <span class="store-toggle-program">Велмарт Бонус</span>
@@ -533,9 +623,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-thrash" class="store-toggle-input" value="thrash" checked>
                 <label for="store-toggle-thrash" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--thrash" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-thrash"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Траш! ТРАШ!</span>
                     <span class="store-toggle-program">Власний Рахунок</span>
@@ -548,9 +640,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-simi" class="store-toggle-input" value="simi" checked>
                 <label for="store-toggle-simi" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--simi" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-simi"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Сімі</span>
                     <span class="store-toggle-program">Сімі Клуб</span>
@@ -563,9 +657,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-blyzenko" class="store-toggle-input" value="blyzenko" checked>
                 <label for="store-toggle-blyzenko" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--blyzenko" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-blyzenko"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Близенько</span>
                     <span class="store-toggle-program">Близенько Разом</span>
@@ -578,9 +674,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-taistra" class="store-toggle-input" value="taistra" checked>
                 <label for="store-toggle-taistra" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--taistra" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-taistra"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Тайстра</span>
                     <span class="store-toggle-program">Тайстра Бонус</span>
@@ -593,9 +691,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-arsen" class="store-toggle-input" value="arsen" checked>
                 <label for="store-toggle-arsen" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--arsen" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-arsen"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Арсен</span>
                     <span class="store-toggle-program">Пакко Бонус</span>
@@ -608,9 +708,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-rukavychka" class="store-toggle-input" value="rukavychka" checked>
                 <label for="store-toggle-rukavychka" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--rukavychka" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-rukavychka"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Рукавичка</span>
                     <span class="store-toggle-program">Родина Рукавичка</span>
@@ -632,9 +734,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-eva" class="store-toggle-input" value="eva" checked>
                 <label for="store-toggle-eva" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--eva" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-eva"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-beauty" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-beauty"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">EVA</span>
                     <span class="store-toggle-program">EVA МОЗАЇКА</span>
@@ -647,9 +751,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-prostor" class="store-toggle-input" value="prostor" checked>
                 <label for="store-toggle-prostor" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--prostor" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-prostor"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-beauty" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-beauty"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Prostor</span>
                     <span class="store-toggle-program">PROSTOR club</span>
@@ -662,9 +768,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-avrora" class="store-toggle-input" value="avrora" checked>
                 <label for="store-toggle-avrora" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--avrora" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-avrora"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-home" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-home"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Аврора Мультимаркет</span>
                     <span class="store-toggle-program">Аврора Бонус</span>
@@ -677,9 +785,11 @@
               <div class="store-toggle-card">
                 <input type="checkbox" id="store-toggle-epicentr" class="store-toggle-input" value="epicentr" checked>
                 <label for="store-toggle-epicentr" class="store-toggle-label">
-                  <svg class="icon store-modal-logo store-pill--epicentr" aria-hidden="true">
-                    <use href="assets/sprite.svg#logo-epicentr"></use>
-                  </svg>
+                  <span class="store-modal-icon-box cat-home" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-home"></use>
+                    </svg>
+                  </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Епіцентр К</span>
                     <span class="store-toggle-program">Вигода</span>
@@ -702,46 +812,28 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-top">
-        <div class="footer-brand">
-          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
-          <span class="brand-name">AURELIA UA</span>
+        <div class="footer-brand-col">
+          <div class="footer-brand">
+            <span class="brand-name">AURELIA UA</span>
+            <span class="brand-dot" aria-hidden="true"></span>
+          </div>
+          <p class="footer-desc">Єдиний простір цін та лояльності українського ритейлу. Архітектурна дисципліна цифрового шопінгу з підтримкою PWA Offline.</p>
         </div>
-        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
-      </div>
 
-      <div class="footer-links-grid">
-        <div>
-          <h3 class="footer-heading">Мережі</h3>
-          <ul class="footer-list">
-            <li><a href="catalog.html">Сільпо</a></li>
-            <li><a href="catalog.html">АТБ-Маркет</a></li>
-            <li><a href="catalog.html">NOVUS</a></li>
-            <li><a href="catalog.html">VARUS</a></li>
-            <li><a href="catalog.html">METRO</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Навігація</h3>
-          <ul class="footer-list">
-            <li><a href="index.html">Мої картки</a></li>
-            <li><a href="catalog.html">Каталог акцій</a></li>
-            <li><a href="basket.html">Кошик порівняння</a></li>
-            <li><a href="admin.html">Адміністративна зона</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Інформація</h3>
-          <ul class="footer-list">
-            <li><a href="404.html">Довідка та статус</a></li>
-            <li><a href="index.html">Політика конфіденційності</a></li>
-            <li><a href="index.html">Умови використання</a></li>
-          </ul>
+        <div class="footer-status-badges">
+          <span class="footer-badge">Івано-Франківськ · Україна</span>
+          <span class="footer-badge">Всі ціни вказані в гривнях (₴)</span>
         </div>
       </div>
 
       <div class="footer-bottom">
         <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
-        <p>Підтримка автономного режиму PWA Offline.</p>
+        <nav class="footer-inline-nav" aria-label="Навігація у підвалі">
+          <a href="index.html">Гаманець</a>
+          <a href="catalog.html">Ціни та Акції</a>
+          <a href="basket.html">Розумний Кошик</a>
+          <a href="admin.html">Адмін-панель</a>
+        </nav>
       </div>
     </div>
   </footer>

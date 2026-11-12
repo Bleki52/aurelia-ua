@@ -180,32 +180,39 @@
 
   const CORE_STORE_IDS = ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan'];
 
-  const STORE_META = {
-    // 1. Національні супермаркети
-    silpo:           { name: 'Сільпо', program: 'Власний Рахунок', logo: 'logo-silpo', cluster: 'national', badgeText: 'балів' },
-    atb:             { name: 'АТБ-Маркет', program: 'Картка АТБ', logo: 'logo-atb', cluster: 'national', badgeText: 'знижка' },
-    novus:           { name: 'NOVUS', program: 'Ваша Картка', logo: 'logo-novus', cluster: 'national', badgeText: 'бонусів' },
-    metro:           { name: 'METRO', program: 'METRO Club', logo: 'logo-metro', cluster: 'national', badgeText: 'клуб' },
-    varus:           { name: 'VARUS', program: 'VARUS Poshuk', logo: 'logo-varus', cluster: 'national', badgeText: 'бонусів' },
-    auchan:          { name: 'АШАН', program: 'Auchan Club', logo: 'logo-auchan', cluster: 'national', badgeText: 'бонусів' },
-    epicentrk_food:  { name: 'Епіцентр Food', program: 'Food Market', logo: 'logo-epicentrk-food', cluster: 'national', badgeText: 'балів' },
-    velmart:         { name: 'Велмарт', program: 'Велмарт Клуб', logo: 'logo-velmart', cluster: 'national', badgeText: 'бонусів' },
+  const CATEGORY_META = {
+    groceries: { key: 'groceries', icon: 'cat-groceries', label: 'Продукти' },
+    beauty:    { key: 'beauty',    icon: 'cat-beauty',    label: 'Краса та Гігієна' },
+    home:      { key: 'home',      icon: 'cat-home',      label: 'Дім та Побут' },
+    pets:      { key: 'pets',      icon: 'cat-pets',      label: 'Зоотовари' }
+  };
 
-    // 2. Локальні та біля дому
-    thrash:          { name: 'Траш! (Thrash!)', program: 'Траш Клуб', logo: 'logo-thrash', cluster: 'local', badgeText: 'балів' },
-    simi:            { name: 'Сімі', program: 'Сімі Клуб', logo: 'logo-simi', cluster: 'local', badgeText: 'бонусів' },
-    blyzenko:        { name: 'Близенько', program: 'Близенько Поруч', logo: 'logo-blyzenko', cluster: 'local', badgeText: 'знижка' },
-    taistra:         { name: 'Тайстра', program: 'Тайстра Клуб', logo: 'logo-taistra', cluster: 'local', badgeText: 'балів' },
-    arsen:           { name: 'Арсен', program: 'Арсен Сім’я', logo: 'logo-arsen', cluster: 'local', badgeText: 'бонусів' },
-    rukavychka:      { name: 'Рукавичка', program: 'Родина Рукавичка', logo: 'logo-rukavychka', cluster: 'local', badgeText: 'бонусів' },
+  const STORE_META = {
+    // 1. Національні супермаркети (Продукти)
+    silpo:           { name: 'Сільпо', program: 'Власний Рахунок', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'балів' },
+    atb:             { name: 'АТБ-Маркет', program: 'Картка АТБ', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'знижка' },
+    novus:           { name: 'NOVUS', program: 'Ваша Картка', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+    metro:           { name: 'METRO', program: 'METRO Club', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'клуб' },
+    varus:           { name: 'VARUS', program: 'VARUS Poshuk', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+    auchan:          { name: 'АШАН', program: 'Auchan Club', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+    epicentrk_food:  { name: 'Епіцентр Food', program: 'Food Market', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'балів' },
+    velmart:         { name: 'Велмарт', program: 'Велмарт Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+
+    // 2. Локальні та біля дому (Продукти)
+    thrash:          { name: 'Траш! (Thrash!)', program: 'Траш Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
+    simi:            { name: 'Сімі', program: 'Сімі Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
+    blyzenko:        { name: 'Близенько', program: 'Близенько Поруч', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'знижка' },
+    taistra:         { name: 'Тайстра', program: 'Тайстра Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
+    arsen:           { name: 'Арсен', program: 'Арсен Сім’я', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
+    rukavychka:      { name: 'Рукавичка', program: 'Родина Рукавичка', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
 
     // 3. Краса, Дім та Щоденні
-    eva:             { name: 'EVA', program: 'EVA Мозаїка', logo: 'logo-eva', cluster: 'daily', badgeText: 'мозаїка' },
-    prostor:         { name: 'Prostor', program: 'Prostor Club', logo: 'logo-prostor', cluster: 'daily', badgeText: 'бонусів' },
-    avrora:          { name: 'Аврора', program: 'Аврора Мультимаркет', logo: 'logo-avrora', cluster: 'daily', badgeText: 'знижки' },
-    epicentr:        { name: 'Епіцентр', program: 'Вигода', logo: 'logo-epicentr', cluster: 'daily', badgeText: 'балів' },
+    eva:             { name: 'EVA', program: 'EVA Мозаїка', categoryKey: 'beauty', logo: 'cat-beauty', cluster: 'daily', badgeText: 'мозаїка' },
+    prostor:         { name: 'Prostor', program: 'Prostor Club', categoryKey: 'beauty', logo: 'cat-beauty', cluster: 'daily', badgeText: 'бонусів' },
+    avrora:          { name: 'Аврора', program: 'Аврора Мультимаркет', categoryKey: 'home', logo: 'cat-home', cluster: 'daily', badgeText: 'знижки' },
+    epicentr:        { name: 'Епіцентр', program: 'Вигода', categoryKey: 'home', logo: 'cat-home', cluster: 'daily', badgeText: 'балів' },
 
-    other:           { name: 'Інша мережа', program: 'Картка лояльності', logo: 'icon-qr', cluster: 'local', badgeText: 'картка' }
+    other:           { name: 'Інша мережа', program: 'Картка лояльності', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'картка' }
   };
 
   function getSelectedStores() {
@@ -268,7 +275,8 @@
       note: '142.50 балів',
       privilegeBadge: 'Преміум гість',
       format: 'qr',
-      logo: 'logo-silpo',
+      categoryKey: 'groceries',
+      logo: 'cat-groceries',
       createdAt: '2026-10-19T10:00:00.000Z'
     },
     {
@@ -281,7 +289,8 @@
       note: 'Знижка до 5%',
       privilegeBadge: 'Екстра Знижка',
       format: 'barcode',
-      logo: 'logo-atb',
+      categoryKey: 'groceries',
+      logo: 'cat-groceries',
       createdAt: '2026-10-19T10:05:00.000Z'
     },
     {
@@ -294,7 +303,8 @@
       note: '85.00 грн бонусів',
       privilegeBadge: 'VIP Покупець',
       format: 'qr',
-      logo: 'logo-novus',
+      categoryKey: 'groceries',
+      logo: 'cat-groceries',
       createdAt: '2026-10-19T10:10:00.000Z'
     },
     {
@@ -307,7 +317,8 @@
       note: '230 бонусів',
       privilegeBadge: 'VARUS Family',
       format: 'barcode',
-      logo: 'logo-varus',
+      categoryKey: 'groceries',
+      logo: 'cat-groceries',
       createdAt: '2026-10-19T10:15:00.000Z'
     },
     {
@@ -320,7 +331,8 @@
       note: 'Партнерська ціна',
       privilegeBadge: 'Бізнес Клієнт',
       format: 'qr',
-      logo: 'logo-metro',
+      categoryKey: 'groceries',
+      logo: 'cat-groceries',
       createdAt: '2026-10-19T10:20:00.000Z'
     },
     {
@@ -333,7 +345,8 @@
       note: '315 бонусів',
       privilegeBadge: 'Преміум Клуб',
       format: 'qr',
-      logo: 'logo-eva',
+      categoryKey: 'beauty',
+      logo: 'cat-beauty',
       createdAt: '2026-10-19T10:25:00.000Z'
     },
     {
@@ -346,7 +359,8 @@
       note: '180 балів',
       privilegeBadge: 'Майстер',
       format: 'barcode',
-      logo: 'logo-epicentr',
+      categoryKey: 'home',
+      logo: 'cat-home',
       createdAt: '2026-10-19T10:30:00.000Z'
     }
   ];
@@ -1487,6 +1501,7 @@
     logout,
     getCurrentUser,
     // Store Personalization & Taxonomy
+    CATEGORY_META,
     STORE_CLUSTERS,
     STORE_META,
     ALL_STORE_IDS,

@@ -5,8 +5,8 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'aurelia-ua-v5';
-const RUNTIME_API_CACHE = 'aurelia-ua-api-v5';
+const CACHE_NAME = 'aurelia-ua-v8';
+const RUNTIME_API_CACHE = 'aurelia-ua-api-v8';
 
 const PRECACHE_ASSETS = [
   './',

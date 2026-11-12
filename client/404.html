@@ -8,8 +8,11 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090B">
+  <meta name="theme-color" content="#0B0B0D">
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -24,9 +27,9 @@
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
-        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
         <span class="brand-name">AURELIA</span>
         <span class="brand-tag">UA</span>
+        <span class="brand-dot" aria-hidden="true"></span>
       </a>
 
       <nav class="nav-desktop nav-menu" aria-label="Основна навігація">
@@ -148,46 +151,28 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-top">
-        <div class="footer-brand">
-          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
-          <span class="brand-name">AURELIA UA</span>
+        <div class="footer-brand-col">
+          <div class="footer-brand">
+            <span class="brand-name">AURELIA UA</span>
+            <span class="brand-dot" aria-hidden="true"></span>
+          </div>
+          <p class="footer-desc">Єдиний простір цін та лояльності українського ритейлу. Архітектурна дисципліна цифрового шопінгу з підтримкою PWA Offline.</p>
         </div>
-        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
-      </div>
 
-      <div class="footer-links-grid">
-        <div>
-          <h3 class="footer-heading">Мережі</h3>
-          <ul class="footer-list">
-            <li><a href="catalog.html">Сільпо</a></li>
-            <li><a href="catalog.html">АТБ-Маркет</a></li>
-            <li><a href="catalog.html">NOVUS</a></li>
-            <li><a href="catalog.html">VARUS</a></li>
-            <li><a href="catalog.html">METRO</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Навігація</h3>
-          <ul class="footer-list">
-            <li><a href="index.html">Мої картки</a></li>
-            <li><a href="catalog.html">Каталог акцій</a></li>
-            <li><a href="basket.html">Кошик порівняння</a></li>
-            <li><a href="admin.html">Адміністративна зона</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Інформація</h3>
-          <ul class="footer-list">
-            <li><a href="404.html">Довідка та статус</a></li>
-            <li><a href="index.html">Політика конфіденційності</a></li>
-            <li><a href="index.html">Умови використання</a></li>
-          </ul>
+        <div class="footer-status-badges">
+          <span class="footer-badge">Івано-Франківськ · Україна</span>
+          <span class="footer-badge">Всі ціни вказані в гривнях (₴)</span>
         </div>
       </div>
 
       <div class="footer-bottom">
         <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
-        <p>Підтримка автономного режиму PWA Offline.</p>
+        <nav class="footer-inline-nav" aria-label="Навігація у підвалі">
+          <a href="index.html">Гаманець</a>
+          <a href="catalog.html">Ціни та Акції</a>
+          <a href="basket.html">Розумний Кошик</a>
+          <a href="admin.html">Адмін-панель</a>
+        </nav>
       </div>
     </div>
   </footer>

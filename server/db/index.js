@@ -1245,8 +1245,22 @@ async function syncProducts(scrapedProducts, city) {
   return getProducts({ city });
 }
 
+async function closeDatabase() {
+  if (pgPool) {
+    try {
+      await pgPool.end();
+    } catch (_) {}
+    pgPool = null;
+    isPostgres = false;
+  }
+}
+
 module.exports = {
   initDatabase,
+  closeDatabase,
+  get pool() {
+    return pgPool;
+  },
   query: (text, params) => (isPostgres ? pgPool.query(text, params) : null),
   isPostgresConnected: () => isPostgres,
   getLocalStorePath: () => LOCAL_STORE_PATH,

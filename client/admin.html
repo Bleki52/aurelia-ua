@@ -8,8 +8,11 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090B">
+  <meta name="theme-color" content="#0B0B0D">
   <script src="js/api.js" defer></script>
   <script src="js/app.js" defer></script>
   <script src="js/admin.js" defer></script>
@@ -26,9 +29,9 @@
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <a href="index.html" class="brand-link" aria-label="AURELIA UA Головна сторінка">
-        <img src="assets/favicon.svg" alt="Логотип AURELIA UA" width="34" height="34" class="brand-logo-img">
         <span class="brand-name">AURELIA</span>
         <span class="brand-tag">ADMIN</span>
+        <span class="brand-dot" aria-hidden="true"></span>
       </a>
 
       <nav class="nav-desktop nav-menu" aria-label="Основна навігація">
@@ -133,6 +136,7 @@
   <!-- Основний контент -->
   <main id="main-content">
     <div class="page-header reveal-item">
+      <p class="page-kicker">Адміністративний реєстр · Керування базою</p>
       <h1>Адміністративна панель AURELIA UA</h1>
       <p class="page-subtitle">Керування каталогом акційних товарів та актуалізація цін за мережами супермаркетів</p>
     </div>
@@ -310,8 +314,8 @@
             <!-- Сільпо -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-silpo"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Сільпо</span>
               </legend>
@@ -334,8 +338,8 @@
             <!-- АТБ -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-atb"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>АТБ-Маркет</span>
               </legend>
@@ -358,8 +362,8 @@
             <!-- NOVUS -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-novus"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>NOVUS</span>
               </legend>
@@ -382,8 +386,8 @@
             <!-- METRO -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-metro"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>METRO</span>
               </legend>
@@ -406,8 +410,8 @@
             <!-- VARUS -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-varus"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>VARUS</span>
               </legend>
@@ -430,8 +434,8 @@
             <!-- АШАН -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-auchan"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>АШАН</span>
               </legend>
@@ -454,8 +458,8 @@
             <!-- Епіцентр Food -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-epicentrk_food"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Епіцентр Food</span>
               </legend>
@@ -478,8 +482,8 @@
             <!-- Велмарт -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-velmart"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Велмарт</span>
               </legend>
@@ -508,8 +512,8 @@
             <!-- Траш! -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-thrash"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Траш! ТРАШ!</span>
               </legend>
@@ -532,8 +536,8 @@
             <!-- Сімі -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-simi"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Сімі</span>
               </legend>
@@ -556,8 +560,8 @@
             <!-- Близенько -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-blyzenko"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Близенько</span>
               </legend>
@@ -580,8 +584,8 @@
             <!-- Тайстра -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-taistra"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Тайстра</span>
               </legend>
@@ -604,8 +608,8 @@
             <!-- Арсен -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-arsen"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Арсен</span>
               </legend>
@@ -628,8 +632,8 @@
             <!-- Рукавичка -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-rukavychka"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
                 </svg>
                 <span>Рукавичка</span>
               </legend>
@@ -658,8 +662,8 @@
             <!-- EVA -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-eva"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-beauty"></use>
                 </svg>
                 <span>EVA</span>
               </legend>
@@ -682,8 +686,8 @@
             <!-- Prostor -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-prostor"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-beauty"></use>
                 </svg>
                 <span>Prostor</span>
               </legend>
@@ -706,8 +710,8 @@
             <!-- Аврора -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-avrora"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-home"></use>
                 </svg>
                 <span>Аврора Мультимаркет</span>
               </legend>
@@ -730,8 +734,8 @@
             <!-- Епіцентр К -->
             <fieldset class="admin-store-price-card">
               <legend class="admin-store-legend">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#logo-epicentr"></use>
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-home"></use>
                 </svg>
                 <span>Епіцентр К</span>
               </legend>
@@ -765,46 +769,28 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-top">
-        <div class="footer-brand">
-          <img src="assets/favicon.svg" alt="" width="28" height="28" role="presentation">
-          <span class="brand-name">AURELIA UA</span>
+        <div class="footer-brand-col">
+          <div class="footer-brand">
+            <span class="brand-name">AURELIA UA</span>
+            <span class="brand-dot" aria-hidden="true"></span>
+          </div>
+          <p class="footer-desc">Єдиний простір цін та лояльності українського ритейлу. Архітектурна дисципліна цифрового шопінгу з підтримкою PWA Offline.</p>
         </div>
-        <p class="footer-desc">Мобільний прогресивний вебдодаток (PWA) для зберігання карток лояльності та зручного порівняння знижок українських продуктових мереж.</p>
-      </div>
 
-      <div class="footer-links-grid">
-        <div>
-          <h3 class="footer-heading">Мережі</h3>
-          <ul class="footer-list">
-            <li><a href="catalog.html">Сільпо</a></li>
-            <li><a href="catalog.html">АТБ-Маркет</a></li>
-            <li><a href="catalog.html">NOVUS</a></li>
-            <li><a href="catalog.html">VARUS</a></li>
-            <li><a href="catalog.html">METRO</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Навігація</h3>
-          <ul class="footer-list">
-            <li><a href="index.html">Мої картки</a></li>
-            <li><a href="catalog.html">Каталог акцій</a></li>
-            <li><a href="basket.html">Кошик порівняння</a></li>
-            <li><a href="admin.html">Адміністративна зона</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer-heading">Інформація</h3>
-          <ul class="footer-list">
-            <li><a href="404.html">Довідка та статус</a></li>
-            <li><a href="index.html">Політика конфіденційності</a></li>
-            <li><a href="index.html">Умови використання</a></li>
-          </ul>
+        <div class="footer-status-badges">
+          <span class="footer-badge">Адміністративна консоль</span>
+          <span class="footer-badge">Всі ціни вказані в гривнях (₴)</span>
         </div>
       </div>
 
       <div class="footer-bottom">
         <p>© 2026 AURELIA UA. Всі права захищено. Створено згідно вимог курсового проєкту.</p>
-        <p>Підтримка автономного режиму PWA Offline.</p>
+        <nav class="footer-inline-nav" aria-label="Навігація у підвалі">
+          <a href="index.html">Гаманець</a>
+          <a href="catalog.html">Ціни та Акції</a>
+          <a href="basket.html">Розумний Кошик</a>
+          <a href="admin.html">Адмін-панель</a>
+        </nav>
       </div>
     </div>
   </footer>

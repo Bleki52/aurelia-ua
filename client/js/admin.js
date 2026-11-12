@@ -273,10 +273,11 @@
               ${prices.length === 0 ? '<span class="file-hint">Немає цін</span>' : prices.map(p => {
                 const isMin = Math.abs(p.price - minPrice) < 0.01;
                 const storeLabel = STORE_NAMES[p.store] || p.store;
+                const catIcon = (window.AureliaAPI?.STORE_META?.[p.store]?.logo) || 'cat-groceries';
                 return `
                   <span class="admin-price-chip ${isMin ? 'is-best' : ''}" title="${storeLabel}: ${p.price.toFixed(2)} грн">
-                    <svg class="icon icon-xs" aria-hidden="true">
-                      <use href="assets/sprite.svg#logo-${p.store}"></use>
+                    <svg class="icon icon-stroke icon-xs" aria-hidden="true">
+                      <use href="assets/sprite.svg#${catIcon}"></use>
                     </svg>
                     <span>${storeLabel}: <strong>${p.price.toFixed(2)} ₴</strong></span>
                     ${isMin ? '<span class="best-star" aria-label="Найнижча ціна">★</span>' : ''}

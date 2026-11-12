@@ -33,27 +33,62 @@
   }
 
   /* ─── 1. State Management & Constants ───────────────────────────────────── */
-  const STORE_META = (window.AureliaAPI && window.AureliaAPI.STORE_META) || {
-    silpo:          { name: 'Сільпо', program: 'Власний Рахунок', logo: 'logo-silpo', badgeText: 'балів' },
-    atb:            { name: 'АТБ-Маркет', program: 'Картка АТБ', logo: 'logo-atb', badgeText: 'знижка' },
-    novus:          { name: 'NOVUS', program: 'NOVUS Club', logo: 'logo-novus', badgeText: 'бонусів' },
-    metro:          { name: 'METRO', program: 'METRO Card', logo: 'logo-metro', badgeText: 'клуб' },
-    varus:          { name: 'VARUS', program: 'VARUS Poshuk', logo: 'logo-varus', badgeText: 'бонусів' },
-    auchan:         { name: 'АШАН', program: 'Auchan Club', logo: 'logo-auchan', badgeText: 'бонусів' },
-    epicentrk_food: { name: 'Епіцентр Food', program: 'Вигода', logo: 'logo-epicentrk_food', badgeText: 'балів' },
-    velmart:        { name: 'Велмарт', program: 'Велмарт Бонус', logo: 'logo-velmart', badgeText: 'бонусів' },
-    thrash:         { name: 'Траш! ТРАШ!', program: 'Власний Рахунок', logo: 'logo-thrash', badgeText: 'балів' },
-    simi:           { name: 'Сімі', program: 'Сімі Клуб', logo: 'logo-simi', badgeText: 'бонусів' },
-    blyzenko:       { name: 'Близенько', program: 'Близенько Разом', logo: 'logo-blyzenko', badgeText: 'бонусів' },
-    taistra:        { name: 'Тайстра', program: 'Тайстра Бонус', logo: 'logo-taistra', badgeText: 'бонусів' },
-    arsen:          { name: 'Арсен', program: 'Пакко Бонус', logo: 'logo-arsen', badgeText: 'бонусів' },
-    rukavychka:     { name: 'Рукавичка', program: 'Родина Рукавичка', logo: 'logo-rukavychka', badgeText: 'бонусів' },
-    eva:            { name: 'EVA', program: 'EVA МОЗАЇКА', logo: 'logo-eva', badgeText: 'бонусів' },
-    prostor:        { name: 'Prostor', program: 'PROSTOR club', logo: 'logo-prostor', badgeText: 'бонусів' },
-    avrora:         { name: 'Аврора Мультимаркет', program: 'Аврора Бонус', logo: 'logo-avrora', badgeText: 'бонусів' },
-    epicentr:       { name: 'Епіцентр К', program: 'Вигода', logo: 'logo-epicentr', badgeText: 'балів' },
-    other:          { name: 'Мережа', program: 'Картка лояльності', logo: 'icon-qr', badgeText: 'картка' }
+  const CATEGORY_META = (window.AureliaAPI && window.AureliaAPI.CATEGORY_META) || {
+    groceries: { key: 'groceries', icon: 'cat-groceries', label: 'Продукти' },
+    beauty:    { key: 'beauty',    icon: 'cat-beauty',    label: 'Краса та Гігієна' },
+    home:      { key: 'home',      icon: 'cat-home',      label: 'Дім та Побут' },
+    pets:      { key: 'pets',      icon: 'cat-pets',      label: 'Зоотовари' }
   };
+
+  const STORE_META = (window.AureliaAPI && window.AureliaAPI.STORE_META) || {
+    silpo:          { name: 'Сільпо', program: 'Власний Рахунок', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'балів' },
+    atb:            { name: 'АТБ-Маркет', program: 'Картка АТБ', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'знижка' },
+    novus:          { name: 'NOVUS', program: 'NOVUS Club', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    metro:          { name: 'METRO', program: 'METRO Card', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'клуб' },
+    varus:          { name: 'VARUS', program: 'VARUS Poshuk', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    auchan:         { name: 'АШАН', program: 'Auchan Club', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    epicentrk_food: { name: 'Епіцентр Food', program: 'Вигода', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'балів' },
+    velmart:        { name: 'Велмарт', program: 'Велмарт Бонус', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    thrash:         { name: 'Траш! ТРАШ!', program: 'Власний Рахунок', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'балів' },
+    simi:           { name: 'Сімі', program: 'Сімі Клуб', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    blyzenko:       { name: 'Близенько', program: 'Близенько Разом', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    taistra:        { name: 'Тайстра', program: 'Тайстра Бонус', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    arsen:          { name: 'Арсен', program: 'Пакко Бонус', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    rukavychka:     { name: 'Рукавичка', program: 'Родина Рукавичка', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'бонусів' },
+    eva:            { name: 'EVA', program: 'EVA МОЗАЇКА', categoryKey: 'beauty', logo: 'cat-beauty', badgeText: 'бонусів' },
+    prostor:        { name: 'Prostor', program: 'PROSTOR club', categoryKey: 'beauty', logo: 'cat-beauty', badgeText: 'бонусів' },
+    avrora:         { name: 'Аврора Мультимаркет', program: 'Аврора Бонус', categoryKey: 'home', logo: 'cat-home', badgeText: 'бонусів' },
+    epicentr:       { name: 'Епіцентр К', program: 'Вигода', categoryKey: 'home', logo: 'cat-home', badgeText: 'балів' },
+    other:          { name: 'Мережа', program: 'Картка лояльності', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'картка' }
+  };
+
+  function resolveEntityCategory(entity) {
+    if (!entity) return CATEGORY_META.groceries;
+    const explicitKey = entity.categoryKey || entity.category_key;
+    if (explicitKey && CATEGORY_META[explicitKey]) {
+      return CATEGORY_META[explicitKey];
+    }
+    const rawCat = String(
+      entity.mainCategory || entity.main_category || entity.category || entity.subCategory || ''
+    ).toLowerCase();
+    if (rawCat.includes('краса') || rawCat.includes('гігієн') || rawCat.includes('догляд') || rawCat.includes('шкір') || rawCat.includes('волос') || rawCat.includes('космет') || rawCat === 'beauty') {
+      return CATEGORY_META.beauty;
+    }
+    if (rawCat.includes('дім') || rawCat.includes('побут') || rawCat.includes('осел') || rawCat.includes('хімі') || rawCat.includes('кухн') || rawCat === 'home') {
+      return CATEGORY_META.home;
+    }
+    if (rawCat.includes('зоо') || rawCat.includes('кіт') || rawCat.includes('кот') || rawCat.includes('собак') || rawCat === 'pets') {
+      return CATEGORY_META.pets;
+    }
+    if (rawCat.includes('продукт') || rawCat === 'groceries') {
+      return CATEGORY_META.groceries;
+    }
+    const meta = entity.store ? (STORE_META[entity.store] || STORE_META.other) : null;
+    if (meta && meta.categoryKey && CATEGORY_META[meta.categoryKey]) {
+      return CATEGORY_META[meta.categoryKey];
+    }
+    return CATEGORY_META.groceries;
+  }
 
   const STORES = Object.keys(STORE_META).filter(s => s !== 'other');
 
@@ -99,6 +134,7 @@
     editingCardId: null,
     uploadedScreenshotUrl: null,
     filterStore: 'all',
+    filterCategory: 'all',
     searchQuery: '',
     cards: [],
     // City State (Default: Ivano-Frankivsk)
@@ -174,7 +210,7 @@
     DOM.cardsContainer = document.getElementById('wallet-cards-container');
     DOM.btnAddCard = document.getElementById('btn-add-card');
     DOM.cardSearchInput = document.getElementById('card-search-input');
-    DOM.cardFilterBtns = document.querySelectorAll('.filter-bar .filter-btn[data-store]');
+    DOM.cardFilterBtns = document.querySelectorAll('.filter-bar .filter-btn[data-cat], .filter-bar .filter-btn[data-store]');
 
     // Catalog 2-Level & Filter Elements (catalog.html)
     DOM.catalogContainer = document.getElementById('catalog-products-container');
@@ -747,7 +783,9 @@
 
     let filtered = AppState.cards;
 
-    if (AppState.filterStore !== 'all') {
+    if (AppState.filterCategory && AppState.filterCategory !== 'all') {
+      filtered = filtered.filter(c => resolveEntityCategory(c).key === AppState.filterCategory);
+    } else if (AppState.filterStore !== 'all') {
       filtered = filtered.filter(c => c.store === AppState.filterStore);
     }
 
@@ -784,46 +822,67 @@
 
     DOM.cardsContainer.innerHTML = filtered.map(card => {
       const meta = STORE_META[card.store] || STORE_META.other;
-      const logoSymbol = meta.logo;
+      const catMeta = resolveEntityCategory(card);
       const numStr = String(card.number || card.card_number || '');
       const formattedNumber = numStr.replace(/(\d{4})/g, '$1 ').trim();
       const actionIcon = card.format === 'barcode' ? 'icon-barcode' : 'icon-qr';
+      const scanHint = card.format === 'barcode' ? 'Торкніться для показу коду' : 'Торкніться для показу QR';
 
       return `
-        <article class="loyalty-card reveal-item is-visible" data-store="${card.store}" data-card-id="${card.id}">
-          <div class="card-top">
-            <div class="card-brand">
-              <svg class="store-badge-icon" aria-hidden="true">
-                <use href="assets/sprite.svg#${logoSymbol}"></use>
-              </svg>
-              <div class="card-title-group">
-                <h3 class="card-store-name">${card.storeName || meta.name}</h3>
-                <span class="card-program-name">${card.program || meta.program}</span>
+        <article class="loyalty-card reveal-item is-visible" data-store="${card.store}" data-cat="${catMeta.key}" data-card-id="${card.id}">
+          <div class="card-body-stack">
+            <div class="card-top">
+              <div class="card-brand">
+                <div class="card-title-group">
+                  <span class="card-category-tag">
+                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
+                      <use href="assets/sprite.svg#${catMeta.icon}"></use>
+                    </svg>
+                    <span>${catMeta.label} · ${card.program || meta.program}</span>
+                  </span>
+                  <h3 class="card-store-name">${card.storeName || meta.name}</h3>
+                </div>
               </div>
+              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="${card.id}" aria-label="Показати на касі ${card.storeName || meta.name}" title="Торкніться для відкриття QR">
+                <svg class="icon" aria-hidden="true">
+                  <use href="assets/sprite.svg#${actionIcon}"></use>
+                </svg>
+              </button>
             </div>
-            ${card.note ? `<span class="card-bonuses-badge">${card.note}</span>` : ''}
-          </div>
 
-          <div class="card-number-wrapper">
-            <span class="card-number-label">Номер картки / QR</span>
-            <div class="card-number-code">${formattedNumber}</div>
+            <div class="card-number-wrapper">
+              <span class="card-number-label">№ картки</span>
+              <div class="card-number-code">${formattedNumber}</div>
+            </div>
+
+            <div class="card-note-box">
+              <div class="card-note-header">
+                <span class="card-note-label">Особиста примітка / Баланс</span>
+                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="${card.id}" aria-label="Редагувати картку ${card.storeName || meta.name}">
+                  <span>Редагувати</span>
+                  <svg class="icon icon-xs" aria-hidden="true">
+                    <use href="assets/sprite.svg#icon-edit"></use>
+                  </svg>
+                </button>
+              </div>
+              <p class="card-note-text">${card.note || 'Торкніться «Редагувати», щоб додати баланс або купон.'}</p>
+            </div>
           </div>
 
           <div class="card-actions">
-            <button type="button" class="btn-card-scan" data-action="scan" data-card-id="${card.id}" aria-label="Показати на касі ${card.storeName || meta.name}">
-              <svg class="icon" aria-hidden="true">
+            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="${card.id}" aria-label="Показати на касі ${card.storeName || meta.name}">
+              <svg class="icon icon-sm" aria-hidden="true">
                 <use href="assets/sprite.svg#${actionIcon}"></use>
               </svg>
-              <span>Показати на касі</span>
+              <span>${scanHint}</span>
             </button>
             <div class="card-action-group">
-              <button type="button" class="btn-icon" data-action="edit" data-card-id="${card.id}" aria-label="Редагувати картку ${card.storeName || meta.name}">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-edit"></use>
-                </svg>
+              <button type="button" class="btn-card-open" data-action="scan" data-card-id="${card.id}">
+                <span>Відкрити</span>
+                <span aria-hidden="true">›</span>
               </button>
-              <button type="button" class="btn-icon" data-action="delete" data-card-id="${card.id}" aria-label="Видалити картку ${card.storeName || meta.name}">
-                <svg class="icon icon-sm" aria-hidden="true">
+              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="${card.id}" aria-label="Видалити картку ${card.storeName || meta.name}">
+                <svg class="icon icon-xs" aria-hidden="true">
                   <use href="assets/sprite.svg#icon-trash"></use>
                 </svg>
               </button>
@@ -838,6 +897,15 @@
 
   function bindCardActionButtons() {
     if (!DOM.cardsContainer) return;
+
+    DOM.cardsContainer.querySelectorAll('.loyalty-card').forEach(cardEl => {
+      cardEl.addEventListener('click', (e) => {
+        if (e.target.closest('button, a')) return;
+        const id = cardEl.dataset.cardId;
+        const card = AppState.cards.find(c => String(c.id) === String(id));
+        if (card) openCheckoutModal(card);
+      });
+    });
 
     DOM.cardsContainer.querySelectorAll('[data-action="scan"]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -991,7 +1059,13 @@
         btn.addEventListener('click', () => {
           DOM.cardFilterBtns.forEach(b => b.classList.remove('is-active'));
           btn.classList.add('is-active');
-          AppState.filterStore = btn.dataset.store || 'all';
+          if (btn.dataset.cat) {
+            AppState.filterCategory = btn.dataset.cat;
+            AppState.filterStore = 'all';
+          } else {
+            AppState.filterStore = btn.dataset.store || 'all';
+            AppState.filterCategory = 'all';
+          }
           renderCards();
         });
       });
@@ -1313,14 +1387,24 @@
         maxDiscount = 0;
       }
 
-      // Build store comparison rows ONLY for stores that actually returned the item
+      // Build store comparison tiles ONLY for stores that actually returned the item
+      const numericPricesForRange = priceEntries.map(e => parseFloat(e.price)).filter(p => !isNaN(p) && p > 0);
+      const maxPrice = numericPricesForRange.length > 1 ? Math.max(...numericPricesForRange) : 0;
+      const spreadSavings = (maxPrice > minPrice && minPrice > 0) ? (maxPrice - minPrice) : 0;
+
+      const prodCat = resolveEntityCategory(prod);
+
       const storesHtml = priceEntries.length > 0 ? priceEntries.map(entry => {
         const s = entry.store;
         const p = parseFloat(entry.price) || 0;
         const rawOld = entry.oldPrice !== undefined ? entry.oldPrice : entry.old_price;
         const oldPrice = (rawOld && !isNaN(parseFloat(rawOld))) ? parseFloat(rawOld) : null;
+        const discPct = entry.discount !== undefined
+          ? Number(entry.discount) || 0
+          : (oldPrice && oldPrice > p ? Math.round(((oldPrice - p) / oldPrice) * 100) : 0);
         const isBest = minPrice > 0 && Math.abs(p - minPrice) < 0.01;
-        const meta = STORE_META[s] || { name: (s || 'Мережа').toUpperCase(), program: '', logo: 'icon-cart', badgeText: '' };
+        const meta = STORE_META[s] || { name: (s || 'Мережа').toUpperCase(), program: '', logo: 'cat-groceries', badgeText: '' };
+        const storeCat = resolveEntityCategory({ store: s });
         const verifyLink = entry.sourceUrl
           ? `<a href="${entry.sourceUrl}" class="store-verify-link" target="_blank" rel="noopener noreferrer">На сайті ↗</a>`
           : '';
@@ -1328,12 +1412,20 @@
         return `
           <div class="store-price-row ${isBest ? 'is-best' : ''}">
             <div class="store-price-brand">
-              <span class="store-pill ${s}">${meta.name}</span>
-              ${isBest && priceEntries.length > 1 ? '<span class="best-price-badge">НАЙВИГІДНІШЕ</span>' : ''}
+              <span class="store-price-brand-left cat-${storeCat.key}">
+                <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
+                  <use href="assets/sprite.svg#${storeCat.icon}"></use>
+                </svg>
+                <span class="store-tile-name">${meta.name}</span>
+              </span>
+              ${isBest && priceEntries.length > 1 ? '<span class="best-price-badge">Лідер</span>' : ''}
             </div>
             <div class="store-price-val">
-              <span>${p.toFixed(2)} грн</span>
-              ${oldPrice && oldPrice > p ? `<small class="price-old">${oldPrice.toFixed(2)}</small>` : ''}
+              <span class="store-tile-price">${p.toFixed(2)} ₴</span>
+              <span class="store-tile-old">${oldPrice && oldPrice > p ? `${oldPrice.toFixed(2)} ₴` : '—'}</span>
+            </div>
+            <div class="store-tile-foot">
+              <span class="store-tile-status">${discPct > 0 ? `-${discPct}% Акція` : (isBest ? 'Найнижча ціна' : 'Звичайна ціна')}</span>
               ${verifyLink}
             </div>
           </div>
@@ -1344,24 +1436,33 @@
       const inBasket = AppState.basket.some(item => String(item.productId) === String(prod.id));
 
       const priceCurrentHtml = minPrice > 0
-        ? `${minPrice.toFixed(2)} грн`
+        ? `${minPrice.toFixed(2)} ₴`
         : 'Уточнюється';
 
-      const displayCategory = prod.subCategory || prod.category || 'Продукти';
+      const displayCategory = prod.subCategory || prod.category || prodCat.label;
       const multiStoreBadgeHtml = priceEntries.length >= 2
-        ? `<span class="multi-store-badge">Порівняння в ${priceEntries.length} мережах</span>`
+        ? `<span class="multi-store-badge">${priceEntries.length} мережі</span>`
         : '';
 
       return `
-        <article class="product-card reveal-item is-visible" data-product-id="${prod.id}">
-          <div class="product-badge-row">
-            <span class="product-category-tag">${displayCategory}</span>
-            ${multiStoreBadgeHtml}
-            ${maxDiscount > 0 ? `<span class="discount-tag">до -${maxDiscount}%</span>` : ''}
+        <article class="product-card reveal-item is-visible" data-product-id="${prod.id}" data-cat="${prodCat.key}">
+          <div class="product-lead">
+            <div class="product-thumb-tile cat-${prodCat.key}" aria-hidden="true">
+              <svg class="icon icon-stroke product-thumb-icon" aria-hidden="true">
+                <use href="assets/sprite.svg#${prodCat.icon}"></use>
+              </svg>
+              <span class="product-unit-pill">${prod.unit || 'шт'}</span>
+            </div>
+            <div class="product-lead-body">
+              <div class="product-badge-row">
+                <span class="product-category-tag">${displayCategory}</span>
+                ${multiStoreBadgeHtml}
+                ${maxDiscount > 0 ? `<span class="discount-tag">до -${maxDiscount}%</span>` : ''}
+              </div>
+              <h3 class="product-title">${prod.title || prod.name}</h3>
+              <div class="product-unit-meta">${prodCat.label} · Одиниця: ${prod.unit || 'шт'}</div>
+            </div>
           </div>
-
-          <h3 class="product-title">${prod.title || prod.name}</h3>
-          <div class="file-hint">Одиниця: ${prod.unit || 'шт'}</div>
 
           <!-- Таблиця цін за наявними мережами -->
           <div class="product-stores-list">
@@ -1369,15 +1470,15 @@
           </div>
 
           <div class="product-price-row">
-            <div>
-              <span class="file-hint">${priceEntries.length > 1 ? 'Найкраща ціна від:' : 'Ціна:'}</span>
+            <div class="product-price-summary">
+              <span class="product-savings-label">${spreadSavings > 0 ? `Вигода: до ${spreadSavings.toFixed(2)} ₴` : (priceEntries.length > 1 ? 'Найкраща ціна від' : 'Актуальна ціна')}</span>
               <span class="price-current">${priceCurrentHtml}</span>
             </div>
             <button type="button" class="btn ${inBasket ? 'btn-secondary' : 'btn-primary'}" data-add-basket="${prod.id}">
               <svg class="icon icon-sm" aria-hidden="true">
                 <use href="assets/sprite.svg#icon-cart"></use>
               </svg>
-              <span>${inBasket ? 'У кошику ✓' : 'Додати в кошик'}</span>
+              <span>${inBasket ? 'У кошику ✓' : 'Додати'}</span>
             </button>
           </div>
         </article>
@@ -1599,13 +1700,19 @@
   function renderBasket() {
     if (!DOM.basketItemsContainer) return;
 
-    // Update count badge
+    // Update count badge & hero metric
     const totalItems = AppState.basket.reduce((sum, item) => sum + item.qty, 0);
     if (DOM.basketCountBadge) {
       DOM.basketCountBadge.textContent = totalItems;
     }
+    const heroCountEl = document.getElementById('hero-basket-count');
+    const heroSavingsEl = document.getElementById('hero-basket-savings');
+    const heroPercentEl = document.getElementById('hero-basket-percent');
+    if (heroCountEl) heroCountEl.textContent = AppState.basket.length;
 
     if (AppState.basket.length === 0) {
+      if (heroSavingsEl) heroSavingsEl.textContent = '0.00 ₴';
+      if (heroPercentEl) heroPercentEl.textContent = '0%';
       DOM.basketItemsContainer.innerHTML = `
         <div class="wallet-empty-state">
           <svg class="icon icon-lg" aria-hidden="true">
@@ -1634,7 +1741,7 @@
       return;
     }
 
-    // Render list of basket items with best available store in city
+    // Render list of basket items as Stitch architectural ledger rows
     DOM.basketItemsContainer.innerHTML = AppState.basket.map(item => {
       const prod = AppState.products.find(p => String(p.id) === String(item.productId));
       if (!prod) return '';
@@ -1643,20 +1750,38 @@
       validPrices.sort((a, b) => a.price - b.price);
 
       const best = validPrices[0];
+      const nextBest = validPrices[1];
       const minP = best ? parseFloat(best.price) : 0;
+      const oldP = (best && best.oldPrice && parseFloat(best.oldPrice) > minP) ? parseFloat(best.oldPrice) : 0;
+      const discPct = oldP > minP ? Math.round(((oldP - minP) / oldP) * 100) : 0;
       const bestStore = best ? best.store : '';
+      const prodCat = resolveEntityCategory(prod);
       const storeName = STORE_META[bestStore]?.name || bestStore;
+      const nextStoreName = nextBest ? (STORE_META[nextBest.store]?.name || nextBest.store) : '';
       const itemTotal = (minP * item.qty).toFixed(2);
+      const itemOldTotal = oldP > minP ? (oldP * item.qty).toFixed(2) : '';
 
       return `
-        <article class="basket-item reveal-item is-visible" data-basket-product="${prod.id}">
-          <div class="basket-item-main">
-            <div class="basket-item-info">
-              <h3 class="basket-item-title">${prod.title || prod.name}</h3>
-              <span class="basket-item-meta">${prod.category || prod.subCategory} • від ${minP.toFixed(2)} грн / ${prod.unit || 'шт'}${storeName ? ` (найкраща ціна у ${storeName})` : ''}</span>
+        <article class="basket-item reveal-item is-visible" data-basket-product="${prod.id}" data-cat="${prodCat.key}">
+          <div class="basket-item-lead">
+            <div class="basket-item-badge-col cat-${prodCat.key}">
+              <span class="basket-disc-chip">${discPct > 0 ? `-${discPct}%` : 'БАЗОВА'}</span>
+              <svg class="icon icon-stroke basket-cat-icon" aria-hidden="true">
+                <use href="assets/sprite.svg#${prodCat.icon}"></use>
+              </svg>
             </div>
-            <div class="basket-price-total">
-              ${itemTotal} грн
+            <div class="basket-item-info">
+              <div class="basket-item-store-row">
+                <span class="basket-store-tag">
+                  <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
+                    <use href="assets/sprite.svg#${prodCat.icon}"></use>
+                  </svg>
+                  <span>${storeName || 'Мережа'} · ${minP.toFixed(2)} ₴</span>
+                </span>
+                ${nextBest ? `<span class="basket-compare-hint">проти ${parseFloat(nextBest.price).toFixed(2)} ₴ у ${nextStoreName}</span>` : ''}
+              </div>
+              <h3 class="basket-item-title">${prod.title || prod.name}</h3>
+              <span class="basket-item-meta">${prodCat.label} · ${prod.subCategory || prod.category || ''} · ${prod.unit || 'шт'}</span>
             </div>
           </div>
 
@@ -1667,9 +1792,14 @@
               <button type="button" class="qty-btn" data-qty-change="1" data-prod-id="${prod.id}" aria-label="Збільшити кількість">+</button>
             </div>
 
-            <button type="button" class="btn-icon" data-remove-basket="${prod.id}" aria-label="Видалити ${prod.title || prod.name}">
+            <div class="basket-price-col">
+              <div class="basket-price-total">${itemTotal} ₴</div>
+              ${itemOldTotal ? `<div class="price-old">${itemOldTotal} ₴</div>` : `<div class="basket-unit-calc">${item.qty} × ${minP.toFixed(2)} ₴</div>`}
+            </div>
+
+            <button type="button" class="btn-icon-subtle" data-remove-basket="${prod.id}" aria-label="Видалити ${prod.title || prod.name}">
               <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-trash"></use>
+                <use href="assets/sprite.svg#icon-close"></use>
               </svg>
             </button>
           </div>
@@ -1772,6 +1902,11 @@
     const savingsPercent = regularTotal > 0 ? Math.round((savingsTotal / regularTotal) * 100) : 0;
     const stopsCount = routeList.length;
 
+    const heroSavingsEl = document.getElementById('hero-basket-savings');
+    const heroPercentEl = document.getElementById('hero-basket-percent');
+    if (heroSavingsEl) heroSavingsEl.textContent = `${savingsTotal.toFixed(2)} ₴`;
+    if (heroPercentEl) heroPercentEl.textContent = savingsTotal > 0 ? `-${savingsPercent}%` : '0%';
+
     if (DOM.optimalRouteContainer) {
       if (routeList.length === 0) {
         DOM.optimalRouteContainer.innerHTML = '<p class="file-hint text-center">Немає доступних цін для обраних товарів.</p>';
@@ -1803,13 +1938,17 @@
           </div>
 
           <div class="optimal-stores-list">
-            ${routeList.map(st => `
+            ${routeList.map(st => {
+              const storeCat = resolveEntityCategory({ store: st.store });
+              return `
               <div class="optimal-store-group">
                 <div class="optimal-store-header">
                   <div class="scorecard-store-group">
-                    <svg class="store-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#${st.meta.logo}"></use>
-                    </svg>
+                    <span class="store-modal-icon-box cat-${storeCat.key}" aria-hidden="true">
+                      <svg class="icon icon-stroke" aria-hidden="true">
+                        <use href="assets/sprite.svg#${storeCat.icon}"></use>
+                      </svg>
+                    </span>
                     <div>
                       <strong>${st.meta.name}</strong>
                       <div class="file-hint">${st.items.length} ${st.items.length === 1 ? 'позиція' : 'позиції'} у чеку</div>
@@ -1840,7 +1979,7 @@
                   `).join('')}
                 </ul>
               </div>
-            `).join('')}
+            `; }).join('')}
           </div>
         `;
       }
@@ -1911,13 +2050,16 @@
       const isWinner = idx === 0;
       const diff = st.total - winner.total;
       const hasAllItems = st.matchedCount === AppState.basket.length;
+      const storeCat = resolveEntityCategory({ store: st.store });
 
       return `
         <div class="scorecard-item ${isWinner ? 'is-winner' : ''}">
           <div class="scorecard-store-group">
-            <svg class="store-badge-icon" aria-hidden="true">
-              <use href="assets/sprite.svg#${st.meta.logo}"></use>
-            </svg>
+            <span class="store-modal-icon-box cat-${storeCat.key}" aria-hidden="true">
+              <svg class="icon icon-stroke" aria-hidden="true">
+                <use href="assets/sprite.svg#${storeCat.icon}"></use>
+              </svg>
+            </span>
             <div>
               <strong>${st.meta.name}</strong>
               <div class="file-hint">${st.matchedCount} з ${AppState.basket.length} позицій ${hasAllItems ? '• повний чек' : '• частковий чек'}</div>
