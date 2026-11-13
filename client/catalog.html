@@ -19,7 +19,7 @@
 <body>
   <!-- Прелоадер -->
   <div id="preloader" class="preloader" aria-hidden="true">
-    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <img src="assets/favicon.svg" alt="AURELIA UA" width="72" height="72" class="preloader-monogram">
     <p class="preloader-title">AURELIA UA</p>
     <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
   </div>
@@ -201,32 +201,32 @@
       <!-- Дворівнева навігація за категоріями -->
       <section class="nav-two-level-container" aria-label="Категорії та підкатегорії акцій">
         <!-- Рівень 1: Макрокатегорії -->
-        <div class="macro-categories-bar" id="macro-categories-bar" role="tablist" aria-label="Макрокатегорії">
-          <button type="button" class="macro-cat-btn is-active" data-main="all" role="tab" aria-selected="true">
+        <div class="macro-categories-bar" id="macro-categories-bar" role="group" aria-label="Макрокатегорії">
+          <button type="button" class="macro-cat-btn is-active" data-main="all" aria-pressed="true">
             <svg class="icon icon-stroke" aria-hidden="true">
               <use href="assets/sprite.svg#cat-all"></use>
             </svg>
             <span>Усі акції</span>
           </button>
-          <button type="button" class="macro-cat-btn" data-main="Продукти" role="tab" aria-selected="false">
+          <button type="button" class="macro-cat-btn" data-main="Продукти" aria-pressed="false">
             <svg class="icon icon-stroke" aria-hidden="true">
               <use href="assets/sprite.svg#cat-groceries"></use>
             </svg>
             <span>Продукти харчування</span>
           </button>
-          <button type="button" class="macro-cat-btn" data-main="Краса та Гігієна" role="tab" aria-selected="false">
+          <button type="button" class="macro-cat-btn" data-main="Краса та Гігієна" aria-pressed="false">
             <svg class="icon icon-stroke" aria-hidden="true">
               <use href="assets/sprite.svg#cat-beauty"></use>
             </svg>
             <span>Краса та догляд</span>
           </button>
-          <button type="button" class="macro-cat-btn" data-main="Дім та Побут" role="tab" aria-selected="false">
+          <button type="button" class="macro-cat-btn" data-main="Дім та Побут" aria-pressed="false">
             <svg class="icon icon-stroke" aria-hidden="true">
               <use href="assets/sprite.svg#cat-home"></use>
             </svg>
             <span>Товари для дому</span>
           </button>
-          <button type="button" class="macro-cat-btn" data-main="Зоотовари" role="tab" aria-selected="false">
+          <button type="button" class="macro-cat-btn" data-main="Зоотовари" aria-pressed="false">
             <svg class="icon icon-stroke" aria-hidden="true">
               <use href="assets/sprite.svg#cat-pets"></use>
             </svg>
@@ -275,7 +275,7 @@
 
     <!-- Аналітичні блоки телеметрії та перехід до кошика -->
     <section class="catalog-telemetry-grid reveal-item" aria-label="Аналітика цінового моніторингу">
-      <article class="telemetry-card">
+      <div class="telemetry-card">
         <span class="telemetry-icon-box" aria-hidden="true">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-filter"></use>
@@ -286,8 +286,8 @@
           <strong class="telemetry-value">До 24% між мережами</strong>
           <p class="telemetry-hint">У межах однієї міської локації</p>
         </div>
-      </article>
-      <article class="telemetry-card">
+      </div>
+      <div class="telemetry-card">
         <span class="telemetry-icon-box" aria-hidden="true">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-check"></use>
@@ -298,8 +298,8 @@
           <strong class="telemetry-value">Пряма телеметрія</strong>
           <p class="telemetry-hint">Дані перевірено за офіційними джерелами</p>
         </div>
-      </article>
-      <article class="telemetry-card">
+      </div>
+      <div class="telemetry-card">
         <span class="telemetry-icon-box" aria-hidden="true">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-cart"></use>
@@ -310,7 +310,7 @@
           <strong class="telemetry-value">Розумний Кошик</strong>
           <p class="telemetry-hint">Автоматичний розподіл списку покупок</p>
         </div>
-      </article>
+      </div>
     </section>
 
     <div class="catalog-basket-cta-bar reveal-item">

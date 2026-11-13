@@ -20,7 +20,7 @@
 <body>
   <!-- Прелоадер -->
   <div id="preloader" class="preloader" aria-hidden="true">
-    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <img src="assets/favicon.svg" alt="AURELIA UA" width="72" height="72" class="preloader-monogram">
     <p class="preloader-title">AURELIA UA</p>
     <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
   </div>
@@ -596,20 +596,20 @@
       </div>
 
       <div class="checkout-modal-body">
-        <div class="checkout-modes" role="tablist" aria-label="Режим відображення коду">
-          <button type="button" class="checkout-mode-btn is-active" data-mode="qr" role="tab" aria-selected="true">
+        <div class="checkout-modes" role="group" aria-label="Режим відображення коду">
+          <button type="button" class="checkout-mode-btn is-active" data-mode="qr" aria-pressed="true">
             <svg class="icon icon-sm" aria-hidden="true">
               <use href="assets/sprite.svg#icon-qr"></use>
             </svg>
             <span>QR-Код</span>
           </button>
-          <button type="button" class="checkout-mode-btn" data-mode="barcode" role="tab" aria-selected="false">
+          <button type="button" class="checkout-mode-btn" data-mode="barcode" aria-pressed="false">
             <svg class="icon icon-sm" aria-hidden="true">
               <use href="assets/sprite.svg#icon-barcode"></use>
             </svg>
             <span>Штрихкод</span>
           </button>
-          <button type="button" class="checkout-mode-btn" data-mode="screenshot" role="tab" aria-selected="false">
+          <button type="button" class="checkout-mode-btn" data-mode="screenshot" aria-pressed="false">
             <svg class="icon icon-sm" aria-hidden="true">
               <use href="assets/sprite.svg#icon-camera"></use>
             </svg>
@@ -653,7 +653,7 @@
       <form id="loyalty-card-form" class="modal-body" novalidate>
         <div class="form-group">
           <label for="card-store-select" class="form-label">Мережа супермаркетів</label>
-          <select id="card-store-select" name="store" class="form-select" required>
+          <select id="card-store-select" name="store" class="form-select">
             <option value="">Оберіть мережу із списку</option>
             <optgroup label="Національні супермаркети">
               <option value="silpo">Сільпо</option>

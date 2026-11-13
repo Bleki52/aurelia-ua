@@ -191,7 +191,7 @@ class W3CAuditor {
       errors.push(`На сторінці більше одного <h1> (${h1Matches.length} шт.): ${h1Matches.map(h => h.replace(/<[^>]+>/g, '').trim()).join(' | ')}`);
     }
 
-    // 12. Images: alt, width, height
+    // 12. Images: alt, width, height & W3C Nu img[role="presentation"] + alt="" guard
     const imgRegex = /<img\b([^>]*)>/gi;
     let imgMatch;
     while ((imgMatch = imgRegex.exec(content)) !== null) {
@@ -200,12 +200,12 @@ class W3CAuditor {
       const hasWidth = /\bwidth\s*=\s*["']?\d+["']?/i.test(attrs);
       const hasHeight = /\bheight\s*=\s*["']?\d+["']?/i.test(attrs);
       const altVal = hasAlt ? attrs.match(/\balt\s*=\s*["']([^"']*)["']/i)[1] : null;
-      const isDecorative = /role=["']presentation["']/i.test(attrs) || /aria-hidden=["']true["']/i.test(attrs);
+      const hasRolePresentation = /\brole\s*=\s*["'](?:presentation|none)["']/i.test(attrs);
 
       if (!hasAlt) {
         errors.push(`Знайдено <img> без обов’язкового атрибута alt: <img ${attrs}>`);
-      } else if (altVal === '' && !isDecorative) {
-        warnings.push(`<img> з порожнім alt="" має мати role="presentation": <img ${attrs}>`);
+      } else if (altVal === '' && hasRolePresentation) {
+        errors.push(`W3C Nu: <img> з role="presentation" не може мати порожній alt="": <img ${attrs}>`);
       }
 
       if (!hasWidth || !hasHeight) {
@@ -239,6 +239,56 @@ class W3CAuditor {
         }
       } else if (!hasAriaLabel && !hasAriaLabelledBy) {
         errors.push(`Елемент <${tag} ${attrs}> не має id для прив’язки <label for="..."> і не має aria-label`);
+      }
+    }
+
+    // 14. W3C Nu: role="tab" must have corresponding role="tabpanel"
+    const hasRoleTab = /\brole\s*=\s*["']tab["']/i.test(content);
+    const hasRoleTabpanel = /\brole\s*=\s*["']tabpanel["']/i.test(content);
+    if (hasRoleTab && !hasRoleTabpanel) {
+      errors.push('W3C Nu: Знайдено елемент(и) з role="tab", але на сторінці відсутній відповідний role="tabpanel"');
+    }
+
+    // 15. W3C Nu: <article> elements should contain an h2-h6 heading
+    const articleRegex = /<article\b([^>]*)>([\s\S]*?)<\/article>/gi;
+    let articleMatch;
+    while ((articleMatch = articleRegex.exec(content)) !== null) {
+      if (!/<h[2-6]\b/i.test(articleMatch[2])) {
+        warnings.push(`W3C Nu: Тег <article${articleMatch[1]}> не містить заголовка <h2>–<h6>`);
+      }
+    }
+
+    // 16. W3C Nu: <div> or <span> with aria-label must also have an explicit role
+    const divSpanAriaRegex = /<(div|span)\b([^>]*)>/gi;
+    let dsMatch;
+    while ((dsMatch = divSpanAriaRegex.exec(content)) !== null) {
+      const attrs = dsMatch[2];
+      if (/\baria-label\s*=\s*["'][^"']*["']/i.test(attrs) && !/\brole\s*=\s*["'][^"']+["']/i.test(attrs)) {
+        errors.push(`W3C Nu: <${dsMatch[1].toLowerCase()}> має aria-label без атрибута role: <${dsMatch[1].toLowerCase()} ${attrs}>`);
+      }
+    }
+
+    // 17. W3C Nu: <select required> (single-select) first <option> must have empty value=""
+    const selectFullRegex = /<select\b([^>]*)>([\s\S]*?)<\/select>/gi;
+    let selMatch;
+    while ((selMatch = selectFullRegex.exec(content)) !== null) {
+      const selAttrs = selMatch[1];
+      const selBody = selMatch[2];
+      if (/\brequired\b/i.test(selAttrs) && !/\bmultiple\b/i.test(selAttrs)) {
+        const sizeMatch = selAttrs.match(/\bsize\s*=\s*["']?(\d+)["']?/i);
+        const sizeVal = sizeMatch ? parseInt(sizeMatch[1], 10) : 1;
+        if (sizeVal <= 1) {
+          const firstOptMatch = selBody.match(/<option\b([^>]*)>([\s\S]*?)<\/option>/i);
+          if (firstOptMatch) {
+            const optAttrs = firstOptMatch[1];
+            const optText = firstOptMatch[2].trim();
+            const valMatch = optAttrs.match(/\bvalue\s*=\s*["']([^"']*)["']/i);
+            const hasEmptyValueAttr = valMatch && valMatch[1] === '';
+            if (!hasEmptyValueAttr && optText.length > 0) {
+              errors.push(`W3C Nu: <select required> має першу <option> з непорожнім значенням замість value="": <select ${selAttrs}>`);
+            }
+          }
+        }
       }
     }
 

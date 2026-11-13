@@ -731,7 +731,7 @@
       const mode = btn.dataset.mode;
       const isActive = mode === AppState.checkoutMode;
       btn.classList.toggle('is-active', isActive);
-      btn.setAttribute('aria-selected', String(isActive));
+      btn.setAttribute('aria-pressed', String(isActive));
     });
   }
 
@@ -1566,10 +1566,10 @@
         btn.addEventListener('click', () => {
           macroBtns.forEach(b => {
             b.classList.remove('is-active');
-            b.setAttribute('aria-selected', 'false');
+            b.setAttribute('aria-pressed', 'false');
           });
           btn.classList.add('is-active');
-          btn.setAttribute('aria-selected', 'true');
+          btn.setAttribute('aria-pressed', 'true');
           AppState.catalogMainCategory = btn.dataset.main || 'all';
           AppState.catalogSubCategory = 'all';
           renderSubCategories(AppState.catalogMainCategory);

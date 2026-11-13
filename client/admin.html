@@ -20,7 +20,7 @@
 <body>
   <!-- Прелоадер -->
   <div id="preloader" class="preloader" aria-hidden="true">
-    <img src="assets/favicon.svg" alt="" width="72" height="72" class="preloader-monogram" role="presentation">
+    <img src="assets/favicon.svg" alt="AURELIA UA" width="72" height="72" class="preloader-monogram">
     <p class="preloader-title">AURELIA UA</p>
     <div class="preloader-spinner" role="status" aria-label="Завантаження"></div>
   </div>
@@ -143,18 +143,18 @@
 
     <!-- Панель показників / статистики -->
     <section class="admin-stats-grid reveal-item" aria-label="Статистика каталогу">
-      <article class="stat-card">
+      <div class="stat-card">
         <span class="stat-num" id="stat-total-products">12</span>
         <span class="stat-label">Активних акційних позицій</span>
-      </article>
-      <article class="stat-card">
+      </div>
+      <div class="stat-card">
         <span class="stat-num">5</span>
         <span class="stat-label">Підключених мереж магазинів</span>
-      </article>
-      <article class="stat-card">
+      </div>
+      <div class="stat-card">
         <span class="stat-num" id="stat-avg-discount">25%</span>
         <span class="stat-label">Середня економія за каталогом</span>
-      </article>
+      </div>
     </section>
 
     <!-- Панель швидких дій -->
@@ -249,7 +249,7 @@
 
           <div class="form-group form-group-sm">
             <label for="admin-prod-city" class="form-label">Місто прив'язки</label>
-            <select id="admin-prod-city" name="city" class="form-select" required>
+            <select id="admin-prod-city" name="city" class="form-select">
               <option value="all">Усі міста</option>
               <option value="ivano-frankivsk" selected>Івано-Франківськ</option>
               <option value="lviv">Львів</option>
@@ -267,7 +267,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="admin-prod-main-category" class="form-label">Головна категорія</label>
-            <select id="admin-prod-main-category" name="mainCategory" class="form-select" required>
+            <select id="admin-prod-main-category" name="mainCategory" class="form-select">
               <option value="Продукти" selected>Продукти</option>
               <option value="Краса та Гігієна">Краса та Гігієна</option>
               <option value="Дім та Побут">Дім та Побут</option>
@@ -278,7 +278,7 @@
 
           <div class="form-group">
             <label for="admin-prod-sub-category" class="form-label">Підкатегорія</label>
-            <select id="admin-prod-sub-category" name="subCategory" class="form-select" required>
+            <select id="admin-prod-sub-category" name="subCategory" class="form-select">
               <option value="Кава та Чай">Кава та Чай</option>
               <option value="Молочні та Сири">Молочні та Сири</option>
               <option value="М'ясо та Риба">М'ясо та Риба</option>

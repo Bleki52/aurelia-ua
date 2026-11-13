@@ -16,8 +16,7 @@
   'use strict';
 
   const LOCAL_API_URL = 'http://localhost:5000/api';
-  const PRODUCTION_API_URL = (typeof localStorage !== 'undefined' && localStorage.getItem('@aurelia_api_url')) || 'https://aurelia-ua-api.onrender.com/api';
-
+  const PRODUCTION_API_URL = localStorage.getItem('@aurelia_api_url') || 'https://aurelia-ua.onrender.com/api';
   const API_BASE = (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
     ? LOCAL_API_URL
     : PRODUCTION_API_URL;
