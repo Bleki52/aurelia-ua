@@ -1,20 +1,19 @@
-name: 24/7 Supermarket Promotions Cloud Scraper & Dual Sync
+name: Sync Live Promotions (PostgreSQL & JSON Fallback)
 
 on:
   schedule:
-    # Runs automatically every 12 hours (at 00:00 and 12:00 UTC)
     - cron: '0 */12 * * *'
-  workflow_dispatch: # Allows manual on-demand trigger via GitHub Actions UI
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CHROME_PATH: /usr/bin/google-chrome
 
 jobs:
   sync-promotions:
-    name: Sync Live Promotions (PostgreSQL & JSON Fallback)
     runs-on: ubuntu-24.04
 
     steps:
@@ -25,40 +24,38 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: 'server/package.json'
 
-      - name: Install Google Chrome Stable for Cloudflare Bypass
+      - name: Verify Google Chrome for Cloudflare Bypass (Zero GPG)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable --no-install-recommends
+          if command -v google-chrome >/dev/null 2>&1; then
+            echo "Using pre-installed Chrome: $(google-chrome --version)"
+          else
+            curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /tmp/chrome.deb
+            sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/chrome.deb
+          fi
 
-      - name: Install server dependencies
+      - name: Install backend dependencies
         working-directory: ./server
         run: npm install
 
-      - name: Run store scraper and sync database
+      - name: Run Live Supermarket Price Sync
         working-directory: ./server
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CHROME_PATH: /usr/bin/google-chrome
-          NODE_ENV: production
         run: node test-sync.js
 
       - name: Commit and push updated promotions
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config commit.gpgsign false
           git add server/db/local-store.json
           if git diff --staged --quiet; then
             echo "No changes in local-store.json to commit."
           else
-            git commit -m "chore(sync): auto-update live supermarket promotions [skip ci]"
+            git commit --no-gpg-sign -m "chore(sync): auto-update live supermarket promotions [skip ci]"
             git pull --rebase origin main
             git push origin HEAD:main
           fi
-
