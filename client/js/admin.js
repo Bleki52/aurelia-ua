@@ -86,6 +86,9 @@
   };
 
   function cacheDOM() {
+    DOM.dashboardContent = document.getElementById('admin-dashboard-content');
+    DOM.accessDenied = document.getElementById('admin-access-denied');
+    DOM.qaBadge = document.getElementById('admin-qa-badge');
     DOM.tbody = document.getElementById('admin-products-tbody');
     DOM.searchInput = document.getElementById('admin-search-input');
     DOM.citySelect = document.getElementById('admin-city-select');
@@ -306,16 +309,18 @@
           </td>
           <td>
             <div class="table-actions-cell">
-              <button type="button" class="btn-icon" data-admin-edit="${product.id}" aria-label="Редагувати ${product.title || product.name}">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-edit"></use>
-                </svg>
-              </button>
-              <button type="button" class="btn-icon" data-admin-delete="${product.id}" aria-label="Видалити ${product.title || product.name}">
-                <svg class="icon icon-sm" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
+              ${isReadOnlyQA()
+                ? '<span class="table-readonly-badge">Тільки перегляд</span>'
+                : `<button type="button" class="btn-icon" data-admin-edit="${product.id}" aria-label="Редагувати ${product.title || product.name}">
+                    <svg class="icon icon-sm" aria-hidden="true">
+                      <use href="assets/sprite.svg#icon-edit"></use>
+                    </svg>
+                  </button>
+                  <button type="button" class="btn-icon" data-admin-delete="${product.id}" aria-label="Видалити ${product.title || product.name}">
+                    <svg class="icon icon-sm" aria-hidden="true">
+                      <use href="assets/sprite.svg#icon-trash"></use>
+                    </svg>
+                  </button>`}
             </div>
           </td>
         </tr>
@@ -325,9 +330,29 @@
     bindTableActions();
   }
 
+  function getCurrentStaffUser() {
+    if (!window.AureliaAPI || typeof window.AureliaAPI.getCurrentUser !== 'function') return null;
+    return window.AureliaAPI.getCurrentUser();
+  }
+
+  function isStaffAuthorized(user) {
+    if (!user || !user.email) return false;
+    const isStaffDomain = String(user.email).trim().toLowerCase().endsWith('@aurelia.ua');
+    const role = String(user.role || '').toUpperCase();
+    return isStaffDomain && (role === 'ADMIN' || role === 'QA');
+  }
+
+  function isReadOnlyQA(user) {
+    const active = user || getCurrentStaffUser();
+    return Boolean(isStaffAuthorized(active) && String(active.role || '').toUpperCase() === 'QA');
+  }
+
   function bindTableActions() {
+    if (isReadOnlyQA()) return;
+
     DOM.tbody.querySelectorAll('[data-admin-edit]').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (isReadOnlyQA()) return;
         const id = btn.dataset.adminEdit;
         const prod = AdminState.products.find(p => String(p.id) === String(id));
         if (prod) openEditForm(prod);
@@ -336,21 +361,33 @@
 
     DOM.tbody.querySelectorAll('[data-admin-delete]').forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (isReadOnlyQA()) {
+          alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
+          return;
+        }
         const id = btn.dataset.adminDelete;
         const prod = AdminState.products.find(p => String(p.id) === String(id));
         if (confirm(`Видалити товар "${prod?.title || prod?.name || ''}" з каталогу?`)) {
-          if (window.AureliaAPI) {
-            await window.AureliaAPI.deleteProduct(id);
+          try {
+            if (window.AureliaAPI) {
+              await window.AureliaAPI.deleteProduct(id);
+            }
+            AdminState.products = AdminState.products.filter(p => String(p.id) !== String(id));
+            updateStats();
+            renderTable();
+          } catch (err) {
+            alert(err.message || 'Не вдалося видалити товар.');
           }
-          AdminState.products = AdminState.products.filter(p => String(p.id) !== String(id));
-          updateStats();
-          renderTable();
         }
       });
     });
   }
 
   function openCreateForm() {
+    if (isReadOnlyQA()) {
+      alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
+      return;
+    }
     AdminState.editingProductId = null;
     clearErrors();
     if (DOM.form) DOM.form.reset();
@@ -376,6 +413,10 @@
   }
 
   function openEditForm(prod) {
+    if (isReadOnlyQA()) {
+      alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
+      return;
+    }
     AdminState.editingProductId = prod.id;
     clearErrors();
 
@@ -438,6 +479,10 @@
     // Live Supermarket Price Sync Button
     if (DOM.btnSync) {
       DOM.btnSync.addEventListener('click', async () => {
+        if (isReadOnlyQA()) {
+          alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
+          return;
+        }
         const cityToSync = DOM.citySelect ? DOM.citySelect.value : 'ivano-frankivsk';
         const actualCity = cityToSync === 'all' ? 'ivano-frankivsk' : cityToSync;
         try {
@@ -458,10 +503,11 @@
           }, 2000);
         } catch (err) {
           console.error('Помилка синхронізації цін:', err);
+          alert(err.message || 'Не вдалося синхронізувати ціни.');
           if (DOM.syncLabel) DOM.syncLabel.textContent = 'Помилка';
           setTimeout(() => {
             if (DOM.syncLabel) DOM.syncLabel.textContent = 'Синхронізувати ціни';
-            DOM.btnSync.disabled = false;
+            DOM.btnSync.disabled = isReadOnlyQA();
           }, 2000);
         }
       });
@@ -594,10 +640,56 @@
     }
   }
 
-  function init() {
+  function applyStaffRoleUI(user) {
+    const readOnly = isReadOnlyQA(user);
+    if (DOM.qaBadge) DOM.qaBadge.classList.toggle('is-hidden', !readOnly);
+    if (DOM.btnAdd) {
+      DOM.btnAdd.classList.toggle('is-hidden', readOnly);
+      DOM.btnAdd.disabled = readOnly;
+    }
+    if (DOM.btnSync) {
+      DOM.btnSync.classList.toggle('is-hidden', readOnly);
+      DOM.btnSync.disabled = readOnly;
+    }
+  }
+
+  function showUnauthorizedView() {
+    if (DOM.dashboardContent) DOM.dashboardContent.classList.add('is-hidden');
+    if (DOM.accessDenied) DOM.accessDenied.classList.remove('is-hidden');
+    if (DOM.qaBadge) DOM.qaBadge.classList.add('is-hidden');
+    setTimeout(() => {
+      window.location.replace('index.html');
+    }, 1200);
+  }
+
+  async function init() {
     cacheDOM();
+
+    const user = getCurrentStaffUser();
+    if (!isStaffAuthorized(user)) {
+      showUnauthorizedView();
+      return;
+    }
+
+    if (DOM.accessDenied) DOM.accessDenied.classList.add('is-hidden');
+    if (DOM.dashboardContent) DOM.dashboardContent.classList.remove('is-hidden');
+    applyStaffRoleUI(user);
+
     initForm();
     loadProducts();
+
+    // Verify JWT session cleanly with backend when online
+    if (window.AureliaAPI && typeof window.AureliaAPI.getMe === 'function') {
+      try {
+        const freshUser = await window.AureliaAPI.getMe();
+        if (!isStaffAuthorized(freshUser)) {
+          showUnauthorizedView();
+          return;
+        }
+        applyStaffRoleUI(freshUser);
+        renderTable();
+      } catch (_) {}
+    }
   }
 
   if (document.readyState === 'loading') {

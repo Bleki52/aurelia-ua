@@ -23,9 +23,20 @@ function getOtpExpiry() {
   return new Date(Date.now() + OTP_TTL_MS).toISOString();
 }
 
+function getSafeRoleForUser(user) {
+  if (!user) return 'USER';
+  const cleanEmail = String(user.email || '').trim().toLowerCase();
+  if (!cleanEmail.endsWith('@aurelia.ua')) {
+    return 'USER';
+  }
+  const role = String(user.role || 'USER').toUpperCase();
+  return (role === 'ADMIN' || role === 'QA') ? role : 'USER';
+}
+
 function signAuthToken(user) {
+  const safeRole = getSafeRoleForUser(user);
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name },
+    { id: user.id, email: user.email, role: safeRole, name: user.name },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -36,7 +47,7 @@ function sanitizeUserPayload(user) {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    role: getSafeRoleForUser(user),
     is_verified: Boolean(user.is_verified)
   };
 }
@@ -63,6 +74,32 @@ async function register(req, res) {
     }
 
     const cleanEmail = String(email).trim().toLowerCase();
+    if (cleanEmail.endsWith('@aurelia.ua')) {
+      return res.status(403).json({
+        error: 'Реєстрація корпоративних адрес @aurelia.ua заборонена. Використовуйте виданий акаунт персоналу.',
+        code: 'RESTRICTED_DOMAIN'
+      });
+    }
+
+    const rawName = typeof name === 'string' ? name.trim() : '';
+    if (rawName && rawName.length < 2) {
+      return res.status(400).json({
+        error: 'Ім’я повинно містити щонайменше 2 символи.',
+        code: 'INVALID_NAME'
+      });
+    }
+    const cleanName = rawName || cleanEmail.split('@')[0];
+
+    const reservedNames = Array.isArray(db.STAFF_ACCOUNTS)
+      ? db.STAFF_ACCOUNTS.map(s => String(s.name || '').toLowerCase())
+      : ['bleki', 'qa1', 'qa2'];
+    if (reservedNames.includes(cleanName.toLowerCase())) {
+      return res.status(403).json({
+        error: 'Це ім’я користувача зарезервоване для персоналу AURELIA UA.',
+        code: 'RESERVED_USERNAME'
+      });
+    }
+
     const existing = await db.findUserByEmail(cleanEmail);
     if (existing) {
       if (existing.is_verified === false) {
@@ -85,16 +122,16 @@ async function register(req, res) {
       });
     }
 
-    const role = cleanEmail === ADMIN_EMAIL ? 'ADMIN' : 'USER';
-    const password_hash = await bcrypt.hash(password, 10);
-    const rawName = typeof name === 'string' ? name.trim() : '';
-    if (rawName && rawName.length < 2) {
-      return res.status(400).json({
-        error: 'Ім’я повинно містити щонайменше 2 символи.',
-        code: 'INVALID_NAME'
+    const existingByName = await db.findUserByIdentifier(cleanName);
+    if (existingByName) {
+      return res.status(409).json({
+        error: 'Користувач із таким іменем (логіном) уже існує.',
+        code: 'USERNAME_EXISTS'
       });
     }
-    const cleanName = rawName || cleanEmail.split('@')[0];
+
+    const role = 'USER';
+    const password_hash = await bcrypt.hash(password, 10);
 
     const code = generateOtpCode();
     const expiresAt = getOtpExpiry();
@@ -245,21 +282,21 @@ async function resendVerification(req, res) {
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body || {};
+    const { identifier, email, password } = req.body || {};
+    const loginId = String(identifier || email || '').trim();
 
-    if (!email || !password) {
+    if (!loginId || !password) {
       return res.status(400).json({
-        error: 'Введіть email та пароль.',
+        error: 'Введіть Email або ім’я користувача та пароль.',
         code: 'MISSING_CREDENTIALS'
       });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const user = await db.findUserByEmail(cleanEmail);
+    const user = await db.findUserByIdentifier(loginId);
 
     if (!user) {
       return res.status(401).json({
-        error: 'Невірний email або пароль.',
+        error: 'Невірний логін/Email або пароль.',
         code: 'INVALID_CREDENTIALS'
       });
     }
@@ -267,7 +304,7 @@ async function login(req, res) {
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({
-        error: 'Невірний email або пароль.',
+        error: 'Невірний логін/Email або пароль.',
         code: 'INVALID_CREDENTIALS'
       });
     }
@@ -275,12 +312,12 @@ async function login(req, res) {
     if (user.is_verified === false) {
       const code = generateOtpCode();
       const expiresAt = getOtpExpiry();
-      await db.setVerificationCode(cleanEmail, code, expiresAt);
-      const mailRes = await emailService.sendVerificationEmail(cleanEmail, user.name, code);
+      await db.setVerificationCode(user.email, code, expiresAt);
+      const mailRes = await emailService.sendVerificationEmail(user.email, user.name, code);
 
       return res.status(200).json({
         requiresVerification: true,
-        email: cleanEmail,
+        email: user.email,
         message: 'Підтвердіть ваш Email — ми надіслали 6-значний код',
         ...(mailRes && mailRes.devCode ? { devCode: mailRes.devCode } : {})
       });

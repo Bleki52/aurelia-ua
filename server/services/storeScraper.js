@@ -311,6 +311,59 @@ function hasWord(text = '', ...stemArgs) {
   return false;
 }
 
+/* ─── Price Parsing & Sanity Validation ──────────────────────────────────── */
+function parsePriceValue(rawText = '') {
+  if (typeof rawText === 'number') {
+    return Number.isFinite(rawText) ? rawText : NaN;
+  }
+  const cleaned = String(rawText || '')
+    .replace(/[\u00A0\u202F\s]+/g, ' ')
+    // Ignore loyalty footnotes like "за 1 грн" or "по 0.01 грн"
+    .replace(/(?:за|по)\s+\d+(?:[.,]\d+)?\s*(?:грн|₴)/gi, ' ')
+    // Collapse space thousand separators e.g. "1 899,00" -> "1899,00"
+    .replace(/(\d)\s+(?=\d{3}(?:[.,]\d+|\b))/g, '$1')
+    .trim();
+  const match = cleaned.match(/(\d+(?:[.,]\d+)?)/);
+  if (!match) return NaN;
+  return parseFloat(match[1].replace(',', '.'));
+}
+
+function isValidProductPrice(title = '', price = 0, oldPrice = null) {
+  const numPrice = Number(price);
+  const hasOld = oldPrice !== null && oldPrice !== undefined && oldPrice !== '' && Number(oldPrice) > 0;
+  const numOld = hasOld ? Number(oldPrice) : null;
+
+  if (!Number.isFinite(numPrice) || numPrice <= 0) return false;
+  if (numOld !== null && (!Number.isFinite(numOld) || numOld <= numPrice)) return false;
+
+  // Rule A: Classic 1.00 UAH / 2.00 UAH HTML parser artifact
+  if (numPrice <= 2.50 && (numOld === null || numOld <= 5.00)) {
+    return false;
+  }
+
+  const titleLower = String(title || '').toLowerCase();
+
+  // Rule B: Alcoholic beverages & spirits must not appear below 75.00 UAH
+  const alcoholStems = [
+    'віскі', 'whisky', 'whiskey', 'glenlivet', 'glenfiddich', 'jameson', 'jack daniels',
+    'ром ', 'джин ', 'текіла', 'коньяк', 'бренді', 'горілка', 'лікер', 'вино ', 'ігристе', 'шампанське'
+  ];
+  if (hasWord(titleLower, alcoholStems) && numPrice < 75.00) {
+    return false;
+  }
+
+  // Rule C: 1 kg ice cream & core staple categories must not appear below 20.00 UAH
+  const isBulkIceCream = /морозиво\s*1\s*кг/i.test(titleLower);
+  const coreGroceryStems = [
+    'кава ', 'кави ', 'масло ', 'масла ', 'сир ', "м'ясо", 'мясо', 'філе', 'ковбаса', 'лосось'
+  ];
+  if ((isBulkIceCream || hasWord(titleLower, coreGroceryStems)) && numPrice < 20.00) {
+    return false;
+  }
+
+  return true;
+}
+
 /* ─── Strict 5-Stage Product Categorization Engine ───────────────────────── */
 function categorizeProduct(title = '', store = '', apiCategory = '') {
   const rawTitle = String(title || '').trim();
@@ -319,20 +372,34 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   const storeStr = String(store || '').toLowerCase().trim();
   const isBeautyStore = ['eva', 'prostor'].includes(storeStr);
 
-  // STAGE 1: Pet Products (mainCategory: 'Зоотовари') — Must Run First!
+  // Guard: Human dessert/dairy stems block pet categorization (e.g. "Морозиво ... з наповнювачем")
+  const HUMAN_FOOD_BLOCK_PET_STEMS = [
+    'морозиво', 'йогурт', 'сирок', 'десерт', 'тістечко', 'круасан', 'пончик', 'донат',
+    'торт', 'рулет', 'вафлі', 'вафл', 'печиво', 'шоколад', 'цукерк', 'згущене молоко',
+    'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо'
+  ];
+  const isHumanFoodBlockingPet = hasWord(text, HUMAN_FOOD_BLOCK_PET_STEMS);
+
+  // STAGE 1: Pet Products (mainCategory: 'Зоотовари') — Strictly Qualified
   const petIndicators = [
     'для котів', 'для кішок', 'для кошенят', 'для собак', 'для цуценят', 'для гризунів', 'для папуг',
-    'корм сухий', 'корм вологий', 'наповнювач для котячого', 'наповнювач', 'стерилізованих',
+    'корм сухий', 'корм вологий', 'стерилізованих',
     'ласощі для котів', 'ласощі для собак', 'ласощі для тварин', 'для тварин', 'для котиків'
   ];
+  const petLitterQualifiers = [
+    'для котів', 'для котячого туалету', 'туалету котів', 'для котячого',
+    'бентонітовий', 'силікагелевий', 'деревний', 'комкуючий', 'грудкуючий',
+    'тофу для котів', 'catsan', 'kotix', 'animall', 'supercat'
+  ];
+  const isPetLitter = hasWord(text, ['наповнювач']) && hasWord(text, petLitterQualifiers);
   const petBrands = [
     'whiskas', 'віскас', 'felix', 'фелікс', 'purina', 'пуріна', 'gourmet', 'гурме',
     'sheba', 'шеба', 'friskies', 'фріскіс', 'optimeal', 'оптіміл', 'клуб 4 лапи', 'club 4 paws',
     'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit', 'savory', 'josera'
   ];
-  if (hasWord(text, petIndicators, petBrands) || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий']))) {
+  if (!isHumanFoodBlockingPet && (hasWord(text, petIndicators, petBrands) || isPetLitter || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий'])))) {
     let sub = 'Усі зоотовари';
-    if (hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба', 'наповнювач'])) {
+    if (isPetLitter || hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба'])) {
       sub = 'Для котів';
     } else if (hasWord(text, ['собак', 'пес', 'пса', 'цуцен', 'педігрі', 'pedigree', 'chappi', 'чаппі'])) {
       sub = 'Для собак';
@@ -816,6 +883,8 @@ async function fetchSilpoAllPromotions(branchId) {
 
     const oldPrice = Number(rawOld.toFixed(2));
     const formattedPrice = Number(price.toFixed(2));
+    if (!isValidProductPrice(title, formattedPrice, oldPrice)) continue;
+
     const sourceUrl = slug ? `https://silpo.ua/product/${slug}` : 'https://silpo.ua';
 
     if (!isStoreUrlConsistent('silpo', sourceUrl)) continue;
@@ -927,7 +996,7 @@ async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
       oldPrice = Number((item.old_price / 100).toFixed(2));
     }
 
-    if (!oldPrice || oldPrice <= price) continue;
+    if (!oldPrice || oldPrice <= price || !isValidProductPrice(title, price, oldPrice)) continue;
 
     const unit = item.unit === 'kg' ? 'кг' : (item.bundle && item.bundle > 1 ? `${item.bundle} шт` : (item.unit === 'pcs' ? 'шт' : (item.unit || 'шт')));
     const catInfo = categorizeProduct(title, storeKey, item.category?.title || '');
@@ -1020,9 +1089,9 @@ async function fetchThrashPromotions() {
           if (seenIds.has(prod.id || prod.slug)) continue;
           seenIds.add(prod.id || prod.slug);
 
-          const price = parseFloat(prod.price);
-          const oldPrice = parseFloat(prod.oldPrice);
-          if (isNaN(price) || isNaN(oldPrice) || price <= 0 || oldPrice <= price) continue;
+          const price = parsePriceValue(prod.price);
+          const oldPrice = parsePriceValue(prod.oldPrice);
+          if (!isValidProductPrice(prod.title, price, oldPrice)) continue;
 
           const slug = prod.slug ? prod.slug.trim() : '';
           const sourceUrl = slug ? `https://thrash.ua/product/${slug}` : 'https://thrash.ua/promotions/campaigns';
@@ -1085,13 +1154,10 @@ async function fetchAvroraPromotions() {
                       $(el).find('a[href*="avrora.ua/"]').attr('title') ||
                       $(el).find('img').attr('alt') || '';
         const href = $(el).find('a').attr('href') || '';
-        const priceNum = $(el).find('.ty-price-num').first().text().replace(/[^\d\.]/g, '');
-        const oldPriceNum = $(el).find('.ty-strike .ty-price-num, .ty-list-price, [id*="old_price"]').first().text().replace(/[^\d\.]/g, '');
+        const price = parsePriceValue($(el).find('.ty-price-num').first().text());
+        const oldPrice = parsePriceValue($(el).find('.ty-strike .ty-price-num, .ty-list-price, [id*="old_price"]').first().text());
 
-        const price = parseFloat(priceNum);
-        const oldPrice = parseFloat(oldPriceNum);
-
-        if (title && href && href.startsWith('https://avrora.ua/') && !isNaN(price) && price > 0 && !isNaN(oldPrice) && oldPrice > price) {
+        if (title && href && href.startsWith('https://avrora.ua/') && isValidProductPrice(title, price, oldPrice)) {
           if (!seenUrls.has(href)) {
             seenUrls.add(href);
             const catInfo = categorizeProduct(title, storeKey);
@@ -1153,17 +1219,19 @@ async function fetchRukavychkaPromotions() {
         const $ = cheerio.load(html);
 
         $('.fm-module-item, .product-layout, .fm-category-product-caption').each((i, el) => {
-          const title = $(el).find('a[href*="market.rukavychka.ua/"]').first().text().trim();
-          const href = $(el).find('a[href*="market.rukavychka.ua/"]').first().attr('href') || '';
-          const pNewText = $(el).find('.new-special-price, [class*="price-new"]').first().text().trim();
-          const pOldText = $(el).find('.old-special-price, [class*="price-old"]').first().text().trim();
+          const titleEl = $(el)
+            .find('.fm-module-title a, .caption h4 a, .fm-category-product-title a, a[href*="market.rukavychka.ua/"]')
+            .filter((_, a) => $(a).text().trim().length > 2)
+            .first();
+          const title = titleEl.text().trim();
+          const href = titleEl.attr('href') || $(el).find('a[href*="market.rukavychka.ua/"]').first().attr('href') || '';
+          const pNewText = $(el).find('.new-special-price, .fm-module-price-new, .price-new').first().text().trim();
+          const pOldText = $(el).find('.old-special-price, .fm-module-price-old, .price-old').first().text().trim();
 
-          const mNew = pNewText.match(/(\d+(?:[\.,]\d+)?)/);
-          const mOld = pOldText.match(/(\d+(?:[\.,]\d+)?)/);
-          const price = mNew ? parseFloat(mNew[1].replace(',', '.')) : 0;
-          const oldPrice = mOld ? parseFloat(mOld[1].replace(',', '.')) : 0;
+          const price = parsePriceValue(pNewText);
+          const oldPrice = parsePriceValue(pOldText);
 
-          if (title && href && price > 0 && oldPrice > price && !seenUrls.has(href)) {
+          if (title && href && isValidProductPrice(title, price, oldPrice) && !seenUrls.has(href)) {
             seenUrls.add(href);
             const catInfo = categorizeProduct(title, storeKey);
             validItems.push({
@@ -1325,7 +1393,7 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
           });
 
           extracted.forEach(it => {
-            if (!seenAtb.has(it.sourceUrl) && it.sourceUrl.includes('atbmarket.com')) {
+            if (!seenAtb.has(it.sourceUrl) && it.sourceUrl.includes('atbmarket.com') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
               seenAtb.add(it.sourceUrl);
               const catInfo = categorizeProduct(it.title, 'atb');
               atbItems.push({
@@ -1395,7 +1463,7 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
       const seenEva = new Set();
       const evaItems = [];
       evaExtracted.forEach(it => {
-        if (!seenEva.has(it.sourceUrl) && it.sourceUrl.includes('eva.ua')) {
+        if (!seenEva.has(it.sourceUrl) && it.sourceUrl.includes('eva.ua') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
           seenEva.add(it.sourceUrl);
           const catInfo = categorizeProduct(it.title, 'eva');
           evaItems.push({
@@ -1457,8 +1525,9 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
           return list;
         });
 
-        if (thrashExtracted.length > 0) {
-          const items = thrashExtracted.map(it => {
+        const cleanThrash = thrashExtracted.filter(it => isValidProductPrice(it.title, it.price, it.oldPrice));
+        if (cleanThrash.length > 0) {
+          const items = cleanThrash.map(it => {
             const catInfo = categorizeProduct(it.title, 'thrash');
             return {
               sourceStore: 'thrash',
@@ -1516,8 +1585,9 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
           return list;
         });
 
-        if (avroraExtracted.length > 0) {
-          const items = avroraExtracted.map(it => {
+        const cleanAvrora = avroraExtracted.filter(it => isValidProductPrice(it.title, it.price, it.oldPrice));
+        if (cleanAvrora.length > 0) {
+          const items = cleanAvrora.map(it => {
             const catInfo = categorizeProduct(it.title, 'avrora');
             return {
               sourceStore: 'avrora',
@@ -1566,7 +1636,7 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
   const groups = [];
 
   for (const item of scrapedItems) {
-    if (!item.title || !item.price || item.price <= 0 || !item.sourceUrl) continue;
+    if (!item.title || !item.sourceUrl || !isValidProductPrice(item.title, item.price, item.oldPrice)) continue;
 
     if (activeStores && !activeStores.includes(item.sourceStore)) continue;
 
@@ -1641,6 +1711,8 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
           : null;
 
         if (!storeStr || isNaN(numPrice) || numPrice <= 0 || !urlStr) continue;
+
+        if (!isValidProductPrice(g.title, numPrice, numOld)) continue;
 
         if (activeStores && !activeStores.includes(storeStr)) continue;
 
@@ -1908,5 +1980,7 @@ module.exports = {
   groupAndMatchLiveProducts,
   isStoreUrlConsistent,
   resolveStoreIdentity,
+  isValidProductPrice,
+  parsePriceValue,
   ALL_18_STORES
 };

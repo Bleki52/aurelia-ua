@@ -44,10 +44,11 @@
       </nav>
 
       <div class="header-actions">
-        <button type="button" id="btn-city-modal-trigger" class="btn-city-selector" aria-label="Обрати місто" aria-haspopup="dialog">
+        <button type="button" id="btn-city-modal-trigger" class="btn-city-selector header-city-control city-selector" aria-label="Обрати місто" aria-haspopup="dialog">
           <svg class="icon icon-location" aria-hidden="true">
             <use href="assets/sprite.svg#icon-location"></use>
           </svg>
+          <span class="city-label-text">Місто:</span>
           <span id="header-city-name" class="city-name-text">Івано-Франківськ</span>
         </button>
 
@@ -393,7 +394,7 @@
   <div id="auth-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h2 id="auth-modal-title" class="modal-title">Реєстрація в AURELIA UA</h2>
+        <h2 id="auth-modal-title" class="modal-title">Вхід до AURELIA UA</h2>
         <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно входу">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-close"></use>
@@ -402,36 +403,55 @@
       </div>
 
       <div id="auth-mode-tabs" class="auth-mode-tabs" role="group" aria-label="Режим авторизації">
-        <button type="button" class="auth-mode-btn is-active" data-auth-mode="register" aria-pressed="true">Реєстрація</button>
-        <button type="button" class="auth-mode-btn" data-auth-mode="login" aria-pressed="false">Вхід</button>
+        <button type="button" class="auth-mode-btn is-active" data-auth-mode="login" aria-pressed="true">Вхід</button>
+        <button type="button" class="auth-mode-btn" data-auth-mode="register" aria-pressed="false">Реєстрація</button>
       </div>
 
-      <form id="auth-form" class="modal-body" novalidate>
-        <div id="auth-name-group" class="form-group">
-          <label for="auth-name-input" class="form-label">Ваше ім’я</label>
-          <input type="text" id="auth-name-input" name="name" class="form-input" placeholder="Наприклад: Олександр">
-          <span class="field-error" id="auth-name-error"></span>
+      <form id="auth-login-form" class="modal-body" novalidate>
+        <div class="form-group">
+          <label for="auth-login-identifier" class="form-label">Email або ім’я користувача</label>
+          <input type="text" id="auth-login-identifier" name="identifier" class="form-input" autocomplete="username" placeholder="user@example.com або логін" required>
+          <span class="field-error" id="auth-login-id-error"></span>
         </div>
 
         <div class="form-group">
-          <label for="auth-email-input" class="form-label">Електронна пошта</label>
-          <input type="email" id="auth-email-input" name="email" class="form-input" placeholder="user@example.com" required>
-          <span class="field-error" id="auth-email-error"></span>
+          <label for="auth-login-password" class="form-label">Пароль</label>
+          <input type="password" id="auth-login-password" name="password" class="form-input" autocomplete="current-password" placeholder="Введіть ваш пароль" required>
+          <span class="field-error" id="auth-login-password-error"></span>
         </div>
 
-        <div class="form-group">
-          <label for="auth-password-input" class="form-label">Пароль</label>
-          <input type="password" id="auth-password-input" name="password" class="form-input" placeholder="Щонайменше 6 символів" required>
-          <span class="field-error" id="auth-password-error"></span>
-        </div>
-
-        <div id="auth-forgot-row" class="auth-forgot-row is-hidden">
+        <div id="auth-forgot-row" class="auth-forgot-row">
           <button type="button" id="auth-forgot-open-btn" class="btn-link auth-forgot-link">Забули пароль?</button>
         </div>
 
         <div class="modal-footer auth-modal-footer">
-          <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-full">Створити акаунт</button>
-          <button type="button" id="auth-guest-browse-btn" class="btn btn-ghost btn-full">Переглянути акції без входу</button>
+          <button type="submit" id="auth-login-submit-btn" class="btn btn-primary btn-full">Увійти</button>
+          <button type="button" id="auth-guest-browse-btn" class="btn btn-ghost btn-full" data-guest-browse>Переглянути акції без входу</button>
+        </div>
+      </form>
+
+      <form id="auth-register-form" class="modal-body is-hidden" novalidate>
+        <div class="form-group">
+          <label for="auth-reg-name" class="form-label">Ваше ім’я</label>
+          <input type="text" id="auth-reg-name" name="name" class="form-input" autocomplete="name" placeholder="Наприклад: Олександр" required>
+          <span class="field-error" id="auth-reg-name-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-reg-email" class="form-label">Електронна пошта</label>
+          <input type="email" id="auth-reg-email" name="email" class="form-input" autocomplete="email" placeholder="user@example.com" required>
+          <span class="field-error" id="auth-reg-email-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-reg-password" class="form-label">Пароль</label>
+          <input type="password" id="auth-reg-password" name="password" class="form-input" autocomplete="new-password" placeholder="Щонайменше 6 символів" required>
+          <span class="field-error" id="auth-reg-password-error"></span>
+        </div>
+
+        <div class="modal-footer auth-modal-footer">
+          <button type="submit" id="auth-reg-submit-btn" class="btn btn-primary btn-full">Створити акаунт</button>
+          <button type="button" id="auth-reg-guest-browse-btn" class="btn btn-ghost btn-full" data-guest-browse>Переглянути акції без входу</button>
         </div>
       </form>
 
@@ -440,8 +460,8 @@
         <p class="auth-dev-code-hint is-hidden" id="auth-verify-dev-hint"></p>
 
         <div class="form-group">
-          <label for="auth-verify-code-input" class="form-label">6-значний код підтвердження</label>
-          <input type="text" id="auth-verify-code-input" name="verification_code" class="form-input auth-otp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>
+          <label for="auth-otp-code" class="form-label">6-значний код підтвердження</label>
+          <input type="text" id="auth-otp-code" name="verification_code" class="form-input auth-otp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>
           <span class="field-error" id="auth-verify-error"></span>
         </div>
 

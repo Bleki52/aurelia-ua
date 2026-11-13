@@ -54,8 +54,13 @@ function requireAuth(req, res, next) {
   return verifyToken(req, res, next);
 }
 
+function isStaffDomainEmail(email) {
+  return String(email || '').trim().toLowerCase().endsWith('@aurelia.ua');
+}
+
 /**
- * Middleware: Requires an authenticated user with ADMIN role.
+ * Middleware: Requires an authenticated @aurelia.ua user with ADMIN role.
+ * Explicitly blocks QA users with a read-only 403 message.
  */
 function requireAdmin(req, res, next) {
   const decoded = extractVerifiedToken(req);
@@ -66,9 +71,19 @@ function requireAdmin(req, res, next) {
     });
   }
 
-  if (decoded.role !== 'ADMIN') {
+  const email = String(decoded.email || '').trim().toLowerCase();
+  const hasDomain = isStaffDomainEmail(email);
+
+  if (hasDomain && decoded.role === 'QA') {
     return res.status(403).json({
-      error: 'Доступ заборонено. Потрібні права адміністратора.',
+      error: 'Режим QA (тільки перегляд): редагування та видалення заборонено',
+      code: 'QA_READ_ONLY'
+    });
+  }
+
+  if (!hasDomain || decoded.role !== 'ADMIN') {
+    return res.status(403).json({
+      error: 'Доступ заборонено. Потрібні права адміністратора @aurelia.ua.',
       code: 'FORBIDDEN'
     });
   }

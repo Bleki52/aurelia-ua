@@ -129,7 +129,7 @@
 
   const AppState = {
     theme: 'dark',
-    authMode: 'register',
+    authMode: 'login',
     activeModal: null,
     activeCheckoutCard: null,
     checkoutMode: 'qr',
@@ -155,8 +155,11 @@
     catalogSubCategory: 'all',
     catalogCategory: 'all',
     catalogStore: 'all',
-    catalogSort: 'cheap',
+    catalogSort: 'default',
     catalogSearch: '',
+    catalogPriceMin: null,
+    catalogPriceMax: null,
+    catalogMinDiscount: 0,
     catalogCurrentPage: 1,
     catalogPageStart: 0,
     catalogVisibleCount: CATALOG_PAGE_SIZE,
@@ -240,7 +243,14 @@
     DOM.breadcrumbCount = document.getElementById('breadcrumb-count');
     DOM.storeFilterBar = document.getElementById('store-filter-bar');
     DOM.storeFilterBtns = document.querySelectorAll('#store-filter-bar .filter-btn');
-    DOM.catalogSortSelect = document.getElementById('catalog-sort-select');
+    DOM.filterPriceMin = document.getElementById('filter-price-min');
+    DOM.filterPriceMax = document.getElementById('filter-price-max');
+    DOM.pricePresetChips = document.querySelectorAll('.price-preset-chip');
+    DOM.filterDiscount = document.getElementById('filter-discount');
+    DOM.filterStore = document.getElementById('filter-store');
+    DOM.filterSort = document.getElementById('filter-sort') || document.getElementById('catalog-sort-select');
+    DOM.catalogSortSelect = DOM.filterSort;
+    DOM.btnResetFilters = document.getElementById('btn-reset-filters');
     DOM.btnCatalogSync = document.getElementById('btn-catalog-sync');
     DOM.catalogSyncLabel = document.getElementById('catalog-sync-label');
     DOM.catalogSyncStatus = document.getElementById('catalog-sync-status');
@@ -261,30 +271,44 @@
     DOM.authOpenBtn = document.getElementById('auth-open-btn');
     DOM.mobileAuthBtn = document.getElementById('mobile-auth-btn');
     DOM.headerLogoutBtn = document.getElementById('header-logout-btn');
-    DOM.authForm = document.getElementById('auth-form');
     DOM.authBtnLabel = document.getElementById('auth-btn-label');
     DOM.authModalTitle = document.getElementById('auth-modal-title');
     DOM.authModeTabs = document.getElementById('auth-mode-tabs');
     DOM.authModeBtns = document.querySelectorAll('[data-auth-mode]');
-    DOM.authNameGroup = document.getElementById('auth-name-group');
-    DOM.authNameInput = document.getElementById('auth-name-input');
-    DOM.authEmailInput = document.getElementById('auth-email-input');
-    DOM.authPasswordInput = document.getElementById('auth-password-input');
-    DOM.authNameError = document.getElementById('auth-name-error');
-    DOM.authEmailError = document.getElementById('auth-email-error');
-    DOM.authPasswordError = document.getElementById('auth-password-error');
-    DOM.authSubmitBtn = document.getElementById('auth-submit-btn');
-    DOM.authGuestBrowseBtn = document.getElementById('auth-guest-browse-btn');
-    DOM.authForgotRow = document.getElementById('auth-forgot-row');
+
+    // View 1: Login Form
+    DOM.authLoginForm = document.getElementById('auth-login-form');
+    DOM.authLoginIdentifierInput = document.getElementById('auth-login-identifier');
+    DOM.authLoginPasswordInput = document.getElementById('auth-login-password');
+    DOM.authLoginIdError = document.getElementById('auth-login-id-error');
+    DOM.authLoginPasswordError = document.getElementById('auth-login-password-error');
+    DOM.authLoginSubmitBtn = document.getElementById('auth-login-submit-btn');
     DOM.authForgotOpenBtn = document.getElementById('auth-forgot-open-btn');
+
+    // View 2: Register Form
+    DOM.authRegisterForm = document.getElementById('auth-register-form');
+    DOM.authRegNameInput = document.getElementById('auth-reg-name');
+    DOM.authRegEmailInput = document.getElementById('auth-reg-email');
+    DOM.authRegPasswordInput = document.getElementById('auth-reg-password');
+    DOM.authRegNameError = document.getElementById('auth-reg-name-error');
+    DOM.authRegEmailError = document.getElementById('auth-reg-email-error');
+    DOM.authRegPasswordError = document.getElementById('auth-reg-password-error');
+    DOM.authRegSubmitBtn = document.getElementById('auth-reg-submit-btn');
+
+    // Guest browse buttons inside both tabs
+    DOM.authGuestBrowseBtns = document.querySelectorAll('[data-guest-browse]');
+
+    // View 3: 6-Digit Email Verification Form
     DOM.authVerifyForm = document.getElementById('auth-verify-form');
     DOM.authVerifyDesc = document.getElementById('auth-verify-desc');
     DOM.authVerifyDevHint = document.getElementById('auth-verify-dev-hint');
-    DOM.authVerifyCodeInput = document.getElementById('auth-verify-code-input');
+    DOM.authOtpCodeInput = document.getElementById('auth-otp-code');
     DOM.authVerifyError = document.getElementById('auth-verify-error');
     DOM.authVerifySubmitBtn = document.getElementById('auth-verify-submit-btn');
     DOM.authResendBtn = document.getElementById('auth-resend-btn');
     DOM.authVerifyBackBtn = document.getElementById('auth-verify-back-btn');
+
+    // View 4: Password Reset Form
     DOM.authResetForm = document.getElementById('auth-reset-form');
     DOM.authResetDesc = document.getElementById('auth-reset-desc');
     DOM.authResetDevHint = document.getElementById('auth-reset-dev-hint');
@@ -297,6 +321,8 @@
     DOM.authResetPasswordError = document.getElementById('auth-reset-password-error');
     DOM.authResetSubmitBtn = document.getElementById('auth-reset-submit-btn');
     DOM.authResetBackBtn = document.getElementById('auth-reset-back-btn');
+
+    // View 5: Authenticated Profile View
     DOM.authProfileView = document.getElementById('auth-profile-view');
     DOM.authProfileRole = document.getElementById('auth-profile-role');
     DOM.authProfileName = document.getElementById('auth-profile-name');
@@ -967,7 +993,7 @@
         setTimeout(() => {
           const stillGuest = !(window.AureliaAPI && window.AureliaAPI.getCurrentUser());
           if (stillGuest && !AppState.activeModal) {
-            setAuthModalMode('register');
+            setAuthModalMode('login');
             openModal(DOM.authModal);
           }
         }, 260);
@@ -1009,7 +1035,7 @@
       const lockedAuthBtn = document.getElementById('locked-wallet-auth-btn');
       if (lockedAuthBtn && DOM.authModal) {
         lockedAuthBtn.addEventListener('click', () => {
-          setAuthModalMode('register');
+          setAuthModalMode('login');
           openModal(DOM.authModal);
         });
       }
@@ -1438,11 +1464,229 @@
     }
   }
 
+  const SHORT_SEARCH_EXCLUDED_STEMS = {
+    'рис': ['рисун', 'рисовк'],
+    'сир': ['сироп', 'сироватк', 'сирник'],
+    'мед': ['медич', 'медаль', 'медіа'],
+    'сік': ['сікатор']
+  };
+
+  function normalizeUkText(str) {
+    return String(str || '').toLowerCase().replace(/['’ʼ`]/g, "'").trim();
+  }
+
+  function tokenizeUkWords(text) {
+    const norm = normalizeUkText(text);
+    const rawTokens = norm.split(/[^а-яіїєґa-z0-9']+/i).filter(Boolean);
+    const words = [];
+    rawTokens.forEach((tok) => {
+      const noApos = tok.replace(/'/g, '');
+      if (noApos) words.push(noApos);
+    });
+    return words;
+  }
+
+  function matchesSearchToken(word, q, isShortToken) {
+    if (!word || !q) return false;
+    if (isShortToken) {
+      if (!word.startsWith(q)) return false;
+      const excluded = SHORT_SEARCH_EXCLUDED_STEMS[q];
+      if (excluded && excluded.some((stem) => word.startsWith(stem))) {
+        return false;
+      }
+      return true;
+    }
+    const stem = q.slice(0, -1);
+    return word.startsWith(q) || word.startsWith(stem);
+  }
+
+  function matchesUkrainianSearch(productName, subCategory, rawQuery) {
+    const queryTokens = normalizeUkText(rawQuery)
+      .split(/\s+/)
+      .map((t) => t.replace(/'/g, ''))
+      .filter(Boolean);
+    if (queryTokens.length === 0) return true;
+
+    const productWords = tokenizeUkWords(productName);
+    const subNorm = normalizeUkText(subCategory).replace(/'/g, '');
+    const subWords = tokenizeUkWords(subCategory);
+
+    return queryTokens.every((q) => {
+      const isShort = q.length <= 4;
+      if (productWords.some((w) => matchesSearchToken(w, q, isShort))) {
+        return true;
+      }
+      if (!isShort) {
+        const stem = q.slice(0, -1);
+        if (subNorm.startsWith(q) || subNorm.startsWith(stem)) return true;
+        if (subWords.some((w) => matchesSearchToken(w, q, false))) return true;
+      }
+      return false;
+    });
+  }
+
+  function getUkrainianSearchRank(productName, rawQuery) {
+    const queryTokens = normalizeUkText(rawQuery)
+      .split(/\s+/)
+      .map((t) => t.replace(/'/g, ''))
+      .filter(Boolean);
+    if (queryTokens.length === 0) return 0;
+
+    const firstQ = queryTokens[0];
+    const isShort = firstQ.length <= 4;
+    const productWords = tokenizeUkWords(productName);
+    if (productWords.length === 0) return 2;
+
+    const firstWord = productWords[0];
+    if (firstWord === firstQ) return -1;
+    if (matchesSearchToken(firstWord, firstQ, isShort)) return 0;
+    if (productWords.slice(1).some((w) => matchesSearchToken(w, firstQ, isShort))) return 1;
+    return 2;
+  }
+
+  function getProductMetricsForCatalog(prod, activeSelectedStores, selectedStore) {
+    const rawEntries = Array.isArray(prod.prices) && prod.prices.length > 0
+      ? prod.prices
+      : Object.entries(prod.storePrices || {}).map(([store, val]) => ({ store, ...val }));
+
+    const validPrices = rawEntries.filter((entry) => {
+      const p = parseFloat(entry.price);
+      const inSelected = activeSelectedStores.includes(entry.store);
+      const matchesSingleStore = !selectedStore || selectedStore === 'all' || selectedStore === 'multi-store' || entry.store === selectedStore;
+      return !isNaN(p) && p > 0 && inSelected && matchesSingleStore;
+    });
+
+    if (validPrices.length === 0) {
+      return { validPrices: [], minPrice: 0, maxDiscount: 0, maxSavingsUah: 0, spreadSavings: 0 };
+    }
+
+    const numericPrices = validPrices.map(e => parseFloat(e.price)).filter(p => !isNaN(p) && p > 0);
+    const minPrice = numericPrices.length > 0 ? Math.min(...numericPrices) : 0;
+    const maxPrice = numericPrices.length > 1 ? Math.max(...numericPrices) : 0;
+    const spreadSavings = (maxPrice > minPrice && minPrice > 0) ? (maxPrice - minPrice) : 0;
+
+    let maxDiscount = 0;
+    let maxPromoSavings = 0;
+    validPrices.forEach((entry) => {
+      const p = parseFloat(entry.price) || 0;
+      const rawOld = entry.oldPrice !== undefined ? entry.oldPrice : entry.old_price;
+      const oldPrice = (rawOld && !isNaN(parseFloat(rawOld))) ? parseFloat(rawOld) : null;
+      const disc = entry.discount !== undefined
+        ? Number(entry.discount) || 0
+        : (oldPrice && oldPrice > p ? Math.round(((oldPrice - p) / oldPrice) * 100) : 0);
+      if (disc > maxDiscount) maxDiscount = disc;
+      if (oldPrice && oldPrice > p) {
+        const promoSaving = oldPrice - p;
+        if (promoSaving > maxPromoSavings) maxPromoSavings = promoSaving;
+      }
+    });
+
+    return {
+      validPrices,
+      minPrice: (isFinite(minPrice) && !isNaN(minPrice) && minPrice > 0) ? minPrice : 0,
+      maxDiscount: (isFinite(maxDiscount) && !isNaN(maxDiscount) && maxDiscount > 0) ? maxDiscount : 0,
+      maxSavingsUah: Math.max(spreadSavings, maxPromoSavings),
+      spreadSavings
+    };
+  }
+
+  function hasActiveCatalogFilters() {
+    return Boolean(
+      AppState.catalogSearch ||
+      AppState.catalogPriceMin !== null ||
+      AppState.catalogPriceMax !== null ||
+      AppState.catalogMinDiscount > 0 ||
+      (AppState.catalogStore && AppState.catalogStore !== 'all') ||
+      (AppState.catalogSort && AppState.catalogSort !== 'default') ||
+      (AppState.catalogMainCategory && AppState.catalogMainCategory !== 'all') ||
+      (AppState.catalogSubCategory && AppState.catalogSubCategory !== 'all')
+    );
+  }
+
+  function updateResetFiltersButton() {
+    if (!DOM.btnResetFilters) return;
+    DOM.btnResetFilters.classList.toggle('is-hidden', !hasActiveCatalogFilters());
+  }
+
+  function syncPricePresetChips() {
+    if (!DOM.pricePresetChips || DOM.pricePresetChips.length === 0) return;
+    const minStr = AppState.catalogPriceMin !== null ? String(AppState.catalogPriceMin) : '';
+    const maxStr = AppState.catalogPriceMax !== null ? String(AppState.catalogPriceMax) : '';
+    DOM.pricePresetChips.forEach((chip) => {
+      const chipMin = chip.dataset.min || '';
+      const chipMax = chip.dataset.max || '';
+      chip.classList.toggle('is-active', chipMin === minStr && chipMax === maxStr);
+    });
+  }
+
+  function syncStoreFilterControls() {
+    if (DOM.storeFilterBar) {
+      DOM.storeFilterBar.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', (btn.dataset.store || 'all') === AppState.catalogStore);
+      });
+    }
+    if (DOM.filterStore) {
+      DOM.filterStore.value = AppState.catalogStore;
+    }
+  }
+
+  function resetAllCatalogFilters() {
+    AppState.catalogSearch = '';
+    AppState.catalogPriceMin = null;
+    AppState.catalogPriceMax = null;
+    AppState.catalogMinDiscount = 0;
+    AppState.catalogStore = 'all';
+    AppState.catalogSort = 'default';
+    AppState.catalogMainCategory = 'all';
+    AppState.catalogSubCategory = 'all';
+
+    if (DOM.productSearchInput) DOM.productSearchInput.value = '';
+    if (DOM.filterPriceMin) DOM.filterPriceMin.value = '';
+    if (DOM.filterPriceMax) DOM.filterPriceMax.value = '';
+    if (DOM.filterDiscount) DOM.filterDiscount.value = '0';
+    if (DOM.filterStore) DOM.filterStore.value = 'all';
+    if (DOM.filterSort) DOM.filterSort.value = 'default';
+
+    document.querySelectorAll('.macro-cat-btn').forEach((b) => {
+      const isAll = (b.dataset.main || 'all') === 'all';
+      b.classList.toggle('is-active', isAll);
+      b.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+    });
+
+    renderSubCategories('all');
+    syncPricePresetChips();
+    syncStoreFilterControls();
+    resetCatalogPagination();
+    renderCatalog();
+  }
+
   function renderCatalogStoreFilters() {
-    if (!DOM.storeFilterBar) return;
     const activeStores = AppState.selectedStores.length > 0 ? AppState.selectedStores : STORES;
+    if (
+      AppState.catalogStore !== 'all' &&
+      AppState.catalogStore !== 'multi-store' &&
+      !activeStores.includes(AppState.catalogStore)
+    ) {
+      AppState.catalogStore = 'all';
+    }
+
+    if (DOM.filterStore) {
+      const selectOptions = [
+        '<option value="all">Усі мережі міста</option>',
+        '<option value="multi-store">Тільки порівняння (2+ мережі)</option>',
+        ...activeStores.map((s) => {
+          const meta = STORE_META[s] || { name: s.toUpperCase() };
+          return `<option value="${s}">${meta.name}</option>`;
+        })
+      ];
+      DOM.filterStore.innerHTML = selectOptions.join('');
+      DOM.filterStore.value = AppState.catalogStore;
+    }
+
+    if (!DOM.storeFilterBar) return;
     const buttons = [
-      `<button type="button" class="filter-btn ${AppState.catalogStore === 'all' ? 'is-active' : ''}" data-store="all">Всі мережі</button>`
+      `<button type="button" class="filter-btn ${AppState.catalogStore === 'all' ? 'is-active' : ''}" data-store="all">Всі мережі</button>`,
+      `<button type="button" class="filter-btn ${AppState.catalogStore === 'multi-store' ? 'is-active' : ''}" data-store="multi-store">2+ мережі</button>`
     ];
 
     activeStores.forEach(s => {
@@ -1459,11 +1703,10 @@
     if (filterBtns && filterBtns.length > 0) {
       filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          DOM.storeFilterBar?.querySelectorAll('.filter-btn')?.forEach(b => b.classList.remove('is-active'));
-          btn.classList.add('is-active');
           triggerSwitchBlur(btn);
           triggerSwitchBlur(DOM.catalogContainer);
           AppState.catalogStore = btn.dataset.store || 'all';
+          syncStoreFilterControls();
           resetCatalogPagination();
           renderCatalog();
         });
@@ -1545,100 +1788,91 @@
 
     // Filter by store personalization: keep products that have at least one price in user's selected stores
     const activeSelectedStores = AppState.selectedStores.length > 0 ? AppState.selectedStores : STORES;
-    list = list.filter(p => {
-      const prices = Array.isArray(p.prices) && p.prices.length > 0
-        ? p.prices
-        : Object.entries(p.storePrices || {}).map(([s, val]) => ({ store: s, ...val }));
-      return prices.some(pr => activeSelectedStores.includes(pr.store) && parseFloat(pr.price) > 0);
+
+    // Filter by active stores, single store, multi-store comparison, price range & minimum discount
+    const metricsCache = new Map();
+    const getMetrics = (prod) => {
+      if (!metricsCache.has(prod.id)) {
+        metricsCache.set(prod.id, getProductMetricsForCatalog(prod, activeSelectedStores, AppState.catalogStore));
+      }
+      return metricsCache.get(prod.id);
+    };
+
+    list = list.filter((p) => {
+      const m = getMetrics(p);
+      if (m.validPrices.length === 0) return false;
+
+      if (AppState.catalogStore === 'multi-store' && m.validPrices.length < 2) {
+        return false;
+      }
+
+      if (AppState.catalogPriceMin !== null && m.minPrice < AppState.catalogPriceMin) {
+        return false;
+      }
+      if (AppState.catalogPriceMax !== null && m.minPrice > AppState.catalogPriceMax) {
+        return false;
+      }
+
+      if (AppState.catalogMinDiscount > 0 && m.maxDiscount < AppState.catalogMinDiscount) {
+        return false;
+      }
+
+      return true;
     });
 
-    // Filter by single store if chosen via store filter button
-    if (AppState.catalogStore && AppState.catalogStore !== 'all') {
-      list = list.filter(p => {
-        if (Array.isArray(p.prices) && p.prices.length > 0) {
-          return p.prices.some(pr => pr.store === AppState.catalogStore && parseFloat(pr.price) > 0);
-        }
-        return Boolean(p.storePrices && p.storePrices[AppState.catalogStore]);
-      });
-    }
-
-    // Filter by search query
+    // Smart Ukrainian word-boundary search filter
     if (AppState.catalogSearch) {
-      const q = AppState.catalogSearch.toLowerCase();
-      list = list.filter(p =>
-        (p.title && p.title.toLowerCase().includes(q)) ||
-        (p.name && p.name.toLowerCase().includes(q)) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
-        (p.subCategory && p.subCategory.toLowerCase().includes(q))
+      list = list.filter((p) =>
+        matchesUkrainianSearch(
+          p.title || p.name || '',
+          p.subCategory || p.sub_category || p.category || '',
+          AppState.catalogSearch
+        )
       );
-    }
-
-    // Filter by multi-store comparison mode (2+ stores)
-    if (AppState.catalogSort === 'multi-store') {
-      list = list.filter(p => {
-        const prices = (
-          Array.isArray(p.prices) && p.prices.length > 0
-            ? p.prices
-            : Object.entries(p.storePrices || {}).map(([s, val]) => ({ store: s, ...val }))
-        ).filter(entry => {
-          const pr = parseFloat(entry.price);
-          const inSelected = activeSelectedStores.includes(entry.store);
-          const matchesStore = AppState.catalogStore === 'all' || entry.store === AppState.catalogStore;
-          return !isNaN(pr) && pr > 0 && inSelected && matchesStore;
-        });
-        return prices.length >= 2;
-      });
     }
 
     // Sort
     list.sort((a, b) => {
-      const getMinPrice = (prod) => {
-        const prs = (Array.isArray(prod.prices) && prod.prices.length > 0
-          ? prod.prices.map(x => parseFloat(x.price))
-          : Object.values(prod.storePrices || {}).map(x => parseFloat(x.price))
-        ).filter(p => !isNaN(p) && p > 0);
-        return prs.length > 0 ? Math.min(...prs) : 0;
-      };
+      const mA = getMetrics(a);
+      const mB = getMetrics(b);
+      const searchRankDiff = AppState.catalogSearch
+        ? getUkrainianSearchRank(a.title || a.name || '', AppState.catalogSearch) -
+          getUkrainianSearchRank(b.title || b.name || '', AppState.catalogSearch)
+        : 0;
 
-      const getMaxDisc = (prod) => {
-        const prs = (Array.isArray(prod.prices) && prod.prices.length > 0
-          ? prod.prices.map(x => {
-              const p = parseFloat(x.price) || 0;
-              const op = parseFloat(x.oldPrice || x.old_price) || 0;
-              return (p > 0 && op > p) ? Math.round(((op - p) / op) * 100) : 0;
-            })
-          : Object.values(prod.storePrices || {}).map(x => Number(x.discount) || 0)
-        ).filter(d => !isNaN(d) && d > 0);
-        return prs.length > 0 ? Math.max(...prs) : 0;
-      };
-
-      if (AppState.catalogSort === 'cheap') {
-        return getMinPrice(a) - getMinPrice(b);
-      } else if (AppState.catalogSort === 'discount') {
-        return getMaxDisc(b) - getMaxDisc(a);
-      } else if (AppState.catalogSort === 'multi-store') {
-        const getStoreCount = (prod) => {
-          const prs = (Array.isArray(prod.prices) && prod.prices.length > 0
-            ? prod.prices
-            : Object.entries(prod.storePrices || {}).map(([s, val]) => ({ store: s, ...val }))
-          ).filter(entry => {
-            const pr = parseFloat(entry.price);
-            const inSelected = activeSelectedStores.includes(entry.store);
-            const matchesStore = AppState.catalogStore === 'all' || entry.store === AppState.catalogStore;
-            return !isNaN(pr) && pr > 0 && inSelected && matchesStore;
-          });
-          return prs.length;
-        };
-        const countDiff = getStoreCount(b) - getStoreCount(a);
-        if (countDiff !== 0) return countDiff;
-        return getMinPrice(a) - getMinPrice(b);
-      } else if (AppState.catalogSort === 'title') {
+      if (AppState.catalogSort === 'price-asc' || AppState.catalogSort === 'cheap') {
+        const diff = mA.minPrice - mB.minPrice;
+        return diff !== 0 ? diff : searchRankDiff;
+      } else if (AppState.catalogSort === 'price-desc') {
+        const diff = mB.minPrice - mA.minPrice;
+        return diff !== 0 ? diff : searchRankDiff;
+      } else if (AppState.catalogSort === 'discount-desc' || AppState.catalogSort === 'discount') {
+        const diff = mB.maxDiscount - mA.maxDiscount;
+        return diff !== 0 ? diff : (mA.minPrice - mB.minPrice);
+      } else if (AppState.catalogSort === 'savings-uah-desc') {
+        const diff = mB.maxSavingsUah - mA.maxSavingsUah;
+        return diff !== 0 ? diff : (mA.minPrice - mB.minPrice);
+      } else if (AppState.catalogSort === 'name-asc' || AppState.catalogSort === 'title') {
         return (a.title || a.name || '').localeCompare(b.title || b.name || '', 'uk');
+      } else if (AppState.catalogSort === 'multi-store') {
+        const countDiff = mB.validPrices.length - mA.validPrices.length;
+        if (countDiff !== 0) return countDiff;
+        return mA.minPrice - mB.minPrice;
       }
-      return 0;
+
+      // Default relevance sort: prioritize first-word noun match when searching, then multi-store & price
+      if (AppState.catalogSearch && searchRankDiff !== 0) {
+        return searchRankDiff;
+      }
+      const multiDiff = mB.validPrices.length - mA.validPrices.length;
+      if (AppState.catalogStore === 'multi-store' && multiDiff !== 0) {
+        return multiDiff;
+      }
+      return mA.minPrice - mB.minPrice;
     });
 
     updateCatalogBreadcrumbs(list.length);
+    updateResetFiltersButton();
 
     if (list.length === 0) {
       DOM.catalogContainer.innerHTML = `
@@ -1667,50 +1901,12 @@
     const visibleList = list.slice(startIdx, startIdx + AppState.catalogVisibleCount);
 
     DOM.catalogContainer.innerHTML = visibleList.map(prod => {
-      // Collect prices strictly for active selected stores & selected single store
-      const priceEntries = (
-        Array.isArray(prod.prices) && prod.prices.length > 0
-          ? prod.prices
-          : Object.entries(prod.storePrices || {}).map(([store, val]) => ({ store, ...val }))
-      ).filter(entry => {
-        const p = parseFloat(entry.price);
-        const inSelected = activeSelectedStores.includes(entry.store);
-        const matchesStore = AppState.catalogStore === 'all' || entry.store === AppState.catalogStore;
-        return !isNaN(p) && p > 0 && inSelected && matchesStore;
-      });
-
-      // Guard minPrice and maxDiscount so they NEVER display Infinity or NaN
-      let minPrice = 0;
-      let maxDiscount = 0;
-
-      if (priceEntries.length > 0) {
-        const numericPrices = priceEntries.map(e => parseFloat(e.price)).filter(p => !isNaN(p) && p > 0);
-        if (numericPrices.length > 0) {
-          minPrice = Math.min(...numericPrices);
-        }
-
-        priceEntries.forEach(entry => {
-          const p = parseFloat(entry.price) || 0;
-          const rawOld = entry.oldPrice !== undefined ? entry.oldPrice : entry.old_price;
-          const oldPrice = (rawOld && !isNaN(parseFloat(rawOld))) ? parseFloat(rawOld) : null;
-          const disc = entry.discount !== undefined
-            ? Number(entry.discount) || 0
-            : (oldPrice && oldPrice > p ? Math.round(((oldPrice - p) / oldPrice) * 100) : 0);
-          if (disc > maxDiscount) maxDiscount = disc;
-        });
-      }
-
-      if (!isFinite(minPrice) || isNaN(minPrice) || minPrice <= 0) {
-        minPrice = 0;
-      }
-      if (!isFinite(maxDiscount) || isNaN(maxDiscount) || maxDiscount <= 0) {
-        maxDiscount = 0;
-      }
-
-      // Build store comparison tiles ONLY for stores that actually returned the item
-      const numericPricesForRange = priceEntries.map(e => parseFloat(e.price)).filter(p => !isNaN(p) && p > 0);
-      const maxPrice = numericPricesForRange.length > 1 ? Math.max(...numericPricesForRange) : 0;
-      const spreadSavings = (maxPrice > minPrice && minPrice > 0) ? (maxPrice - minPrice) : 0;
+      const {
+        validPrices: priceEntries,
+        minPrice,
+        maxDiscount,
+        spreadSavings
+      } = getMetrics(prod);
 
       const prodCat = resolveEntityCategory(prod);
 
@@ -1947,12 +2143,85 @@
       });
     }
 
+    // Price range numeric inputs
+    const parsePriceBound = (val) => {
+      const trimmed = String(val || '').trim();
+      if (!trimmed) return null;
+      const num = parseFloat(trimmed);
+      if (isNaN(num) || num < 0) return null;
+      return num;
+    };
+
+    if (DOM.filterPriceMin) {
+      DOM.filterPriceMin.addEventListener('input', (e) => {
+        AppState.catalogPriceMin = parsePriceBound(e.target.value);
+        syncPricePresetChips();
+        resetCatalogPagination();
+        renderCatalog();
+      });
+    }
+
+    if (DOM.filterPriceMax) {
+      DOM.filterPriceMax.addEventListener('input', (e) => {
+        AppState.catalogPriceMax = parsePriceBound(e.target.value);
+        syncPricePresetChips();
+        resetCatalogPagination();
+        renderCatalog();
+      });
+    }
+
+    // Price preset chips
+    if (DOM.pricePresetChips && DOM.pricePresetChips.length > 0) {
+      DOM.pricePresetChips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const minVal = chip.dataset.min || '';
+          const maxVal = chip.dataset.max || '';
+          AppState.catalogPriceMin = parsePriceBound(minVal);
+          AppState.catalogPriceMax = parsePriceBound(maxVal);
+          if (DOM.filterPriceMin) DOM.filterPriceMin.value = minVal;
+          if (DOM.filterPriceMax) DOM.filterPriceMax.value = maxVal;
+          syncPricePresetChips();
+          triggerSwitchBlur(chip);
+          triggerSwitchBlur(DOM.catalogContainer);
+          resetCatalogPagination();
+          renderCatalog();
+        });
+      });
+    }
+
+    // Minimum discount select
+    if (DOM.filterDiscount) {
+      DOM.filterDiscount.addEventListener('change', (e) => {
+        AppState.catalogMinDiscount = parseInt(e.target.value, 10) || 0;
+        resetCatalogPagination();
+        renderCatalog();
+      });
+    }
+
+    // Store & comparison select
+    if (DOM.filterStore) {
+      DOM.filterStore.addEventListener('change', (e) => {
+        AppState.catalogStore = e.target.value || 'all';
+        syncStoreFilterControls();
+        resetCatalogPagination();
+        renderCatalog();
+      });
+    }
+
     // Sorting select
     if (DOM.catalogSortSelect) {
       DOM.catalogSortSelect.addEventListener('change', (e) => {
-        AppState.catalogSort = e.target.value;
+        AppState.catalogSort = e.target.value || 'default';
         resetCatalogPagination();
         renderCatalog();
+      });
+    }
+
+    // Reset all catalog filters
+    if (DOM.btnResetFilters) {
+      DOM.btnResetFilters.addEventListener('click', () => {
+        triggerSwitchBlur(DOM.catalogContainer);
+        resetAllCatalogFilters();
       });
     }
 
@@ -2497,9 +2766,11 @@
 
   /* ─── 11. Auth Modal & Session Controller ────────────────────────────────── */
   function clearAuthErrors() {
-    if (DOM.authNameError) DOM.authNameError.textContent = '';
-    if (DOM.authEmailError) DOM.authEmailError.textContent = '';
-    if (DOM.authPasswordError) DOM.authPasswordError.textContent = '';
+    if (DOM.authLoginIdError) DOM.authLoginIdError.textContent = '';
+    if (DOM.authLoginPasswordError) DOM.authLoginPasswordError.textContent = '';
+    if (DOM.authRegNameError) DOM.authRegNameError.textContent = '';
+    if (DOM.authRegEmailError) DOM.authRegEmailError.textContent = '';
+    if (DOM.authRegPasswordError) DOM.authRegPasswordError.textContent = '';
     if (DOM.authVerifyError) DOM.authVerifyError.textContent = '';
     if (DOM.authResetEmailError) DOM.authResetEmailError.textContent = '';
     if (DOM.authResetCodeError) DOM.authResetCodeError.textContent = '';
@@ -2517,9 +2788,16 @@
     }
   }
 
+  function isStaffSessionUser(user) {
+    if (!user || !user.email) return false;
+    const isStaffDomain = String(user.email).trim().toLowerCase().endsWith('@aurelia.ua');
+    const role = String(user.role || '').toUpperCase();
+    return isStaffDomain && (role === 'ADMIN' || role === 'QA');
+  }
+
   function setAuthModalMode(mode, meta = {}) {
-    const validModes = ['register', 'login', 'verify', 'forgot', 'reset-confirm', 'profile'];
-    const targetMode = validModes.includes(mode) ? mode : 'register';
+    const validModes = ['login', 'register', 'verify', 'forgot', 'reset-confirm', 'profile'];
+    const targetMode = validModes.includes(mode) ? mode : 'login';
     AppState.authMode = targetMode;
     clearAuthErrors();
 
@@ -2534,10 +2812,11 @@
     const isReset = isForgot || isResetConfirm;
     const isRegister = targetMode === 'register';
     const isLogin = targetMode === 'login';
-    const isMainForm = isRegister || isLogin;
+    const showTabs = isLogin || isRegister;
 
-    if (DOM.authModeTabs) DOM.authModeTabs.classList.toggle('is-hidden', !isMainForm);
-    if (DOM.authForm) DOM.authForm.classList.toggle('is-hidden', !isMainForm);
+    if (DOM.authModeTabs) DOM.authModeTabs.classList.toggle('is-hidden', !showTabs);
+    if (DOM.authLoginForm) DOM.authLoginForm.classList.toggle('is-hidden', !isLogin);
+    if (DOM.authRegisterForm) DOM.authRegisterForm.classList.toggle('is-hidden', !isRegister);
     if (DOM.authVerifyForm) DOM.authVerifyForm.classList.toggle('is-hidden', !isVerify);
     if (DOM.authResetForm) DOM.authResetForm.classList.toggle('is-hidden', !isReset);
     if (DOM.authProfileView) DOM.authProfileView.classList.toggle('is-hidden', !isProfile);
@@ -2550,30 +2829,22 @@
       });
     }
 
-    if (DOM.authNameGroup) DOM.authNameGroup.classList.toggle('is-hidden', !isRegister);
-    if (DOM.authForgotRow) DOM.authForgotRow.classList.toggle('is-hidden', !isLogin);
-
     if (DOM.authModalTitle) {
       const titles = {
-        profile: 'Особистий кабінет',
-        register: 'Реєстрація в AURELIA UA',
         login: 'Вхід до AURELIA UA',
+        register: 'Реєстрація в AURELIA UA',
         verify: 'Підтвердження Email',
         forgot: 'Відновлення пароля',
-        'reset-confirm': 'Новий пароль'
+        'reset-confirm': 'Новий пароль',
+        profile: 'Особистий кабінет'
       };
       DOM.authModalTitle.textContent = titles[targetMode] || 'Вхід до AURELIA UA';
     }
 
-    if (DOM.authSubmitBtn) {
-      DOM.authSubmitBtn.textContent = isRegister ? 'Створити акаунт' : 'Увійти';
-    }
-    if (DOM.authPasswordInput) {
-      DOM.authPasswordInput.placeholder = isRegister ? 'Щонайменше 6 символів' : 'Введіть ваш пароль';
-    }
-
     if (isVerify) {
-      const targetEmail = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+      const regEmail = DOM.authRegEmailInput ? DOM.authRegEmailInput.value.trim().toLowerCase() : '';
+      const loginId = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim().toLowerCase() : '';
+      const targetEmail = AppState.pendingAuthEmail || regEmail || (loginId.includes('@') ? loginId : '');
       if (DOM.authVerifyDesc) {
         DOM.authVerifyDesc.textContent = meta.message
           || (targetEmail
@@ -2581,13 +2852,14 @@
             : 'Ми надіслали 6-значний код підтвердження на вашу електронну пошту.');
       }
       showDevOtpHint(DOM.authVerifyDevHint, meta.devCode);
-      if (DOM.authVerifyCodeInput) {
-        DOM.authVerifyCodeInput.value = '';
-        setTimeout(() => DOM.authVerifyCodeInput && DOM.authVerifyCodeInput.focus(), 60);
+      if (DOM.authOtpCodeInput) {
+        DOM.authOtpCodeInput.value = '';
+        setTimeout(() => DOM.authOtpCodeInput && DOM.authOtpCodeInput.focus(), 60);
       }
     } else if (isReset) {
       if (DOM.authResetEmailInput) {
-        const fallbackEmail = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+        const loginId = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim().toLowerCase() : '';
+        const fallbackEmail = AppState.pendingAuthEmail || (loginId.includes('@') ? loginId : '');
         if (!DOM.authResetEmailInput.value && fallbackEmail) {
           DOM.authResetEmailInput.value = fallbackEmail;
         }
@@ -2642,20 +2914,27 @@
       if (DOM.authProfileName) DOM.authProfileName.textContent = displayName;
       if (DOM.authProfileEmail) DOM.authProfileEmail.textContent = user.email || '';
       if (DOM.authProfileRole) {
-        DOM.authProfileRole.textContent = user.role === 'ADMIN' ? 'Адміністратор' : 'Персональний гаманець';
+        const role = String(user.role || '').toUpperCase();
+        if (role === 'ADMIN') {
+          DOM.authProfileRole.textContent = 'Адміністратор';
+        } else if (role === 'QA') {
+          DOM.authProfileRole.textContent = 'QA-інженер (Тільки перегляд)';
+        } else {
+          DOM.authProfileRole.textContent = 'Персональний гаманець';
+        }
       }
     }
 
-    const isAdmin = Boolean(user && user.role === 'ADMIN');
+    const canAccessAdmin = isStaffSessionUser(user);
     document.querySelectorAll('.admin-nav-item').forEach(el => {
-      el.classList.toggle('is-hidden', !isAdmin);
+      el.classList.toggle('is-hidden', !canAccessAdmin);
     });
     document.querySelectorAll('a[href="admin.html"]').forEach(link => {
       const parentLi = link.closest('li');
       if (parentLi && parentLi.parentElement && (parentLi.parentElement.classList.contains('nav-menu-list') || parentLi.parentElement.classList.contains('mobile-nav-list'))) {
-        parentLi.classList.toggle('is-hidden', !isAdmin);
+        parentLi.classList.toggle('is-hidden', !canAccessAdmin);
       } else {
-        link.classList.toggle('is-hidden', !isAdmin);
+        link.classList.toggle('is-hidden', !canAccessAdmin);
       }
     });
   }
@@ -2665,7 +2944,10 @@
       await window.AureliaAPI.logout();
     }
     AppState.cards = [];
-    if (DOM.authForm) DOM.authForm.reset();
+    if (DOM.authLoginForm) DOM.authLoginForm.reset();
+    if (DOM.authRegisterForm) DOM.authRegisterForm.reset();
+    if (DOM.authVerifyForm) DOM.authVerifyForm.reset();
+    if (DOM.authResetForm) DOM.authResetForm.reset();
     closeModal(DOM.authModal);
     updateAuthUI();
 
@@ -2684,10 +2966,8 @@
       : null;
     if (user) {
       setAuthModalMode('profile');
-    } else if (AppState.authMode === 'profile') {
-      setAuthModalMode('register');
     } else {
-      setAuthModalMode(AppState.authMode || 'register');
+      setAuthModalMode(AppState.authMode === 'register' ? 'register' : 'login');
     }
     openModal(DOM.authModal);
   }
@@ -2719,21 +2999,24 @@
       });
     }
 
-    if (DOM.authGuestBrowseBtn) {
-      DOM.authGuestBrowseBtn.addEventListener('click', () => {
-        try {
-          sessionStorage.setItem('@aurelia_guest_dismissed', '1');
-        } catch (_) {}
-        closeModal(DOM.authModal);
-        if (DOM.cardsContainer) {
-          window.location.href = 'catalog.html';
-        }
+    if (DOM.authGuestBrowseBtns) {
+      DOM.authGuestBrowseBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          try {
+            sessionStorage.setItem('@aurelia_guest_dismissed', '1');
+          } catch (_) {}
+          closeModal(DOM.authModal);
+          if (DOM.cardsContainer) {
+            window.location.href = 'catalog.html';
+          }
+        });
       });
     }
 
     if (DOM.authForgotOpenBtn) {
       DOM.authForgotOpenBtn.addEventListener('click', () => {
-        const typedEmail = DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '';
+        const typedId = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim().toLowerCase() : '';
+        const typedEmail = typedId.includes('@') ? typedId : '';
         if (DOM.authResetEmailInput) DOM.authResetEmailInput.value = typedEmail;
         setAuthModalMode('forgot', { email: typedEmail });
       });
@@ -2756,7 +3039,8 @@
         sessionStorage.setItem('@aurelia_guest_dismissed', '1');
       } catch (_) {}
 
-      if (DOM.authForm) DOM.authForm.reset();
+      if (DOM.authLoginForm) DOM.authLoginForm.reset();
+      if (DOM.authRegisterForm) DOM.authRegisterForm.reset();
       if (DOM.authVerifyForm) DOM.authVerifyForm.reset();
       if (DOM.authResetForm) DOM.authResetForm.reset();
       AppState.pendingAuthEmail = '';
@@ -2770,41 +3054,83 @@
       }
     };
 
-    if (DOM.authForm) {
-      DOM.authForm.addEventListener('submit', async (e) => {
+    if (DOM.authLoginForm) {
+      DOM.authLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         clearAuthErrors();
 
-        const name = DOM.authNameInput ? DOM.authNameInput.value.trim() : '';
-        const email = DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '';
-        const pass = DOM.authPasswordInput ? DOM.authPasswordInput.value : '';
+        const identifier = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim() : '';
+        const pass = DOM.authLoginPasswordInput ? DOM.authLoginPasswordInput.value : '';
 
         let hasErr = false;
-        if (AppState.authMode === 'register' && name && name.length < 2) {
-          if (DOM.authNameError) DOM.authNameError.textContent = 'Ім’я має містити щонайменше 2 символи.';
-          hasErr = true;
-        }
-        if (!email || !email.includes('@')) {
-          if (DOM.authEmailError) DOM.authEmailError.textContent = 'Вкажіть коректну адресу електронної пошти.';
+        if (!identifier || identifier.length < 2) {
+          if (DOM.authLoginIdError) DOM.authLoginIdError.textContent = 'Вкажіть email або ім’я користувача.';
           hasErr = true;
         }
         if (!pass || pass.length < 6) {
-          if (DOM.authPasswordError) DOM.authPasswordError.textContent = 'Пароль повинен містити щонайменше 6 символів.';
+          if (DOM.authLoginPasswordError) DOM.authLoginPasswordError.textContent = 'Пароль повинен містити щонайменше 6 символів.';
           hasErr = true;
         }
         if (hasErr) return;
 
-        if (DOM.authSubmitBtn) DOM.authSubmitBtn.disabled = true;
-
+        if (DOM.authLoginSubmitBtn) DOM.authLoginSubmitBtn.disabled = true;
         try {
-          let res = null;
-          if (window.AureliaAPI) {
-            if (AppState.authMode === 'register') {
-              res = await window.AureliaAPI.register(name, email, pass);
-            } else {
-              res = await window.AureliaAPI.login(email, pass);
-            }
+          const res = window.AureliaAPI
+            ? await window.AureliaAPI.login(identifier, pass)
+            : null;
+
+          if (res && res.requiresVerification) {
+            setAuthModalMode('verify', {
+              email: res.email || (identifier.includes('@') ? identifier.toLowerCase() : ''),
+              message: res.message,
+              devCode: res.devCode
+            });
+            return;
           }
+
+          await finishAuthenticatedSession();
+        } catch (err) {
+          if (DOM.authLoginIdError) {
+            DOM.authLoginIdError.textContent = err.message || 'Не вдалося виконати вхід.';
+          }
+        } finally {
+          if (DOM.authLoginSubmitBtn) DOM.authLoginSubmitBtn.disabled = false;
+        }
+      });
+    }
+
+    if (DOM.authRegisterForm) {
+      DOM.authRegisterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAuthErrors();
+
+        const name = DOM.authRegNameInput ? DOM.authRegNameInput.value.trim() : '';
+        const email = DOM.authRegEmailInput ? DOM.authRegEmailInput.value.trim().toLowerCase() : '';
+        const pass = DOM.authRegPasswordInput ? DOM.authRegPasswordInput.value : '';
+
+        let hasErr = false;
+        if (!name || name.length < 2) {
+          if (DOM.authRegNameError) DOM.authRegNameError.textContent = 'Ім’я має містити щонайменше 2 символи.';
+          hasErr = true;
+        }
+        if (!email || !email.includes('@')) {
+          if (DOM.authRegEmailError) DOM.authRegEmailError.textContent = 'Вкажіть коректну адресу електронної пошти.';
+          hasErr = true;
+        } else if (email.endsWith('@aurelia.ua')) {
+          if (DOM.authRegEmailError) DOM.authRegEmailError.textContent = 'Реєстрація з доменом @aurelia.ua заборонена.';
+          hasErr = true;
+        }
+        if (!pass || pass.length < 6) {
+          if (DOM.authRegPasswordError) DOM.authRegPasswordError.textContent = 'Пароль повинен містити щонайменше 6 символів.';
+          hasErr = true;
+        }
+        if (hasErr) return;
+
+        if (DOM.authRegSubmitBtn) DOM.authRegSubmitBtn.disabled = true;
+        try {
+          const res = window.AureliaAPI
+            ? await window.AureliaAPI.register(name, email, pass)
+            : null;
 
           if (res && res.requiresVerification) {
             setAuthModalMode('verify', {
@@ -2817,11 +3143,11 @@
 
           await finishAuthenticatedSession();
         } catch (err) {
-          if (DOM.authEmailError) {
-            DOM.authEmailError.textContent = err.message || 'Не вдалося виконати авторизацію.';
+          if (DOM.authRegEmailError) {
+            DOM.authRegEmailError.textContent = err.message || 'Не вдалося створити акаунт.';
           }
         } finally {
-          if (DOM.authSubmitBtn) DOM.authSubmitBtn.disabled = false;
+          if (DOM.authRegSubmitBtn) DOM.authRegSubmitBtn.disabled = false;
         }
       });
     }
@@ -2831,8 +3157,10 @@
         e.preventDefault();
         clearAuthErrors();
 
-        const email = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
-        const code = DOM.authVerifyCodeInput ? DOM.authVerifyCodeInput.value.replace(/\D/g, '').slice(0, 6) : '';
+        const regEmail = DOM.authRegEmailInput ? DOM.authRegEmailInput.value.trim().toLowerCase() : '';
+        const loginId = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim().toLowerCase() : '';
+        const email = AppState.pendingAuthEmail || regEmail || (loginId.includes('@') ? loginId : '');
+        const code = DOM.authOtpCodeInput ? DOM.authOtpCodeInput.value.replace(/\D/g, '').slice(0, 6) : '';
 
         if (!/^\d{6}$/.test(code)) {
           if (DOM.authVerifyError) DOM.authVerifyError.textContent = 'Введіть коректний 6-значний код підтвердження.';
@@ -2858,7 +3186,9 @@
     if (DOM.authResendBtn) {
       DOM.authResendBtn.addEventListener('click', async () => {
         clearAuthErrors();
-        const email = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+        const regEmail = DOM.authRegEmailInput ? DOM.authRegEmailInput.value.trim().toLowerCase() : '';
+        const loginId = DOM.authLoginIdentifierInput ? DOM.authLoginIdentifierInput.value.trim().toLowerCase() : '';
+        const email = AppState.pendingAuthEmail || regEmail || (loginId.includes('@') ? loginId : '');
         if (!email) {
           if (DOM.authVerifyError) DOM.authVerifyError.textContent = 'Вкажіть email перед повторним надсиланням коду.';
           return;

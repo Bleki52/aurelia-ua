@@ -17,10 +17,103 @@
 const fs = require('fs');
 const path = require('path');
 const db = require('./db');
-const { syncLivePromotions, getLatestSyncStats, getStoresStatus, isStoreUrlConsistent, ALL_18_STORES } = require('./services/storeScraper');
+const { syncLivePromotions, getLatestSyncStats, getStoresStatus, isStoreUrlConsistent, categorizeProduct, isValidProductPrice, ALL_18_STORES } = require('./services/storeScraper');
 const { getCityConfig, getAllCities, isStoreInCity } = require('./config/cities');
 
+function sanitizeLocalStoreFile() {
+  const storePath = db.getLocalStorePath ? db.getLocalStorePath() : path.join(__dirname, 'db', 'local-store.json');
+  if (!fs.existsSync(storePath)) {
+    console.log(`ℹ️ Файл ${storePath} не знайдено — очищення пропущено.`);
+    return { removedPrices: 0, removedProducts: 0, recategorized: 0, totalRemaining: 0 };
+  }
+
+  const raw = JSON.parse(fs.readFileSync(storePath, 'utf8'));
+  const products = Array.isArray(raw.products) ? raw.products : [];
+
+  let removedPrices = 0;
+  let removedProducts = 0;
+  let recategorized = 0;
+
+  const cleanedProducts = [];
+  for (const p of products) {
+    const title = (p.name || p.title || '').trim();
+    const originalPrices = Array.isArray(p.prices) ? p.prices : [];
+
+    const validPrices = originalPrices.filter(pr => {
+      if (!pr) {
+        removedPrices++;
+        return false;
+      }
+      const ok = isValidProductPrice(title, pr.price, pr.oldPrice ?? pr.old_price ?? null);
+      if (!ok) {
+        removedPrices++;
+        console.log(`   🧹 Видалено некоректну ціну: [${pr.store}] "${title}" -> ${pr.price} ₴ (було: ${pr.oldPrice ?? pr.old_price ?? 'немає'} ₴)`);
+      }
+      return ok;
+    });
+
+    if (validPrices.length === 0) {
+      removedProducts++;
+      continue;
+    }
+
+    const primaryStore = validPrices[0].store || '';
+    const newCat = categorizeProduct(title, primaryStore, '');
+    const oldMain = (p.mainCategory || p.main_category || '').trim();
+    const oldSub = (p.subCategory || p.sub_category || p.category || '').trim();
+
+    if (oldMain !== newCat.mainCategory || oldSub !== newCat.subCategory) {
+      recategorized++;
+      console.log(`   🏷️ Перекатегоризовано: "${title}" | ${oldMain} -> ${oldSub}  ==>  ${newCat.mainCategory} -> ${newCat.subCategory}`);
+    }
+
+    cleanedProducts.push({
+      ...p,
+      mainCategory: newCat.mainCategory,
+      main_category: newCat.mainCategory,
+      subCategory: newCat.subCategory,
+      sub_category: newCat.subCategory,
+      category: newCat.category,
+      prices: validPrices
+    });
+  }
+
+  raw.products = cleanedProducts;
+  fs.writeFileSync(storePath, JSON.stringify(raw, null, 2), 'utf8');
+
+  const petIceCreams = cleanedProducts.filter(p =>
+    (p.mainCategory === 'Зоотовари' || p.main_category === 'Зоотовари') &&
+    /морозиво|йогурт|сирок|десерт|згущен/i.test(p.name || p.title || '')
+  );
+  const cheapRows = [];
+  cleanedProducts.forEach(p => {
+    (p.prices || []).forEach(pr => {
+      if (!isValidProductPrice(p.name || p.title, pr.price, pr.oldPrice ?? pr.old_price ?? null)) {
+        cheapRows.push({ title: p.name || p.title, store: pr.store, price: pr.price });
+      }
+    });
+  });
+
+  console.log(`\n🧼 [SANITIZE] Очищення local-store.json завершено:`);
+  console.log(`   • Видалено некоректних цінових записів: ${removedPrices}`);
+  console.log(`   • Видалено порожніх товарів:            ${removedProducts}`);
+  console.log(`   • Перекатегоризовано товарів:           ${recategorized}`);
+  console.log(`   • Залишилось валідних товарів:          ${cleanedProducts.length}`);
+  console.log(`   • Морозива/десертів у Зоотоварах:       ${petIceCreams.length}`);
+  console.log(`   • Товарів із ціною 1.00 / 2.00 ₴ або < норми: ${cheapRows.length}`);
+
+  return { removedPrices, removedProducts, recategorized, totalRemaining: cleanedProducts.length };
+}
+
 async function runTest() {
+  if (process.argv.includes('--clean-only')) {
+    console.log('================================================================');
+    console.log('🧼 AURELIA UA — ОЧИЩЕННЯ ТА ВАЛІДАЦІЯ LOCAL-STORE.JSON');
+    console.log('================================================================\n');
+    sanitizeLocalStoreFile();
+    process.exit(0);
+  }
+
   console.log('================================================================');
   console.log('🚀 AURELIA UA — ТЕСТ СИНХРОНІЗАЦІЇ МІСТ (ЗАХІДНА УКРАЇНА: ІФ, ЛЬВІВ)');
   console.log('================================================================\n');
@@ -30,8 +123,9 @@ async function runTest() {
   let hasLocalFallback = false;
 
   try {
-    // 1. Ініціалізація бази даних
+    // 1. Ініціалізація бази даних та очищення наявного локального кешу
     console.log('📦 [1/6] Ініціалізація сховища даних...');
+    sanitizeLocalStoreFile();
     await db.initDatabase();
     const initialProducts = await db.getProducts({ city: 'ivano-frankivsk' });
     hasLocalFallback = initialProducts.length > 0 || fs.existsSync(db.getLocalStorePath());

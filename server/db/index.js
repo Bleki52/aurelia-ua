@@ -17,19 +17,60 @@ const LOCAL_STORE_PATH = path.join(__dirname, 'local-store.json');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 /* ─── Seed Data Constants ─────────────────────────────────────────────────── */
-const DEFAULT_ADMIN = {
-  id: 1,
-  name: 'Головний Адміністратор',
-  email: 'admin@aurelia.ua',
-  password_hash: bcrypt.hashSync('Admin123!', 10),
-  role: 'ADMIN',
-  is_verified: true,
-  verification_code: null,
-  verification_expires: null,
-  reset_code: null,
-  reset_expires: null,
-  created_at: new Date().toISOString()
-};
+const STAFF_ACCOUNTS = [
+  {
+    id: 1,
+    name: 'bleki',
+    email: 'bleki@aurelia.ua',
+    password_hash: bcrypt.hashSync('Bleki123!', 10),
+    role: 'ADMIN',
+    is_verified: true,
+    verification_code: null,
+    verification_expires: null,
+    reset_code: null,
+    reset_expires: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: 'Qa1',
+    email: 'Qa1@aurelia.ua',
+    password_hash: bcrypt.hashSync('Qa1123!', 10),
+    role: 'QA',
+    is_verified: true,
+    verification_code: null,
+    verification_expires: null,
+    reset_code: null,
+    reset_expires: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 3,
+    name: 'Qa2',
+    email: 'Qa2@aurelia.ua',
+    password_hash: bcrypt.hashSync('Qa2123!', 10),
+    role: 'QA',
+    is_verified: true,
+    verification_code: null,
+    verification_expires: null,
+    reset_code: null,
+    reset_expires: null,
+    created_at: new Date().toISOString()
+  }
+];
+
+const DEFAULT_ADMIN = STAFF_ACCOUNTS[0];
+
+function isStaffDomainEmail(email) {
+  return String(email || '').trim().toLowerCase().endsWith('@aurelia.ua');
+}
+
+function getEffectiveUserRole(user) {
+  if (!user) return 'USER';
+  if (!isStaffDomainEmail(user.email)) return 'USER';
+  const r = String(user.role || 'USER').toUpperCase();
+  return (r === 'ADMIN' || r === 'QA') ? r : 'USER';
+}
 
 const SEED_CARDS = [
   {
@@ -287,10 +328,80 @@ function buildSeedProductPrices(prods) {
   return list;
 }
 
+function reconcileLocalUsers(rawUsers) {
+  let changed = false;
+  const users = Array.isArray(rawUsers) ? rawUsers.filter(Boolean).map(u => {
+    const staffMatch = STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === String(u.email || '').toLowerCase());
+    if (staffMatch) {
+      const needsUpdate =
+        u.name !== staffMatch.name ||
+        u.email !== staffMatch.email ||
+        u.role !== staffMatch.role ||
+        u.is_verified !== true ||
+        !u.password_hash;
+      if (needsUpdate) changed = true;
+      return {
+        ...u,
+        name: staffMatch.name,
+        email: staffMatch.email,
+        role: staffMatch.role,
+        password_hash: u.password_hash || staffMatch.password_hash,
+        is_verified: true,
+        verification_code: null,
+        verification_expires: null
+      };
+    }
+
+    const safeRole = getEffectiveUserRole(u);
+    const verifiedVal = u.is_verified === undefined ? true : Boolean(u.is_verified);
+    if (
+      u.role !== safeRole ||
+      u.is_verified === undefined ||
+      u.verification_code === undefined ||
+      u.verification_expires === undefined ||
+      u.reset_code === undefined ||
+      u.reset_expires === undefined
+    ) {
+      changed = true;
+    }
+
+    return {
+      ...u,
+      role: safeRole,
+      is_verified: verifiedVal,
+      verification_code: u.verification_code !== undefined ? u.verification_code : null,
+      verification_expires: u.verification_expires !== undefined ? u.verification_expires : null,
+      reset_code: u.reset_code !== undefined ? u.reset_code : null,
+      reset_expires: u.reset_expires !== undefined ? u.reset_expires : null
+    };
+  }) : [];
+
+  for (const staff of STAFF_ACCOUNTS) {
+    const existsIdx = users.findIndex(u => String(u.email || '').toLowerCase() === staff.email.toLowerCase());
+    if (existsIdx === -1) {
+      const maxId = users.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0);
+      users.push({
+        ...staff,
+        id: users.some(u => Number(u.id) === staff.id) ? maxId + 1 : staff.id
+      });
+      changed = true;
+    } else if (
+      (staff.email === 'bleki@aurelia.ua' && !bcrypt.compareSync('Bleki123!', users[existsIdx].password_hash)) ||
+      (staff.email === 'Qa1@aurelia.ua' && !bcrypt.compareSync('Qa1123!', users[existsIdx].password_hash)) ||
+      (staff.email === 'Qa2@aurelia.ua' && !bcrypt.compareSync('Qa2123!', users[existsIdx].password_hash))
+    ) {
+      users[existsIdx].password_hash = staff.password_hash;
+      changed = true;
+    }
+  }
+
+  return { users, changed };
+}
+
 function loadLocalStore() {
   if (!fs.existsSync(LOCAL_STORE_PATH)) {
     const initialData = {
-      users: [DEFAULT_ADMIN],
+      users: STAFF_ACCOUNTS.map(u => ({ ...u })),
       loyalty_cards: SEED_CARDS,
       products: SEED_PRODUCTS,
       product_prices: buildSeedProductPrices(SEED_PRODUCTS)
@@ -301,33 +412,22 @@ function loadLocalStore() {
   try {
     const raw = fs.readFileSync(LOCAL_STORE_PATH, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed.users) || parsed.users.length === 0) {
-      parsed.users = [DEFAULT_ADMIN];
-    } else {
-      parsed.users = parsed.users.map(u => {
-        if (!u) return u;
-        const isAdminEmail = String(u.email || '').toLowerCase() === DEFAULT_ADMIN.email;
-        return {
-          ...u,
-          is_verified: isAdminEmail ? true : (u.is_verified === undefined ? true : Boolean(u.is_verified)),
-          verification_code: u.verification_code !== undefined ? u.verification_code : null,
-          verification_expires: u.verification_expires !== undefined ? u.verification_expires : null,
-          reset_code: u.reset_code !== undefined ? u.reset_code : null,
-          reset_expires: u.reset_expires !== undefined ? u.reset_expires : null
-        };
-      });
-    }
+    const { users, changed } = reconcileLocalUsers(parsed.users);
+    parsed.users = users;
     if (!Array.isArray(parsed.loyalty_cards)) {
       parsed.loyalty_cards = [];
     }
     if (!parsed.product_prices || !Array.isArray(parsed.product_prices)) {
       parsed.product_prices = buildSeedProductPrices(parsed.products);
     }
+    if (changed) {
+      saveLocalStore(parsed);
+    }
     return parsed;
   } catch (err) {
     console.error('Помилка зчитування local-store.json:', err);
     return {
-      users: [DEFAULT_ADMIN],
+      users: STAFF_ACCOUNTS.map(u => ({ ...u })),
       loyalty_cards: SEED_CARDS,
       products: SEED_PRODUCTS,
       product_prices: buildSeedProductPrices(SEED_PRODUCTS)
@@ -452,24 +552,48 @@ async function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(sub_category);
       `);
 
-      // Ensure admin@aurelia.ua and pre-existing users created before OTP migration stay verified
+      // Enforce @aurelia.ua domain restriction & ensure existing users created before OTP migration stay verified
+      await pgPool.query(
+        `UPDATE users
+         SET role = 'USER'
+         WHERE LOWER(email) NOT LIKE '%@aurelia.ua'
+           AND role IN ('ADMIN', 'QA')`
+      );
       await pgPool.query(
         `UPDATE users
          SET is_verified = TRUE
-         WHERE LOWER(email) = LOWER($1)
-            OR (is_verified IS NOT TRUE AND verification_code IS NULL)`,
-        [DEFAULT_ADMIN.email]
+         WHERE LOWER(email) LIKE '%@aurelia.ua'
+            OR (is_verified IS NOT TRUE AND verification_code IS NULL)`
       );
 
-      // Seed admin if not present
-      const adminRes = await pgPool.query('SELECT id FROM users WHERE email = $1', [DEFAULT_ADMIN.email]);
-      if (adminRes.rowCount === 0) {
-        await pgPool.query(
-          `INSERT INTO users (name, email, password_hash, role, is_verified) VALUES ($1, $2, $3, $4, TRUE)`,
-          [DEFAULT_ADMIN.name, DEFAULT_ADMIN.email, DEFAULT_ADMIN.password_hash, 'ADMIN']
+      // Auto-seed / upsert staff accounts (ADMIN: bleki, QA: Qa1, Qa2)
+      for (const staff of STAFF_ACCOUNTS) {
+        const existingStaff = await pgPool.query(
+          'SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+          [staff.email]
         );
-        console.log('✅ Адміністратора admin@aurelia.ua додано до бази.');
+        if (existingStaff.rowCount === 0) {
+          await pgPool.query(
+            `INSERT INTO users (name, email, password_hash, role, is_verified, verification_code, verification_expires)
+             VALUES ($1, $2, $3, $4, TRUE, NULL, NULL)`,
+            [staff.name, staff.email, staff.password_hash, staff.role]
+          );
+        } else {
+          await pgPool.query(
+            `UPDATE users
+             SET name = $1,
+                 email = $2,
+                 password_hash = $3,
+                 role = $4,
+                 is_verified = TRUE,
+                 verification_code = NULL,
+                 verification_expires = NULL
+             WHERE id = $5`,
+            [staff.name, staff.email, staff.password_hash, staff.role, existingStaff.rows[0].id]
+          );
+        }
       }
+      console.log('✅ Персонал @aurelia.ua (bleki [ADMIN], Qa1 [QA], Qa2 [QA]) синхронізовано у PostgreSQL.');
 
       // Seed loyalty cards if empty
       const cardRes = await pgPool.query('SELECT id FROM loyalty_cards LIMIT 1');
@@ -524,11 +648,29 @@ async function initDatabase() {
 // 1. Користувачі (Users)
 async function findUserByEmail(email) {
   if (isPostgres) {
-    const res = await pgPool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+    const res = await pgPool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1', [email]);
     return res.rows[0] || null;
   }
   const store = loadLocalStore();
-  return store.users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+  return store.users.find(u => u.email.toLowerCase() === String(email).toLowerCase()) || null;
+}
+
+async function findUserByIdentifier(identifier) {
+  const cleanId = String(identifier || '').trim();
+  if (!cleanId) return null;
+  if (isPostgres) {
+    const res = await pgPool.query(
+      'SELECT * FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(name) = LOWER($1) LIMIT 1',
+      [cleanId]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const lower = cleanId.toLowerCase();
+  return store.users.find(u =>
+    String(u.email || '').toLowerCase() === lower ||
+    String(u.name || '').toLowerCase() === lower
+  ) || null;
 }
 
 async function findUserById(id) {
@@ -973,6 +1115,86 @@ async function deleteCard(userId, cardId) {
   return store.loyalty_cards.length < initLen;
 }
 
+const SHORT_SEARCH_EXCLUDED_STEMS = {
+  'рис': ['рисун', 'рисовк'],
+  'сир': ['сироп', 'сироватк', 'сирник'],
+  'мед': ['медич', 'медаль', 'медіа'],
+  'сік': ['сікатор']
+};
+
+function normalizeUkText(str) {
+  return String(str || '').toLowerCase().replace(/['’ʼ`]/g, "'").trim();
+}
+
+function tokenizeUkWords(text) {
+  const norm = normalizeUkText(text);
+  const rawTokens = norm.split(/[^а-яіїєґa-z0-9']+/i).filter(Boolean);
+  const words = [];
+  rawTokens.forEach((tok) => {
+    const noApos = tok.replace(/'/g, '');
+    if (noApos) words.push(noApos);
+  });
+  return words;
+}
+
+function matchesSearchToken(word, q, isShortToken) {
+  if (!word || !q) return false;
+  if (isShortToken) {
+    if (!word.startsWith(q)) return false;
+    const excluded = SHORT_SEARCH_EXCLUDED_STEMS[q];
+    if (excluded && excluded.some((stem) => word.startsWith(stem))) {
+      return false;
+    }
+    return true;
+  }
+  const stem = q.slice(0, -1);
+  return word.startsWith(q) || word.startsWith(stem);
+}
+
+function matchesUkrainianSearch(productName, subCategory, rawQuery) {
+  const queryTokens = normalizeUkText(rawQuery)
+    .split(/\s+/)
+    .map((t) => t.replace(/'/g, ''))
+    .filter(Boolean);
+  if (queryTokens.length === 0) return true;
+
+  const productWords = tokenizeUkWords(productName);
+  const subNorm = normalizeUkText(subCategory).replace(/'/g, '');
+  const subWords = tokenizeUkWords(subCategory);
+
+  return queryTokens.every((q) => {
+    const isShort = q.length <= 4;
+    if (productWords.some((w) => matchesSearchToken(w, q, isShort))) {
+      return true;
+    }
+    if (!isShort) {
+      const stem = q.slice(0, -1);
+      if (subNorm.startsWith(q) || subNorm.startsWith(stem)) return true;
+      if (subWords.some((w) => matchesSearchToken(w, q, false))) return true;
+    }
+    return false;
+  });
+}
+
+function getUkrainianSearchRank(productName, rawQuery) {
+  const queryTokens = normalizeUkText(rawQuery)
+    .split(/\s+/)
+    .map((t) => t.replace(/'/g, ''))
+    .filter(Boolean);
+  if (queryTokens.length === 0) return 0;
+
+  const firstQ = queryTokens[0];
+  const isShort = firstQ.length <= 4;
+  const productWords = tokenizeUkWords(productName);
+  if (productWords.length === 0) return 2;
+
+  const firstWord = productWords[0];
+  if (firstWord === firstQ) return -1;
+  if (matchesSearchToken(firstWord, firstQ, isShort)) return 0;
+  if (productWords.slice(1).some((w) => matchesSearchToken(w, firstQ, isShort))) return 1;
+  return 2;
+}
+
 // 3. Акційні товари (Products & Prices)
 async function getProducts({ category, search, sort, city } = {}) {
   let products = [];
@@ -1089,16 +1311,20 @@ async function getProducts({ category, search, sort, city } = {}) {
     products = products.filter(p => p.category === category);
   }
   if (search) {
-    const q = search.toLowerCase();
     products = products.filter(p =>
-      (p.name && p.name.toLowerCase().includes(q)) ||
-      (p.title && p.title.toLowerCase().includes(q)) ||
-      (p.category && p.category.toLowerCase().includes(q))
+      matchesUkrainianSearch(p.name || p.title || '', p.subCategory || p.sub_category || p.category || '', search)
     );
   }
 
   // Sorting
-  if (sort === 'cheap') {
+  if (search && (!sort || sort === 'default')) {
+    products.sort((a, b) => {
+      const rankDiff = getUkrainianSearchRank(a.name || a.title || '', search)
+        - getUkrainianSearchRank(b.name || b.title || '', search);
+      if (rankDiff !== 0) return rankDiff;
+      return (a.name || a.title || '').localeCompare(b.name || b.title || '', 'uk');
+    });
+  } else if (sort === 'cheap' || sort === 'price-asc') {
     products.sort((a, b) => {
       const getMin = (item) => {
         const prs = (Array.isArray(item.prices) ? item.prices : [])
@@ -1108,8 +1334,18 @@ async function getProducts({ category, search, sort, city } = {}) {
       };
       return getMin(a) - getMin(b);
     });
-  } else if (sort === 'title') {
-    products.sort((a, b) => (a.name || a.title).localeCompare(b.name || b.title, 'uk'));
+  } else if (sort === 'price-desc') {
+    products.sort((a, b) => {
+      const getMin = (item) => {
+        const prs = (Array.isArray(item.prices) ? item.prices : [])
+          .map(x => parseFloat(x.price))
+          .filter(x => !isNaN(x) && x > 0);
+        return prs.length > 0 ? Math.min(...prs) : 0;
+      };
+      return getMin(b) - getMin(a);
+    });
+  } else if (sort === 'title' || sort === 'name-asc') {
+    products.sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || '', 'uk'));
   }
 
   // Format products and strictly filter out any product whose prices array is empty
@@ -1453,7 +1689,11 @@ module.exports = {
   isPostgresConnected: () => isPostgres,
   getLocalStorePath: () => LOCAL_STORE_PATH,
   // Users
+  STAFF_ACCOUNTS,
+  isStaffDomainEmail,
+  getEffectiveUserRole,
   findUserByEmail,
+  findUserByIdentifier,
   findUserById,
   createUser,
   setVerificationCode,
@@ -1470,6 +1710,8 @@ module.exports = {
   // Products
   getProducts,
   getProductById,
+  matchesUkrainianSearch,
+  getUkrainianSearchRank,
   createProduct,
   updateProduct,
   deleteProduct,

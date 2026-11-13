@@ -109,8 +109,9 @@ router.get('/:id', async (req, res) => {
 /**
  * POST /api/products/sync
  * Triggers live price synchronisation with public Ukrainian supermarket endpoints.
+ * Protected: Requires ADMIN role (@aurelia.ua). QA role gets 403 read-only error.
  */
-router.post('/sync', async (req, res) => {
+router.post('/sync', requireAdmin, async (req, res) => {
   try {
     const city = req.query.city || (req.body && req.body.city) || 'ivano-frankivsk';
     const liveItems = await syncLivePromotions(city);

@@ -959,6 +959,38 @@
     return false;
   }
 
+  function isValidProductPrice(title = '', price = 0, oldPrice = null) {
+    const numPrice = Number(price);
+    const hasOld = oldPrice !== null && oldPrice !== undefined && oldPrice !== '' && Number(oldPrice) > 0;
+    const numOld = hasOld ? Number(oldPrice) : null;
+
+    if (!Number.isFinite(numPrice) || numPrice <= 0) return false;
+    if (numOld !== null && (!Number.isFinite(numOld) || numOld <= numPrice)) return false;
+
+    if (numPrice <= 2.50 && (numOld === null || numOld <= 5.00)) {
+      return false;
+    }
+
+    const titleLower = String(title || '').toLowerCase();
+    const alcoholStems = [
+      'віскі', 'whisky', 'whiskey', 'glenlivet', 'glenfiddich', 'jameson', 'jack daniels',
+      'ром ', 'джин ', 'текіла', 'коньяк', 'бренді', 'горілка', 'лікер', 'вино ', 'ігристе', 'шампанське'
+    ];
+    if (hasWord(titleLower, alcoholStems) && numPrice < 75.00) {
+      return false;
+    }
+
+    const isBulkIceCream = /морозиво\s*1\s*кг/i.test(titleLower);
+    const coreGroceryStems = [
+      'кава ', 'кави ', 'масло ', 'масла ', 'сир ', "м'ясо", 'мясо', 'філе', 'ковбаса', 'лосось'
+    ];
+    if ((isBulkIceCream || hasWord(titleLower, coreGroceryStems)) && numPrice < 20.00) {
+      return false;
+    }
+
+    return true;
+  }
+
   /* ─── Category Normalization & Resolution Utility ────────────────────────── */
   function resolveCategories(p) {
     const rawMain = (p.mainCategory || p.main_category || '').trim();
@@ -969,24 +1001,37 @@
     const isBeautyStore = ['eva', 'prostor'].includes(store);
     const text = (title + ' ' + rawCat).toLowerCase();
 
-    if (rawMain && rawSub) {
+    const HUMAN_FOOD_BLOCK_PET_STEMS = [
+      'морозиво', 'йогурт', 'сирок', 'десерт', 'тістечко', 'круасан', 'пончик', 'донат',
+      'торт', 'рулет', 'вафлі', 'вафл', 'печиво', 'шоколад', 'цукерк', 'згущене молоко',
+      'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо'
+    ];
+    const isHumanFoodBlockingPet = hasWord(text, HUMAN_FOOD_BLOCK_PET_STEMS);
+
+    if (rawMain && rawSub && !(rawMain === 'Зоотовари' && isHumanFoodBlockingPet)) {
       return { mainCategory: rawMain, subCategory: rawSub, category: rawSub };
     }
 
-    // STAGE 1: Pet Products (mainCategory: 'Зоотовари')
+    // STAGE 1: Pet Products (mainCategory: 'Зоотовари') — Strictly Qualified
     const petIndicators = [
       'для котів', 'для кішок', 'для кошенят', 'для собак', 'для цуценят', 'для гризунів', 'для папуг',
-      'корм сухий', 'корм вологий', 'наповнювач для котячого', 'наповнювач', 'стерилізованих',
+      'корм сухий', 'корм вологий', 'стерилізованих',
       'ласощі для котів', 'ласощі для собак', 'ласощі для тварин', 'для тварин'
     ];
+    const petLitterQualifiers = [
+      'для котів', 'для котячого туалету', 'туалету котів', 'для котячого',
+      'бентонітовий', 'силікагелевий', 'деревний', 'комкуючий', 'грудкуючий',
+      'тофу для котів', 'catsan', 'kotix', 'animall', 'supercat'
+    ];
+    const isPetLitter = hasWord(text, ['наповнювач']) && hasWord(text, petLitterQualifiers);
     const petBrands = [
       'whiskas', 'віскас', 'felix', 'фелікс', 'purina', 'пуріна', 'gourmet', 'гурме',
       'sheba', 'шеба', 'friskies', 'фріскіс', 'optimeal', 'оптіміл', 'клуб 4 лапи', 'club 4 paws',
       'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit', 'savory', 'josera'
     ];
-    if (rawCat === 'Зоотовари' || rawCat === 'Для котів' || rawCat === 'Для собак' || hasWord(text, petIndicators, petBrands) || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий']))) {
+    if (!isHumanFoodBlockingPet && (rawCat === 'Зоотовари' || rawCat === 'Для котів' || rawCat === 'Для собак' || hasWord(text, petIndicators, petBrands) || isPetLitter || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий'])))) {
       let sub = 'Усі зоотовари';
-      if (rawCat === 'Для котів' || hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба', 'наповнювач'])) {
+      if (rawCat === 'Для котів' || isPetLitter || hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба'])) {
         sub = 'Для котів';
       } else if (rawCat === 'Для собак' || hasWord(text, ['собак', 'пес', 'пса', 'цуцен', 'педігрі', 'pedigree', 'chappi', 'чаппі'])) {
         sub = 'Для собак';
@@ -1251,8 +1296,13 @@
         sourceUrl: val.sourceUrl || ''
       }));
     }
-    // Filter prices to only those active in the chosen city
-    prices = prices.filter(pr => pr && pr.store && typeof pr.price === 'number' && !isNaN(pr.price) && pr.price > 0 && cityConfig.activeStores.includes(String(pr.store).toLowerCase()));
+    const title = (p.title || p.name || '').trim();
+    // Filter prices to only those active in the chosen city and passing price sanity checks
+    prices = prices.filter(pr =>
+      pr && pr.store && typeof pr.price === 'number' && !isNaN(pr.price) && pr.price > 0
+      && cityConfig.activeStores.includes(String(pr.store).toLowerCase())
+      && isValidProductPrice(title, pr.price, pr.oldPrice || pr.old_price)
+    );
     const storePrices = p.storePrices && typeof p.storePrices === 'object' ? { ...p.storePrices } : {};
     prices.forEach(pr => {
       if (!storePrices[pr.store]) {
@@ -1326,11 +1376,30 @@
     }
   }
 
+  function isStaffDomainEmail(email) {
+    return String(email || '').trim().toLowerCase().endsWith('@aurelia.ua');
+  }
+
+  function assertOfflineAdminWritePermission() {
+    const user = getCurrentUser();
+    if (!user || !isStaffDomainEmail(user.email)) {
+      throw new Error('Доступ лише для авторизованого персоналу @aurelia.ua.');
+    }
+    if (user.role === 'QA') {
+      throw new Error('Режим QA (тільки перегляд): редагування та видалення заборонено');
+    }
+    if (user.role !== 'ADMIN') {
+      throw new Error('Недостатньо прав для зміни каталогу.');
+    }
+  }
+
   async function createProduct(prodData) {
     const res = await fetchWithFallback('/products', {
       method: 'POST',
-      body: JSON.stringify(prodData)
+      body: JSON.stringify(prodData),
+      throwOnHttpError: true
     }, () => {
+      assertOfflineAdminWritePermission();
       const products = getStorage(STORAGE_KEYS.PRODUCTS, SEED_PRODUCTS);
       const newProduct = Object.assign({
         id: 'prod-' + Date.now(),
@@ -1346,8 +1415,10 @@
   async function updateProduct(id, prodData) {
     const res = await fetchWithFallback(`/products/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(prodData)
+      body: JSON.stringify(prodData),
+      throwOnHttpError: true
     }, () => {
+      assertOfflineAdminWritePermission();
       const products = getStorage(STORAGE_KEYS.PRODUCTS, SEED_PRODUCTS);
       const idx = products.findIndex(p => String(p.id) === String(id));
       if (idx === -1) throw new Error('Товар не знайдено.');
@@ -1362,8 +1433,10 @@
 
   async function deleteProduct(id) {
     const res = await fetchWithFallback(`/products/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      throwOnHttpError: true
     }, () => {
+      assertOfflineAdminWritePermission();
       let products = getStorage(STORAGE_KEYS.PRODUCTS, SEED_PRODUCTS);
       products = products.filter(p => String(p.id) !== String(id));
       setStorage(STORAGE_KEYS.PRODUCTS, products);
@@ -1375,18 +1448,29 @@
   async function syncProducts(cityParam) {
     const city = cityParam || getSelectedCity();
     try {
+      const auth = getStorage(STORAGE_KEYS.AUTH, null);
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      };
+      if (auth && auth.token) {
+        headers['Authorization'] = `Bearer ${auth.token}`;
+      }
+
       const res = await fetch(`${API_BASE}/products/sync?city=${encodeURIComponent(city)}`, {
         method: 'POST',
         cache: 'no-store',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ city })
       });
 
       if (!res.ok) {
-        throw new Error(`Sync HTTP Error: ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        const httpErr = new Error(errData.error || `Sync HTTP Error: ${res.status}`);
+        httpErr.status = res.status;
+        httpErr.code = errData.code || 'HTTP_ERROR';
+        httpErr.isHttpError = true;
+        throw httpErr;
       }
 
       const data = await res.json();
@@ -1402,6 +1486,9 @@
       }
       throw new Error('Синхронізація не повернула товарів');
     } catch (err) {
+      if (err && (err.status === 401 || err.status === 403 || err.isHttpError)) {
+        throw err;
+      }
       console.warn('⚠️ [API] Помилка запиту синхронізації:', err.message);
       const cached = getStorage(STORAGE_KEYS.PRODUCTS, SEED_PRODUCTS);
       const list = Array.isArray(cached) && cached.length > 0 ? cached : SEED_PRODUCTS;
@@ -1497,19 +1584,51 @@
   }
 
   /* ─── 4. AUTH API ────────────────────────────────────────────────────────── */
-  async function login(email, password) {
-    const cleanEmail = String(email || '').trim().toLowerCase();
+  function resolveOfflineStaffAccount(identifier, password, requirePasswordMatch = true) {
+    const cleanId = String(identifier || '').trim().toLowerCase();
+    const staffList = [
+      { id: 'staff_bleki', name: 'bleki', email: 'bleki@aurelia.ua', role: 'ADMIN', pass: 'Bleki123!' },
+      { id: 'staff_qa1', name: 'Qa1', email: 'qa1@aurelia.ua', role: 'QA', pass: 'Qa1123!' },
+      { id: 'staff_qa2', name: 'Qa2', email: 'qa2@aurelia.ua', role: 'QA', pass: 'Qa2123!' }
+    ];
+    const match = staffList.find(s => s.email === cleanId || s.name.toLowerCase() === cleanId);
+    if (!match) return null;
+    if (requirePasswordMatch && match.pass !== password) {
+      throw new Error('Невірний логін або пароль.');
+    }
+    return {
+      id: match.id,
+      name: match.name,
+      email: match.email,
+      role: match.role,
+      is_verified: true,
+      token: 'mock-jwt-token-' + Date.now()
+    };
+  }
+
+  async function login(identifier, password) {
+    const cleanId = String(identifier || '').trim();
+    const lowerId = cleanId.toLowerCase();
     const res = await fetchWithFallback('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email: cleanEmail, password }),
+      body: JSON.stringify({ identifier: cleanId, email: lowerId, password }),
       throwOnHttpError: true
     }, () => {
-      if (!cleanEmail || !password) throw new Error('Вкажіть email та пароль.');
+      if (!cleanId || !password) throw new Error('Вкажіть email або ім’я користувача та пароль.');
+      const staffUser = resolveOfflineStaffAccount(cleanId, password, true);
+      if (staffUser) {
+        setStorage(STORAGE_KEYS.AUTH, staffUser);
+        return { user: staffUser, token: staffUser.token };
+      }
+      if (isStaffDomainEmail(lowerId)) {
+        throw new Error('Невірний логін або пароль.');
+      }
+      const fallbackEmail = lowerId.includes('@') ? lowerId : `${lowerId.replace(/[^a-z0-9._-]/gi, '') || 'user'}@aurelia.local`;
       const user = {
-        id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
-        name: cleanEmail.split('@')[0],
-        email: cleanEmail,
-        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        id: 'local_' + fallbackEmail.replace(/[^a-z0-9]/gi, '_'),
+        name: cleanId.includes('@') ? cleanId.split('@')[0] : cleanId,
+        email: fallbackEmail,
+        role: 'USER',
         is_verified: true,
         token: 'mock-jwt-token-' + Date.now()
       };
@@ -1541,6 +1660,12 @@
     }, () => {
       if (!cleanEmail || !password) throw new Error('Заповніть усі обов’язкові поля.');
       if (password.length < 6) throw new Error('Пароль повинен містити щонайменше 6 символів.');
+      if (isStaffDomainEmail(cleanEmail)) {
+        throw new Error('Реєстрація з доменом @aurelia.ua заборонена.');
+      }
+      if (['bleki', 'qa1', 'qa2'].includes(cleanName.toLowerCase())) {
+        throw new Error('Це ім’я користувача зарезервоване.');
+      }
       const devCode = '123456';
       return {
         requiresVerification: true,
@@ -1576,11 +1701,14 @@
       if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
         throw new Error('Вкажіть коректний 6-значний код підтвердження.');
       }
+      if (isStaffDomainEmail(cleanEmail)) {
+        throw new Error('Підтвердження персоналу @aurelia.ua виконується адміністратором.');
+      }
       const user = {
         id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
         name: cleanEmail.split('@')[0],
         email: cleanEmail,
-        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        role: 'USER',
         is_verified: true,
         token: 'mock-jwt-token-' + Date.now()
       };
@@ -1640,11 +1768,12 @@
       if (!newPassword || newPassword.length < 6) {
         throw new Error('Новий пароль повинен містити щонайменше 6 символів.');
       }
-      const user = {
+      const staffUser = resolveOfflineStaffAccount(cleanEmail, newPassword, false);
+      const user = staffUser || {
         id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
         name: cleanEmail.split('@')[0],
         email: cleanEmail,
-        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        role: 'USER',
         is_verified: true,
         token: 'mock-jwt-token-' + Date.now()
       };

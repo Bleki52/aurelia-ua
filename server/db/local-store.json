@@ -6,7 +6,51 @@
       "email": "admin@aurelia.ua",
       "password_hash": "$2a$10$pYwcmFGrTX/GBGXbRG0WFO.KyNMxHigGDCds8310cYS.q0JwLcXUW",
       "role": "ADMIN",
-      "created_at": "2026-10-19T19:11:43.517Z"
+      "created_at": "2026-10-19T19:11:43.517Z",
+      "is_verified": true,
+      "verification_code": null,
+      "verification_expires": null,
+      "reset_code": null,
+      "reset_expires": null
+    },
+    {
+      "id": 2,
+      "name": "bleki",
+      "email": "bleki@aurelia.ua",
+      "password_hash": "$2a$10$a5rtLrCTtbx5sIhegiklAutHAuXgAJVYopuIcd/LE7Eq755IsoBCa",
+      "role": "ADMIN",
+      "is_verified": true,
+      "verification_code": null,
+      "verification_expires": null,
+      "reset_code": null,
+      "reset_expires": null,
+      "created_at": "2026-11-13T22:14:09.449Z"
+    },
+    {
+      "id": 3,
+      "name": "Qa1",
+      "email": "Qa1@aurelia.ua",
+      "password_hash": "$2a$10$Bd4R2tv5UryQ0EzlgiohBelzln/dCDwfgQVvEtm8SBgTrKOPjqbOW",
+      "role": "QA",
+      "is_verified": true,
+      "verification_code": null,
+      "verification_expires": null,
+      "reset_code": null,
+      "reset_expires": null,
+      "created_at": "2026-11-13T22:14:09.511Z"
+    },
+    {
+      "id": 4,
+      "name": "Qa2",
+      "email": "Qa2@aurelia.ua",
+      "password_hash": "$2a$10$poQZ4C3af1OmyjuCSKNvPu7SpjlKQ2YzrNez0gJCqo06lloCtENYy",
+      "role": "QA",
+      "is_verified": true,
+      "verification_code": null,
+      "verification_expires": null,
+      "reset_code": null,
+      "reset_expires": null,
+      "created_at": "2026-11-13T22:14:09.561Z"
     }
   ],
   "loyalty_cards": [
@@ -4993,30 +5037,6 @@
       ]
     },
     {
-      "id": 206,
-      "name": "Горілка Oxygenium особлива",
-      "title": "Горілка Oxygenium особлива",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Напої",
-      "sub_category": "Напої",
-      "category": "Напої",
-      "promoTag": "Ціна тижня Сільпо",
-      "promo_tag": "Ціна тижня Сільпо",
-      "unit": "0,25л",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "silpo",
-          "price": 64.9,
-          "oldPrice": 84,
-          "old_price": 84,
-          "sourceUrl": "https://silpo.ua/product/gorilka-oxygenium-osoblyva-932290"
-        }
-      ]
-    },
-    {
       "id": 207,
       "name": "Горілка Medoff «Класік» New",
       "title": "Горілка Medoff «Класік» New",
@@ -6285,30 +6305,6 @@
           "oldPrice": 459,
           "old_price": 459,
           "sourceUrl": "https://silpo.ua/product/nastoianka-becherovka-38-55557"
-        }
-      ]
-    },
-    {
-      "id": 260,
-      "name": "Горілка «Козацька рада» «Класична»",
-      "title": "Горілка «Козацька рада» «Класична»",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Напої",
-      "sub_category": "Напої",
-      "category": "Напої",
-      "promoTag": "Ціна тижня Сільпо",
-      "promo_tag": "Ціна тижня Сільпо",
-      "unit": "0,25л",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "silpo",
-          "price": 69.9,
-          "oldPrice": 89,
-          "old_price": 89,
-          "sourceUrl": "https://silpo.ua/product/gorilka-kozatska-rada-klasychna-436334"
         }
       ]
     },
@@ -18776,54 +18772,6 @@
       ]
     },
     {
-      "id": 780,
-      "name": "Сир плавлений Ферма Дружба 35% брикет",
-      "title": "Сир плавлений Ферма Дружба 35% брикет",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Молочні та Сири",
-      "sub_category": "Молочні та Сири",
-      "category": "Молочні та Сири",
-      "promoTag": "Акція: СЛУХАЙ,А ЦІНИ НИЗЬКІ",
-      "promo_tag": "Акція: СЛУХАЙ,А ЦІНИ НИЗЬКІ",
-      "unit": "70г",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "thrash",
-          "price": 16.99,
-          "oldPrice": 30.99,
-          "old_price": 30.99,
-          "sourceUrl": "https://thrash.ua/product/sir-plavlenii-ferma-druzhba-35-briket-19"
-        }
-      ]
-    },
-    {
-      "id": 781,
-      "name": "Сир плавлений Ферма Вершковий 35% брикет",
-      "title": "Сир плавлений Ферма Вершковий 35% брикет",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Молочні та Сири",
-      "sub_category": "Молочні та Сири",
-      "category": "Молочні та Сири",
-      "promoTag": "Акція: СЛУХАЙ,А ЦІНИ НИЗЬКІ",
-      "promo_tag": "Акція: СЛУХАЙ,А ЦІНИ НИЗЬКІ",
-      "unit": "70г",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "thrash",
-          "price": 16.99,
-          "oldPrice": 29.99,
-          "old_price": 29.99,
-          "sourceUrl": "https://thrash.ua/product/sir-plavlenii-ferma-vershkovii-35-briket-19"
-        }
-      ]
-    },
-    {
       "id": 782,
       "name": "Сир Deli Q Daily Гауда 48% коров'яче молоко слайс",
       "title": "Сир Deli Q Daily Гауда 48% коров'яче молоко слайс",
@@ -20624,30 +20572,6 @@
       ]
     },
     {
-      "id": 857,
-      "name": "БрендІ Ордин Виногр 40% 0.1Л Коблево",
-      "title": "БрендІ Ордин Виногр 40% 0.1Л Коблево",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Напої",
-      "sub_category": "Напої",
-      "category": "Напої",
-      "promoTag": "Акція Рукавичка",
-      "promo_tag": "Акція Рукавичка",
-      "unit": "100ml",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "rukavychka",
-          "price": 39.99,
-          "oldPrice": 59.9,
-          "old_price": 59.9,
-          "sourceUrl": "https://market.rukavychka.ua/brendi-ordin-vinogr-40-01l-koblevo-0101050976"
-        }
-      ]
-    },
-    {
       "id": 858,
       "name": "БРУСКЕТИ ГРИБИ/СМЕТАНА 70Г MARETTI",
       "title": "БРУСКЕТИ ГРИБИ/СМЕТАНА 70Г MARETTI",
@@ -20740,30 +20664,6 @@
           "oldPrice": 33.9,
           "old_price": 33.9,
           "sourceUrl": "https://market.rukavychka.ua/bulka-z-sosiskoju-80g-kuharochka-0307020483"
-        }
-      ]
-    },
-    {
-      "id": 862,
-      "name": "ВІскІ 12РокІв 40% /Кор/ 0.7Л Glenlivet",
-      "title": "ВІскІ 12РокІв 40% /Кор/ 0.7Л Glenlivet",
-      "mainCategory": "Продукти",
-      "main_category": "Продукти",
-      "subCategory": "Напої",
-      "sub_category": "Напої",
-      "category": "Напої",
-      "promoTag": "Акція Рукавичка",
-      "promo_tag": "Акція Рукавичка",
-      "unit": "700ml",
-      "syncedAt": "2026-11-13T00:11:59.001Z",
-      "updated_at": "2026-11-13T00:11:59.001Z",
-      "prices": [
-        {
-          "store": "rukavychka",
-          "price": 1,
-          "oldPrice": 2,
-          "old_price": 2,
-          "sourceUrl": "https://market.rukavychka.ua/viski-12rokiv-40-kor-07l-glenlivet-0101031338"
         }
       ]
     },
@@ -23795,11 +23695,11 @@
       "id": 989,
       "name": "Морозиво 1 кг Розумний вибір з наповнювачем Варене згущене молоко п/ет(Ласка)",
       "title": "Морозиво 1 кг Розумний вибір з наповнювачем Варене згущене молоко п/ет(Ласка)",
-      "mainCategory": "Зоотовари",
-      "main_category": "Зоотовари",
-      "subCategory": "Для котів",
-      "sub_category": "Для котів",
-      "category": "Для котів",
+      "mainCategory": "Продукти",
+      "main_category": "Продукти",
+      "subCategory": "Солодощі",
+      "sub_category": "Солодощі",
+      "category": "Солодощі",
       "promoTag": "Економія АТБ",
       "promo_tag": "Економія АТБ",
       "unit": "1000g",
