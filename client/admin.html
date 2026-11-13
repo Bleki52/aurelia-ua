@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0B0B0D">
   <script src="js/api.js" defer></script>
@@ -760,6 +760,39 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
           <button type="submit" class="btn btn-primary" id="admin-submit-btn">Зберегти товар</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Авторизація (#auth-modal) -->
+  <div id="auth-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="auth-modal-title" class="modal-title">Вхід до AURELIA UA</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно входу">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <form id="auth-form" class="modal-body" novalidate>
+        <div class="form-group">
+          <label for="auth-email-input" class="form-label">Електронна пошта</label>
+          <input type="email" id="auth-email-input" name="email" class="form-input" placeholder="user@example.com" required>
+          <span class="field-error" id="auth-email-error"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password-input" class="form-label">Пароль</label>
+          <input type="password" id="auth-password-input" name="password" class="form-input" placeholder="Введіть ваш пароль" required>
+          <span class="field-error" id="auth-password-error"></span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
+          <button type="submit" class="btn btn-primary">Увійти</button>
         </div>
       </form>
     </div>

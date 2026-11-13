@@ -91,6 +91,7 @@
   }
 
   const STORES = Object.keys(STORE_META).filter(s => s !== 'other');
+  const CATALOG_PAGE_SIZE = 50;
 
   const CATEGORY_HIERARCHY = {
     'all': [
@@ -147,7 +148,7 @@
     selectedStores: (window.AureliaAPI && typeof window.AureliaAPI.getSelectedStores === 'function')
       ? window.AureliaAPI.getSelectedStores()
       : [...STORES],
-    // Catalog State (2-Level Hierarchy)
+    // Catalog State (2-Level Hierarchy & 50-Item Pagination)
     products: [],
     catalogMainCategory: 'all',
     catalogSubCategory: 'all',
@@ -155,6 +156,9 @@
     catalogStore: 'all',
     catalogSort: 'cheap',
     catalogSearch: '',
+    catalogCurrentPage: 1,
+    catalogPageStart: 0,
+    catalogVisibleCount: CATALOG_PAGE_SIZE,
     // Basket State
     basket: []
   };
@@ -190,6 +194,13 @@
     DOM.checkoutModal = document.getElementById('checkout-modal');
     DOM.cardFormModal = document.getElementById('card-form-modal');
     DOM.authModal = document.getElementById('auth-modal');
+    [
+      document.getElementById('city-modal'),
+      document.getElementById('stores-modal'),
+      DOM.authModal
+    ].forEach((m) => {
+      if (m) m.classList.add('header-dropdown-modal');
+    });
 
     // Checkout surface elements (index.html)
     DOM.checkoutSurface = document.getElementById('checkout-display-surface');
@@ -216,6 +227,7 @@
 
     // Catalog 2-Level & Filter Elements (catalog.html)
     DOM.catalogContainer = document.getElementById('catalog-products-container');
+    DOM.catalogPagination = document.getElementById('catalog-pagination');
     DOM.productSearchInput = document.getElementById('product-search-input');
     DOM.macroCategoriesBar = document.getElementById('macro-categories-bar');
     DOM.macroCatBtns = document.querySelectorAll('.macro-cat-btn');
@@ -296,11 +308,32 @@
 
   function initHeaderScroll() {
     if (!DOM.header) return;
+    let lastScrollY = window.scrollY || 0;
+    let ticking = false;
+
+    const updateHeaderOnScroll = () => {
+      const currentY = window.scrollY || 0;
+      const deltaY = currentY - lastScrollY;
+
+      DOM.header.classList.toggle('is-scrolled', currentY > 20);
+
+      const isBurgerOpen = DOM.mobileNav && DOM.mobileNav.classList.contains('is-open');
+      const isModalOpen = Boolean(AppState.activeModal) || document.body.classList.contains('has-header-dropdown');
+
+      if (currentY <= 60 || deltaY < -6 || isBurgerOpen || isModalOpen) {
+        DOM.header.classList.remove('is-zoomed-out');
+      } else if (currentY > 90 && deltaY > 4) {
+        DOM.header.classList.add('is-zoomed-out');
+      }
+
+      lastScrollY = Math.max(0, currentY);
+      ticking = false;
+    };
+
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) {
-        DOM.header.classList.add('is-scrolled');
-      } else {
-        DOM.header.classList.remove('is-scrolled');
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeaderOnScroll);
+        ticking = true;
       }
     }, { passive: true });
   }
@@ -374,14 +407,48 @@
     });
   }
 
+  function triggerSwitchBlur(el) {
+    if (!el) return;
+    el.classList.remove('is-switching-blur');
+    void el.offsetWidth;
+    el.classList.add('is-switching-blur');
+    el.addEventListener('animationend', () => {
+      el.classList.remove('is-switching-blur');
+    }, { once: true });
+  }
+
   /* ─── 6. Generic Modal Manager ───────────────────────────────────────────── */
   function openModal(modalEl) {
     if (!modalEl) return;
+    if (AppState.activeModal === modalEl && modalEl.classList.contains('is-open')) {
+      if (modalEl.classList.contains('header-dropdown-modal')) {
+        closeModal(modalEl);
+      }
+      return;
+    }
     if (AppState.activeModal && AppState.activeModal !== modalEl) {
       closeModal(AppState.activeModal);
     }
+    if (modalEl._closeTimer) {
+      clearTimeout(modalEl._closeTimer);
+      modalEl._closeTimer = null;
+    }
+    if (DOM.header) {
+      DOM.header.classList.remove('is-zoomed-out');
+    }
+    modalEl.classList.remove('is-closing');
+    void modalEl.offsetWidth;
     modalEl.classList.add('is-open');
     document.body.classList.add('is-locked');
+
+    if (modalEl.classList.contains('header-dropdown-modal')) {
+      document.body.classList.add('has-header-dropdown');
+      document.body.classList.remove('has-page-modal');
+    } else {
+      document.body.classList.add('has-page-modal');
+      document.body.classList.remove('has-header-dropdown');
+    }
+
     AppState.activeModal = modalEl;
 
     const focusable = modalEl.querySelector('input, select, button:not([data-close-modal])');
@@ -391,9 +458,21 @@
   function closeModal(modalEl) {
     const target = modalEl || AppState.activeModal;
     if (!target) return;
+    if (target._closeTimer) {
+      clearTimeout(target._closeTimer);
+    }
     target.classList.remove('is-open');
-    AppState.activeModal = null;
-    document.body.classList.remove('is-locked');
+    target.classList.add('is-closing');
+
+    if (!AppState.activeModal || AppState.activeModal === target) {
+      AppState.activeModal = null;
+      document.body.classList.remove('is-locked', 'has-page-modal', 'has-header-dropdown');
+    }
+
+    target._closeTimer = setTimeout(() => {
+      target.classList.remove('is-closing');
+      target._closeTimer = null;
+    }, 380);
   }
 
   function initModalEvents() {
@@ -443,6 +522,23 @@
     });
   }
 
+  function ensureStoreToggleSubrow(metaContainer) {
+    if (!metaContainer) return null;
+    let subrow = metaContainer.querySelector('.store-toggle-subrow');
+    const progEl = metaContainer.querySelector('.store-toggle-program');
+    if (!subrow) {
+      subrow = document.createElement('span');
+      subrow.className = 'store-toggle-subrow';
+      if (progEl) {
+        progEl.parentNode.insertBefore(subrow, progEl);
+        subrow.appendChild(progEl);
+      } else {
+        metaContainer.appendChild(subrow);
+      }
+    }
+    return subrow;
+  }
+
   function updateStoresModalForCity(cityId) {
     const currentCity = cityId || AppState.selectedCity || 'ivano-frankivsk';
     const storeCards = document.querySelectorAll('.store-toggle-card');
@@ -452,6 +548,7 @@
       if (!input) return;
       const storeId = input.value;
       const metaContainer = card.querySelector('.store-toggle-meta');
+      const subrow = ensureStoreToggleSubrow(metaContainer);
 
       const inCity = (window.AureliaAPI && typeof window.AureliaAPI.isStoreInCity === 'function')
         ? window.AureliaAPI.isStoreInCity(storeId, currentCity)
@@ -463,11 +560,11 @@
         card.classList.add('is-not-in-city');
         input.disabled = true;
         input.checked = false;
-        if (!notInCityBadge && metaContainer) {
+        if (!notInCityBadge && subrow) {
           notInCityBadge = document.createElement('span');
           notInCityBadge.className = 'store-not-in-city-badge';
           notInCityBadge.textContent = 'Немає в місті';
-          metaContainer.appendChild(notInCityBadge);
+          subrow.appendChild(notInCityBadge);
         }
       } else {
         card.classList.remove('is-not-in-city');
@@ -503,6 +600,7 @@
       if (window.AureliaAPI && typeof window.AureliaAPI.getProducts === 'function') {
         AppState.products = await window.AureliaAPI.getProducts(cityId);
       }
+      resetCatalogPagination();
       renderCatalogStoreFilters();
       renderCatalog();
     }
@@ -572,6 +670,7 @@
 
     // Trigger page-specific re-renders based on active page
     if (DOM.catalogContainer) {
+      resetCatalogPagination();
       renderCatalogStoreFilters();
       renderCatalog();
     }
@@ -594,11 +693,16 @@
             if (!input) return;
             const metaContainer = input.parentElement ? input.parentElement.querySelector('.store-toggle-meta') : null;
             if (!metaContainer) return;
+            const subrow = ensureStoreToggleSubrow(metaContainer);
+            const legacyNotInCity = metaContainer.querySelector('.store-not-in-city-badge');
+            if (legacyNotInCity) legacyNotInCity.remove();
             let badge = metaContainer.querySelector('.store-status-badge');
-            if (!badge) {
+            if (!badge && subrow) {
               badge = document.createElement('span');
               badge.className = 'store-status-badge';
-              metaContainer.appendChild(badge);
+              subrow.appendChild(badge);
+            } else if (badge && subrow && badge.parentElement !== subrow) {
+              subrow.appendChild(badge);
             }
             if (item.status === 'not_in_city') {
               badge.className = 'store-status-badge store-offline-badge';
@@ -782,6 +886,8 @@
       btn.addEventListener('click', () => {
         AppState.checkoutMode = btn.dataset.mode;
         updateCheckoutModeButtons();
+        triggerSwitchBlur(btn);
+        triggerSwitchBlur(DOM.checkoutSurface);
         renderActiveCheckoutCode();
       });
     });
@@ -850,7 +956,7 @@
       const scanHint = card.format === 'barcode' ? 'Торкніться для показу коду' : 'Торкніться для показу QR';
 
       return `
-        <article class="loyalty-card reveal-item is-visible" data-store="${card.store}" data-cat="${catMeta.key}" data-card-id="${card.id}">
+        <article class="loyalty-card reveal-item is-visible scroll-item" data-store="${card.store}" data-cat="${catMeta.key}" data-card-id="${card.id}">
           <div class="card-body-stack">
             <div class="card-top">
               <div class="card-brand">
@@ -914,6 +1020,7 @@
     }).join('');
 
     bindCardActionButtons();
+    observeScrollItems(DOM.cardsContainer);
   }
 
   function bindCardActionButtons() {
@@ -1111,6 +1218,8 @@
         btn.addEventListener('click', () => {
           DOM.cardFilterBtns.forEach(b => b.classList.remove('is-active'));
           btn.classList.add('is-active');
+          triggerSwitchBlur(btn);
+          triggerSwitchBlur(DOM.cardsContainer);
           if (btn.dataset.cat) {
             AppState.filterCategory = btn.dataset.cat;
             AppState.filterStore = 'all';
@@ -1157,6 +1266,12 @@
   }
 
   /* ─── 9. Catalog & Promotions Controller (catalog.html) ─────────────────── */
+  function resetCatalogPagination() {
+    AppState.catalogCurrentPage = 1;
+    AppState.catalogPageStart = 0;
+    AppState.catalogVisibleCount = CATALOG_PAGE_SIZE;
+  }
+
   function renderSubCategories(macroCat) {
     if (!DOM.subCategoriesBar) return;
     const items = CATEGORY_HIERARCHY[macroCat] || CATEGORY_HIERARCHY['all'] || [];
@@ -1179,7 +1294,10 @@
         chip.addEventListener('click', () => {
           DOM.subCategoriesBar?.querySelectorAll('.sub-cat-chip')?.forEach(c => c.classList.remove('is-active'));
           chip.classList.add('is-active');
+          triggerSwitchBlur(chip);
+          triggerSwitchBlur(DOM.catalogContainer);
           AppState.catalogSubCategory = chip.dataset.sub || 'all';
+          resetCatalogPagination();
           renderCatalog();
         });
       });
@@ -1209,7 +1327,10 @@
         btn.addEventListener('click', () => {
           DOM.storeFilterBar?.querySelectorAll('.filter-btn')?.forEach(b => b.classList.remove('is-active'));
           btn.classList.add('is-active');
+          triggerSwitchBlur(btn);
+          triggerSwitchBlur(DOM.catalogContainer);
           AppState.catalogStore = btn.dataset.store || 'all';
+          resetCatalogPagination();
           renderCatalog();
         });
       });
@@ -1395,10 +1516,23 @@
           <p class="wallet-empty-desc">Спробуйте змінити фільтри або пошуковий запит.</p>
         </div>
       `;
+      if (DOM.catalogPagination) DOM.catalogPagination.innerHTML = '';
       return;
     }
 
-    DOM.catalogContainer.innerHTML = list.map(prod => {
+    const totalItems = list.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / CATALOG_PAGE_SIZE));
+    if (AppState.catalogCurrentPage > totalPages) {
+      AppState.catalogCurrentPage = totalPages;
+    }
+    if (AppState.catalogCurrentPage < 1) {
+      AppState.catalogCurrentPage = 1;
+    }
+    const startIdx = Math.min(AppState.catalogPageStart, (totalPages - 1) * CATALOG_PAGE_SIZE);
+    AppState.catalogPageStart = startIdx;
+    const visibleList = list.slice(startIdx, startIdx + AppState.catalogVisibleCount);
+
+    DOM.catalogContainer.innerHTML = visibleList.map(prod => {
       // Collect prices strictly for active selected stores & selected single store
       const priceEntries = (
         Array.isArray(prod.prices) && prod.prices.length > 0
@@ -1462,7 +1596,7 @@
           : '';
 
         return `
-          <div class="store-price-row ${isBest ? 'is-best' : ''}">
+          <div class="store-price-row price-row ${isBest ? 'is-best' : ''}">
             <div class="store-price-brand">
               <span class="store-price-brand-left cat-${storeCat.key}">
                 <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
@@ -1497,7 +1631,7 @@
         : '';
 
       return `
-        <article class="product-card reveal-item is-visible" data-product-id="${prod.id}" data-cat="${prodCat.key}">
+        <article class="product-card reveal-item is-visible scroll-item" data-product-id="${prod.id}" data-cat="${prodCat.key}">
           <div class="product-lead">
             <div class="product-thumb-tile cat-${prodCat.key}" aria-hidden="true">
               <svg class="icon icon-stroke product-thumb-icon" aria-hidden="true">
@@ -1521,7 +1655,7 @@
             ${storesHtml}
           </div>
 
-          <div class="product-price-row">
+          <div class="product-price-row price-row">
             <div class="product-price-summary">
               <span class="product-savings-label">${spreadSavings > 0 ? `Вигода: до ${spreadSavings.toFixed(2)} ₴` : (priceEntries.length > 1 ? 'Найкраща ціна від' : 'Актуальна ціна')}</span>
               <span class="price-current">${priceCurrentHtml}</span>
@@ -1538,6 +1672,93 @@
     }).join('');
 
     bindCatalogActions();
+    renderCatalogPagination(totalItems, totalPages, startIdx, visibleList.length);
+    observeScrollItems(DOM.catalogContainer);
+  }
+
+  function buildPaginationSequence(currentPage, totalPages) {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    const left = Math.max(2, currentPage - 1);
+    const right = Math.min(totalPages - 1, currentPage + 1);
+    if (left > 2) pages.push('...');
+    for (let p = left; p <= right; p++) pages.push(p);
+    if (right < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  }
+
+  function renderCatalogPagination(totalItems, totalPages, startIdx, renderedCount) {
+    if (!DOM.catalogPagination) return;
+    if (totalItems === 0) {
+      DOM.catalogPagination.innerHTML = '';
+      return;
+    }
+
+    const shownStart = startIdx + 1;
+    const shownEnd = Math.min(totalItems, startIdx + renderedCount);
+    const remainingAfter = Math.max(0, totalItems - shownEnd);
+    const activeEndPage = Math.min(totalPages, Math.ceil(shownEnd / CATALOG_PAGE_SIZE));
+
+    const loadMoreHtml = remainingAfter > 0
+      ? `<button type="button" class="pagination-load-more-btn" data-action="load-more-50">
+           <svg class="icon icon-sm" aria-hidden="true">
+             <use href="assets/sprite.svg#icon-plus"></use>
+           </svg>
+           <span>Показати ще ${Math.min(CATALOG_PAGE_SIZE, remainingAfter)} пропозицій (залишилось ${remainingAfter})</span>
+         </button>`
+      : '';
+
+    let pagesHtml = '';
+    if (totalPages > 1) {
+      const seq = buildPaginationSequence(AppState.catalogCurrentPage, totalPages);
+      const prevDisabled = AppState.catalogCurrentPage <= 1 ? 'disabled' : '';
+      const nextDisabled = AppState.catalogCurrentPage >= totalPages ? 'disabled' : '';
+
+      pagesHtml = `
+        <div class="pagination-pages">
+          <button type="button" class="pagination-page-btn" data-page="${Math.max(1, AppState.catalogCurrentPage - 1)}" aria-label="Попередня сторінка" ${prevDisabled}>‹</button>
+          ${seq.map(item => {
+            if (item === '...') {
+              return '<span class="pagination-ellipsis" aria-hidden="true">…</span>';
+            }
+            const isCurrent = item >= AppState.catalogCurrentPage && item <= activeEndPage;
+            return `<button type="button" class="pagination-page-btn ${isCurrent ? 'is-active' : ''}" data-page="${item}" aria-label="Сторінка ${item}" ${isCurrent ? 'aria-current="page"' : ''}>${item}</button>`;
+          }).join('')}
+          <button type="button" class="pagination-page-btn" data-page="${Math.min(totalPages, AppState.catalogCurrentPage + 1)}" aria-label="Наступна сторінка" ${nextDisabled}>›</button>
+        </div>
+      `;
+    }
+
+    DOM.catalogPagination.innerHTML = `
+      ${loadMoreHtml}
+      ${pagesHtml}
+      <p class="pagination-counter">Показано ${shownStart}–${shownEnd} з ${totalItems} акційних пропозицій</p>
+    `;
+
+    const loadMoreBtn = DOM.catalogPagination.querySelector('[data-action="load-more-50"]');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        AppState.catalogVisibleCount += CATALOG_PAGE_SIZE;
+        renderCatalog();
+      });
+    }
+
+    DOM.catalogPagination.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nextPage = parseInt(btn.dataset.page, 10);
+        if (isNaN(nextPage) || nextPage < 1 || nextPage > totalPages) return;
+        AppState.catalogCurrentPage = nextPage;
+        AppState.catalogPageStart = (nextPage - 1) * CATALOG_PAGE_SIZE;
+        AppState.catalogVisibleCount = CATALOG_PAGE_SIZE;
+        renderCatalog();
+        if (DOM.catalogContainer) {
+          DOM.catalogContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
   }
 
   function bindCatalogActions() {
@@ -1570,8 +1791,11 @@
           });
           btn.classList.add('is-active');
           btn.setAttribute('aria-pressed', 'true');
+          triggerSwitchBlur(btn);
+          triggerSwitchBlur(DOM.catalogContainer);
           AppState.catalogMainCategory = btn.dataset.main || 'all';
           AppState.catalogSubCategory = 'all';
+          resetCatalogPagination();
           renderSubCategories(AppState.catalogMainCategory);
           renderCatalog();
         });
@@ -1582,6 +1806,7 @@
     if (DOM.productSearchInput) {
       DOM.productSearchInput.addEventListener('input', (e) => {
         AppState.catalogSearch = e.target.value.trim();
+        resetCatalogPagination();
         renderCatalog();
       });
     }
@@ -1590,6 +1815,7 @@
     if (DOM.catalogSortSelect) {
       DOM.catalogSortSelect.addEventListener('change', (e) => {
         AppState.catalogSort = e.target.value;
+        resetCatalogPagination();
         renderCatalog();
       });
     }
@@ -1668,9 +1894,11 @@
       DOM.tabBtnOptimal.setAttribute('aria-selected', 'true');
       DOM.tabBtnStores.classList.remove('is-active');
       DOM.tabBtnStores.setAttribute('aria-selected', 'false');
+      triggerSwitchBlur(DOM.tabBtnOptimal);
 
       if (DOM.optimizerOptimalView) {
         DOM.optimizerOptimalView.classList.add('is-active');
+        triggerSwitchBlur(DOM.optimizerOptimalView);
       }
       if (DOM.optimizerStoresView) {
         DOM.optimizerStoresView.classList.remove('is-active');
@@ -1682,9 +1910,11 @@
       DOM.tabBtnStores.setAttribute('aria-selected', 'true');
       DOM.tabBtnOptimal.classList.remove('is-active');
       DOM.tabBtnOptimal.setAttribute('aria-selected', 'false');
+      triggerSwitchBlur(DOM.tabBtnStores);
 
       if (DOM.optimizerStoresView) {
         DOM.optimizerStoresView.classList.add('is-active');
+        triggerSwitchBlur(DOM.optimizerStoresView);
       }
       if (DOM.optimizerOptimalView) {
         DOM.optimizerOptimalView.classList.remove('is-active');
@@ -1814,7 +2044,7 @@
       const itemOldTotal = oldP > minP ? (oldP * item.qty).toFixed(2) : '';
 
       return `
-        <article class="basket-item reveal-item is-visible" data-basket-product="${prod.id}" data-cat="${prodCat.key}">
+        <article class="basket-item reveal-item is-visible scroll-item" data-basket-product="${prod.id}" data-cat="${prodCat.key}">
           <div class="basket-item-lead">
             <div class="basket-item-badge-col cat-${prodCat.key}">
               <span class="basket-disc-chip">${discPct > 0 ? `-${discPct}%` : 'БАЗОВА'}</span>
@@ -1861,6 +2091,7 @@
 
     bindBasketActions();
     calculateAndRenderOptimizer();
+    observeScrollItems(DOM.basketItemsContainer);
   }
 
   function bindBasketActions() {
@@ -2174,7 +2405,110 @@
     }
   }
 
-  /* ─── 12. Scroll Reveal Animations ───────────────────────────────────────── */
+  /* ─── 12. Scroll Reveal, Dissolve & Page Slide Transitions ───────────────── */
+  let scrollDissolveObserver = null;
+
+  function initScrollDissolveObserver() {
+    if (scrollDissolveObserver || !('IntersectionObserver' in window)) return;
+
+    scrollDissolveObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        const rect = entry.boundingClientRect;
+        if (rect.top < 0 && entry.intersectionRatio < 0.18) {
+          el.classList.add('is-scrolled-past');
+          el.classList.remove('is-visible');
+        } else if (entry.isIntersecting && entry.intersectionRatio >= 0.12) {
+          el.classList.add('is-visible');
+          el.classList.remove('is-scrolled-past');
+        } else if (rect.top >= 0 && !entry.isIntersecting) {
+          el.classList.remove('is-scrolled-past');
+        }
+      });
+    }, {
+      threshold: [0, 0.12, 0.88, 1],
+      rootMargin: '-56px 0px -24px 0px'
+    });
+  }
+
+  function observeScrollItems(root = document) {
+    if (!root) return;
+    const targets = root.querySelectorAll('.scroll-item, .loyalty-card, .product-card, .basket-item');
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach(el => {
+        el.classList.add('scroll-item', 'is-visible');
+        el.classList.remove('is-scrolled-past');
+      });
+      return;
+    }
+
+    initScrollDissolveObserver();
+    targets.forEach(el => {
+      el.classList.add('scroll-item');
+      scrollDissolveObserver.observe(el);
+    });
+  }
+
+  function initPageTransitions() {
+    const PAGE_ORDER = ['index.html', 'catalog.html', 'basket.html', 'admin.html'];
+    const mainEl = document.querySelector('main');
+
+    const getPageName = (pathname) => {
+      const clean = String(pathname || '').split('?')[0].split('#')[0];
+      const segment = clean.split('/').pop() || 'index.html';
+      return PAGE_ORDER.includes(segment) ? segment : 'index.html';
+    };
+
+    try {
+      const navDir = sessionStorage.getItem('aurelia-nav-dir');
+      if (navDir && mainEl) {
+        sessionStorage.removeItem('aurelia-nav-dir');
+        const enterClass = navDir === 'backward' ? 'page-slide-enter-from-left' : 'page-slide-enter-from-right';
+        mainEl.classList.add(enterClass);
+        mainEl.addEventListener('animationend', () => {
+          mainEl.classList.remove(enterClass);
+        }, { once: true });
+      }
+    } catch (_) {}
+
+    const navSelectors = '.nav-menu a, .mobile-bottom-nav a, .mobile-nav-list a, .footer-inline-nav a, .brand-link';
+    document.querySelectorAll(navSelectors).forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || link.target === '_blank') return;
+
+        let targetUrl;
+        try {
+          targetUrl = new URL(href, window.location.href);
+        } catch (_) {
+          return;
+        }
+        if (targetUrl.origin !== window.location.origin) return;
+
+        const currentPage = getPageName(window.location.pathname);
+        const targetPage = getPageName(targetUrl.pathname);
+        if (currentPage === targetPage && !targetUrl.search) return;
+
+        const fromIdx = PAGE_ORDER.indexOf(currentPage);
+        const toIdx = PAGE_ORDER.indexOf(targetPage);
+        const direction = (fromIdx !== -1 && toIdx !== -1 && toIdx < fromIdx) ? 'backward' : 'forward';
+
+        try {
+          sessionStorage.setItem('aurelia-nav-dir', direction);
+        } catch (_) {}
+
+        if (mainEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          e.preventDefault();
+          mainEl.classList.add(direction === 'backward' ? 'page-slide-exit-right' : 'page-slide-exit-left');
+          setTimeout(() => {
+            window.location.href = targetUrl.href;
+          }, 170);
+        }
+      });
+    });
+  }
+
   function initScrollReveal() {
     if (!('IntersectionObserver' in window)) {
       document.querySelectorAll('.reveal-item').forEach(el => el.classList.add('is-visible'));
@@ -2191,6 +2525,7 @@
     }, { threshold: 0.1 });
 
     document.querySelectorAll('.reveal-item').forEach(el => observer.observe(el));
+    observeScrollItems(document);
   }
 
   /* ─── 13. Service Worker, PWA Install & Offline Indicator ─────────────────── */
@@ -2317,6 +2652,7 @@
     initCitySelector();
     initStoresModal();
     initAuth();
+    initPageTransitions();
     initScrollReveal();
     initServiceWorker();
 

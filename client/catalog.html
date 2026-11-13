@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0B0B0D">
   <script src="js/api.js" defer></script>
@@ -271,6 +271,7 @@
       <div class="products-grid" id="catalog-products-container">
         <!-- Наповнюється динамічно через app.js на основі AureliaAPI.getProducts() -->
       </div>
+      <div id="catalog-pagination" class="catalog-pagination" role="navigation" aria-label="Пагінація каталогу"></div>
     </section>
 
     <!-- Аналітичні блоки телеметрії та перехід до кошика -->
@@ -333,7 +334,7 @@
   </main>
 
   <!-- МОДАЛЬНЕ ВІКНО: Авторизація (#auth-modal) -->
-  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div id="auth-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <div class="modal-dialog">
       <div class="modal-header">
         <h2 id="auth-modal-title" class="modal-title">Вхід до AURELIA UA</h2>
@@ -366,7 +367,7 @@
   </div>
 
   <!-- МОДАЛЬНЕ ВІКНО: Вибір міста (#city-modal) -->
-  <div id="city-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="city-modal-title">
+  <div id="city-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="city-modal-title">
     <div class="modal-dialog city-modal-dialog">
       <div class="modal-header">
         <h2 id="city-modal-title" class="modal-title">Оберіть ваше місто</h2>
@@ -444,7 +445,7 @@
   </div>
 
   <!-- МОДАЛЬНЕ ВІКНО: Вибір мереж лояльності (#stores-modal) -->
-  <div id="stores-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="stores-modal-title">
+  <div id="stores-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="stores-modal-title">
     <div class="modal-dialog stores-modal-dialog">
       <div class="modal-header">
         <h2 id="stores-modal-title" class="modal-title">Мої Мережі</h2>
@@ -485,7 +486,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Сільпо</span>
-                    <span class="store-toggle-program">Власний Рахунок</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Власний Рахунок</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -502,7 +503,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">АТБ-Маркет</span>
-                    <span class="store-toggle-program">Картка АТБ</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Картка АТБ</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -519,7 +520,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">NOVUS</span>
-                    <span class="store-toggle-program">NOVUS Club</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">NOVUS Club</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -536,7 +537,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">VARUS</span>
-                    <span class="store-toggle-program">VARUS Poshuk</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">VARUS Poshuk</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -553,7 +554,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">METRO</span>
-                    <span class="store-toggle-program">METRO Card</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">METRO Card</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -570,7 +571,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">АШАН</span>
-                    <span class="store-toggle-program">Auchan Club</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Auchan Club</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -587,7 +588,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Епіцентр Food</span>
-                    <span class="store-toggle-program">Вигода</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Вигода</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -604,7 +605,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Велмарт</span>
-                    <span class="store-toggle-program">Велмарт Бонус</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Велмарт Бонус</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -630,7 +631,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Траш! ТРАШ!</span>
-                    <span class="store-toggle-program">Власний Рахунок</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Власний Рахунок</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -647,7 +648,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Сімі</span>
-                    <span class="store-toggle-program">Сімі Клуб</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Сімі Клуб</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -664,7 +665,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Близенько</span>
-                    <span class="store-toggle-program">Близенько Разом</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Близенько Разом</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -681,7 +682,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Тайстра</span>
-                    <span class="store-toggle-program">Тайстра Бонус</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Тайстра Бонус</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -698,7 +699,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Арсен</span>
-                    <span class="store-toggle-program">Пакко Бонус</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Пакко Бонус</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -715,7 +716,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Рукавичка</span>
-                    <span class="store-toggle-program">Родина Рукавичка</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Родина Рукавичка</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -741,7 +742,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">EVA</span>
-                    <span class="store-toggle-program">EVA МОЗАЇКА</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">EVA МОЗАЇКА</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -758,7 +759,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Prostor</span>
-                    <span class="store-toggle-program">PROSTOR club</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">PROSTOR club</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -775,7 +776,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Аврора Мультимаркет</span>
-                    <span class="store-toggle-program">Аврора Бонус</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Аврора Бонус</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
@@ -792,7 +793,7 @@
                   </span>
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Епіцентр К</span>
-                    <span class="store-toggle-program">Вигода</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Вигода</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>

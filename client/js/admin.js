@@ -126,16 +126,34 @@
 
   function openModal(modalEl) {
     if (!modalEl) return;
+    if (modalEl._closeTimer) {
+      clearTimeout(modalEl._closeTimer);
+      modalEl._closeTimer = null;
+    }
+    const header = document.getElementById('site-header');
+    if (header) header.classList.remove('is-zoomed-out');
+    modalEl.classList.remove('is-closing');
+    void modalEl.offsetWidth;
     modalEl.classList.add('is-open');
-    document.body.classList.add('is-locked');
+    document.body.classList.add('is-locked', 'has-page-modal');
+    document.body.classList.remove('has-header-dropdown');
     const firstInput = modalEl.querySelector('input, select');
     if (firstInput) firstInput.focus();
   }
 
   function closeModal(modalEl) {
     if (!modalEl) return;
+    if (modalEl._closeTimer) {
+      clearTimeout(modalEl._closeTimer);
+    }
     modalEl.classList.remove('is-open');
-    document.body.classList.remove('is-locked');
+    modalEl.classList.add('is-closing');
+    document.body.classList.remove('is-locked', 'has-page-modal');
+
+    modalEl._closeTimer = setTimeout(() => {
+      modalEl.classList.remove('is-closing');
+      modalEl._closeTimer = null;
+    }, 380);
   }
 
   function populateSubCategories(mainCat, selectedSubCat = '') {
