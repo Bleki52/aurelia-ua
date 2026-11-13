@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'aurelia_jwt_super_secret_key_2026'
 /**
  * Extracts and verifies JWT from Bearer header.
  */
-function verifyToken(req) {
+function extractVerifiedToken(req) {
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
   if (!authHeader) return null;
 
@@ -27,10 +27,16 @@ function verifyToken(req) {
 }
 
 /**
- * Middleware: Requires a valid authenticated user.
+ * Dual-mode helper / middleware:
+ * - When called as verifyToken(req), returns decoded JWT payload or null.
+ * - When mounted as Express middleware (req, res, next), enforces authentication.
  */
-function requireAuth(req, res, next) {
-  const decoded = verifyToken(req);
+function verifyToken(req, res, next) {
+  if (!res || typeof next !== 'function') {
+    return extractVerifiedToken(req);
+  }
+
+  const decoded = extractVerifiedToken(req);
   if (!decoded) {
     return res.status(401).json({
       error: 'Необхідна авторизація. Будь ласка, увійдіть до системи.',
@@ -42,10 +48,17 @@ function requireAuth(req, res, next) {
 }
 
 /**
+ * Middleware: Requires a valid authenticated user.
+ */
+function requireAuth(req, res, next) {
+  return verifyToken(req, res, next);
+}
+
+/**
  * Middleware: Requires an authenticated user with ADMIN role.
  */
 function requireAdmin(req, res, next) {
-  const decoded = verifyToken(req);
+  const decoded = extractVerifiedToken(req);
   if (!decoded) {
     return res.status(401).json({
       error: 'Необхідна авторизація для доступу до адміністративної зони.',
@@ -68,7 +81,7 @@ function requireAdmin(req, res, next) {
  * Middleware: Optional authentication (attaches req.user if token valid, but does not block).
  */
 function optionalAuth(req, res, next) {
-  const decoded = verifyToken(req);
+  const decoded = extractVerifiedToken(req);
   if (decoded) {
     req.user = decoded;
   }
@@ -76,6 +89,7 @@ function optionalAuth(req, res, next) {
 }
 
 module.exports = {
+  verifyToken,
   requireAuth,
   requireAdmin,
   optionalAuth,

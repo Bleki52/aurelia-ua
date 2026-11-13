@@ -23,6 +23,11 @@ const DEFAULT_ADMIN = {
   email: 'admin@aurelia.ua',
   password_hash: bcrypt.hashSync('Admin123!', 10),
   role: 'ADMIN',
+  is_verified: true,
+  verification_code: null,
+  verification_expires: null,
+  reset_code: null,
+  reset_expires: null,
   created_at: new Date().toISOString()
 };
 
@@ -296,6 +301,25 @@ function loadLocalStore() {
   try {
     const raw = fs.readFileSync(LOCAL_STORE_PATH, 'utf8');
     const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.users) || parsed.users.length === 0) {
+      parsed.users = [DEFAULT_ADMIN];
+    } else {
+      parsed.users = parsed.users.map(u => {
+        if (!u) return u;
+        const isAdminEmail = String(u.email || '').toLowerCase() === DEFAULT_ADMIN.email;
+        return {
+          ...u,
+          is_verified: isAdminEmail ? true : (u.is_verified === undefined ? true : Boolean(u.is_verified)),
+          verification_code: u.verification_code !== undefined ? u.verification_code : null,
+          verification_expires: u.verification_expires !== undefined ? u.verification_expires : null,
+          reset_code: u.reset_code !== undefined ? u.reset_code : null,
+          reset_expires: u.reset_expires !== undefined ? u.reset_expires : null
+        };
+      });
+    }
+    if (!Array.isArray(parsed.loyalty_cards)) {
+      parsed.loyalty_cards = [];
+    }
     if (!parsed.product_prices || !Array.isArray(parsed.product_prices)) {
       parsed.product_prices = buildSeedProductPrices(parsed.products);
     }
@@ -407,6 +431,16 @@ async function initDatabase() {
 
       // Auto-migrations: ensure new columns and indexes exist
       await pgPool.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'USER';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(12);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expires TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(12);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+        ALTER TABLE loyalty_cards ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+        CREATE INDEX IF NOT EXISTS idx_loyalty_cards_user_id ON loyalty_cards(user_id);
         ALTER TABLE products ADD COLUMN IF NOT EXISTS city VARCHAR(60) DEFAULT 'ivano-frankivsk';
         ALTER TABLE products ADD COLUMN IF NOT EXISTS main_category VARCHAR(80) DEFAULT 'Продукти';
         ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_category VARCHAR(80) DEFAULT 'Бакалія';
@@ -418,11 +452,20 @@ async function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_products_sub_category ON products(sub_category);
       `);
 
+      // Ensure admin@aurelia.ua and pre-existing users created before OTP migration stay verified
+      await pgPool.query(
+        `UPDATE users
+         SET is_verified = TRUE
+         WHERE LOWER(email) = LOWER($1)
+            OR (is_verified IS NOT TRUE AND verification_code IS NULL)`,
+        [DEFAULT_ADMIN.email]
+      );
+
       // Seed admin if not present
       const adminRes = await pgPool.query('SELECT id FROM users WHERE email = $1', [DEFAULT_ADMIN.email]);
       if (adminRes.rowCount === 0) {
         await pgPool.query(
-          `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)`,
+          `INSERT INTO users (name, email, password_hash, role, is_verified) VALUES ($1, $2, $3, $4, TRUE)`,
           [DEFAULT_ADMIN.name, DEFAULT_ADMIN.email, DEFAULT_ADMIN.password_hash, 'ADMIN']
         );
         console.log('✅ Адміністратора admin@aurelia.ua додано до бази.');
@@ -490,21 +533,31 @@ async function findUserByEmail(email) {
 
 async function findUserById(id) {
   if (isPostgres) {
-    const res = await pgPool.query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
+    const res = await pgPool.query('SELECT id, name, email, role, is_verified, created_at FROM users WHERE id = $1', [id]);
     return res.rows[0] || null;
   }
   const store = loadLocalStore();
   const u = store.users.find(user => String(user.id) === String(id));
   if (!u) return null;
-  const { password_hash, ...safeUser } = u;
+  const { password_hash, verification_code, verification_expires, reset_code, reset_expires, ...safeUser } = u;
   return safeUser;
 }
 
-async function createUser({ name, email, password_hash, role }) {
+async function createUser({
+  name,
+  email,
+  password_hash,
+  role,
+  is_verified = false,
+  verification_code = null,
+  verification_expires = null
+}) {
   if (isPostgres) {
     const res = await pgPool.query(
-      `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at`,
-      [name, email, password_hash, role || 'USER']
+      `INSERT INTO users (name, email, password_hash, role, is_verified, verification_code, verification_expires)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, email, role, is_verified, created_at`,
+      [name, email, password_hash, role || 'USER', Boolean(is_verified), verification_code, verification_expires]
     );
     return res.rows[0];
   }
@@ -516,11 +569,110 @@ async function createUser({ name, email, password_hash, role }) {
     email,
     password_hash,
     role: role || 'USER',
+    is_verified: Boolean(is_verified),
+    verification_code: verification_code || null,
+    verification_expires: verification_expires || null,
+    reset_code: null,
+    reset_expires: null,
     created_at: new Date().toISOString()
   };
   store.users.push(newUser);
   saveLocalStore(store);
-  const { password_hash: _, ...safeUser } = newUser;
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = newUser;
+  return safeUser;
+}
+
+async function setVerificationCode(email, code, expiresAt) {
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET verification_code = $2, verification_expires = $3
+       WHERE LOWER(email) = LOWER($1)
+       RETURNING id, name, email, role, is_verified, created_at`,
+      [email, code, expiresAt]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => u.email.toLowerCase() === String(email).toLowerCase());
+  if (idx === -1) return null;
+  store.users[idx].verification_code = code;
+  store.users[idx].verification_expires = expiresAt;
+  saveLocalStore(store);
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = store.users[idx];
+  return safeUser;
+}
+
+async function verifyUserEmail(email) {
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET is_verified = TRUE, verification_code = NULL, verification_expires = NULL
+       WHERE LOWER(email) = LOWER($1)
+       RETURNING id, name, email, role, is_verified, created_at`,
+      [email]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => u.email.toLowerCase() === String(email).toLowerCase());
+  if (idx === -1) return null;
+  store.users[idx].is_verified = true;
+  store.users[idx].verification_code = null;
+  store.users[idx].verification_expires = null;
+  saveLocalStore(store);
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = store.users[idx];
+  return safeUser;
+}
+
+async function setPasswordResetCode(email, code, expiresAt) {
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET reset_code = $2, reset_expires = $3
+       WHERE LOWER(email) = LOWER($1)
+       RETURNING id, name, email, role, is_verified, created_at`,
+      [email, code, expiresAt]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => u.email.toLowerCase() === String(email).toLowerCase());
+  if (idx === -1) return null;
+  store.users[idx].reset_code = code;
+  store.users[idx].reset_expires = expiresAt;
+  saveLocalStore(store);
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = store.users[idx];
+  return safeUser;
+}
+
+async function resetUserPassword(email, password_hash) {
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET password_hash = $2,
+           reset_code = NULL,
+           reset_expires = NULL,
+           is_verified = TRUE,
+           verification_code = NULL,
+           verification_expires = NULL
+       WHERE LOWER(email) = LOWER($1)
+       RETURNING id, name, email, role, is_verified, created_at`,
+      [email, password_hash]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => u.email.toLowerCase() === String(email).toLowerCase());
+  if (idx === -1) return null;
+  store.users[idx].password_hash = password_hash;
+  store.users[idx].reset_code = null;
+  store.users[idx].reset_expires = null;
+  store.users[idx].is_verified = true;
+  store.users[idx].verification_code = null;
+  store.users[idx].verification_expires = null;
+  saveLocalStore(store);
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = store.users[idx];
   return safeUser;
 }
 
@@ -675,37 +827,60 @@ function formatProduct(p) {
   };
 }
 
-// 2. Картки лояльності (Loyalty Cards)
-async function getCards(userId) {
+// 2. Картки лояльності (Loyalty Cards — Strict Per-User Isolation)
+async function getCardsByUser(userId) {
+  if (!userId) return [];
   if (isPostgres) {
     const res = await pgPool.query(
-      'SELECT * FROM loyalty_cards WHERE user_id = $1 OR user_id = 1 ORDER BY id DESC',
-      [userId || 1]
+      'SELECT * FROM loyalty_cards WHERE user_id = $1 ORDER BY id DESC',
+      [userId]
     );
     return res.rows.map(formatCard);
   }
   const store = loadLocalStore();
-  return store.loyalty_cards.map(formatCard);
+  return store.loyalty_cards
+    .filter(c => String(c.user_id) === String(userId))
+    .map(formatCard);
 }
 
-async function getCardById(id) {
+async function getCards(userId) {
+  return getCardsByUser(userId);
+}
+
+async function getCardById(userId, cardId) {
+  if (!userId || !cardId) return null;
   if (isPostgres) {
-    const res = await pgPool.query('SELECT * FROM loyalty_cards WHERE id = $1', [id]);
+    const res = await pgPool.query(
+      'SELECT * FROM loyalty_cards WHERE user_id = $1 AND id = $2',
+      [userId, cardId]
+    );
     return res.rows[0] ? formatCard(res.rows[0]) : null;
   }
   const store = loadLocalStore();
-  const card = store.loyalty_cards.find(c => String(c.id) === String(id)) || null;
+  const card = store.loyalty_cards.find(
+    c => String(c.user_id) === String(userId) && String(c.id) === String(cardId)
+  ) || null;
   return formatCard(card);
 }
 
-async function createCard(cardData, userId) {
+async function createCard(userIdArg, cardDataArg) {
+  let userId = userIdArg;
+  let cardData = cardDataArg;
+  if (userIdArg && typeof userIdArg === 'object' && cardDataArg !== undefined) {
+    cardData = userIdArg;
+    userId = cardDataArg;
+  }
+  if (!userId || !cardData) {
+    throw new Error('Потрібен ідентифікатор користувача та дані картки.');
+  }
+
   const persistedQr = cardData.qr_payload || cardData.qrPayload || cardData.card_number || cardData.number;
   if (isPostgres) {
     const res = await pgPool.query(
       `INSERT INTO loyalty_cards (user_id, store, program, card_number, qr_payload, points, cashback, screenshot_data)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [
-        userId || 1,
+        userId,
         cardData.store,
         cardData.program || '',
         cardData.card_number || cardData.number,
@@ -721,7 +896,7 @@ async function createCard(cardData, userId) {
   const maxId = store.loyalty_cards.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0);
   const newCard = {
     id: maxId + 1,
-    user_id: userId || 1,
+    user_id: userId,
     store: cardData.store,
     program: cardData.program || '',
     card_number: cardData.card_number || cardData.number,
@@ -736,20 +911,22 @@ async function createCard(cardData, userId) {
   return formatCard(newCard);
 }
 
-async function updateCard(id, cardData) {
+async function updateCard(userId, cardId, cardData) {
+  if (!userId || !cardId || !cardData) return null;
   const persistedQr = cardData.qr_payload || cardData.qrPayload || cardData.card_number || cardData.number;
   if (isPostgres) {
     const res = await pgPool.query(
       `UPDATE loyalty_cards SET
-        store = COALESCE($1, store),
-        program = COALESCE($2, program),
-        card_number = COALESCE($3, card_number),
-        qr_payload = COALESCE($4, qr_payload),
-        points = COALESCE($5, points),
-        cashback = COALESCE($6, cashback),
-        screenshot_data = COALESCE($7, screenshot_data)
-       WHERE id = $8 RETURNING *`,
+        store = COALESCE($2, store),
+        program = COALESCE($3, program),
+        card_number = COALESCE($4, card_number),
+        qr_payload = COALESCE($5, qr_payload),
+        points = COALESCE($6, points),
+        cashback = COALESCE($7, cashback),
+        screenshot_data = COALESCE($8, screenshot_data)
+       WHERE user_id = $1 AND id = $9 RETURNING *`,
       [
+        userId,
         cardData.store,
         cardData.program,
         cardData.card_number || cardData.number,
@@ -757,17 +934,20 @@ async function updateCard(id, cardData) {
         cardData.points || cardData.note,
         cardData.cashback,
         cardData.screenshot_data || cardData.screenshotDataUrl,
-        id
+        cardId
       ]
     );
     return res.rows[0] ? formatCard(res.rows[0]) : null;
   }
   const store = loadLocalStore();
-  const idx = store.loyalty_cards.findIndex(c => String(c.id) === String(id));
+  const idx = store.loyalty_cards.findIndex(
+    c => String(c.user_id) === String(userId) && String(c.id) === String(cardId)
+  );
   if (idx === -1) return null;
   store.loyalty_cards[idx] = {
     ...store.loyalty_cards[idx],
     ...cardData,
+    user_id: store.loyalty_cards[idx].user_id,
     card_number: cardData.card_number || cardData.number || store.loyalty_cards[idx].card_number,
     qr_payload: persistedQr || store.loyalty_cards[idx].qr_payload
   };
@@ -775,14 +955,20 @@ async function updateCard(id, cardData) {
   return formatCard(store.loyalty_cards[idx]);
 }
 
-async function deleteCard(id) {
+async function deleteCard(userId, cardId) {
+  if (!userId || !cardId) return false;
   if (isPostgres) {
-    const res = await pgPool.query('DELETE FROM loyalty_cards WHERE id = $1 RETURNING id', [id]);
+    const res = await pgPool.query(
+      'DELETE FROM loyalty_cards WHERE user_id = $1 AND id = $2 RETURNING id',
+      [userId, cardId]
+    );
     return res.rowCount > 0;
   }
   const store = loadLocalStore();
   const initLen = store.loyalty_cards.length;
-  store.loyalty_cards = store.loyalty_cards.filter(c => String(c.id) !== String(id));
+  store.loyalty_cards = store.loyalty_cards.filter(
+    c => !(String(c.user_id) === String(userId) && String(c.id) === String(cardId))
+  );
   saveLocalStore(store);
   return store.loyalty_cards.length < initLen;
 }
@@ -1270,7 +1456,12 @@ module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
+  setVerificationCode,
+  verifyUserEmail,
+  setPasswordResetCode,
+  resetUserPassword,
   // Cards
+  getCardsByUser,
   getCards,
   getCardById,
   createCard,

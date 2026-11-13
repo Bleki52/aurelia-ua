@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0B0B0D">
+  <script src="js/api.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -37,7 +38,7 @@
           <li><a href="index.html" class="nav-link">Гаманець</a></li>
           <li><a href="catalog.html" class="nav-link">Ціни та Акції</a></li>
           <li><a href="basket.html" class="nav-link">Розумний Кошик</a></li>
-          <li><a href="admin.html" class="nav-link">Адмін-панель</a></li>
+          <li class="admin-nav-item is-hidden"><a href="admin.html" class="nav-link">Адмін-панель</a></li>
         </ul>
       </nav>
 
@@ -110,7 +111,7 @@
             <span>Розумний Кошик</span>
           </a>
         </li>
-        <li>
+        <li class="admin-nav-item is-hidden">
           <a href="admin.html" class="mobile-nav-link">
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-edit"></use>
@@ -171,7 +172,7 @@
           <a href="index.html">Гаманець</a>
           <a href="catalog.html">Ціни та Акції</a>
           <a href="basket.html">Розумний Кошик</a>
-          <a href="admin.html">Адмін-панель</a>
+          <a href="admin.html" class="admin-nav-item is-hidden">Адмін-панель</a>
         </nav>
       </div>
     </div>
@@ -197,7 +198,7 @@
       </svg>
       <span class="bottom-nav-label">Кошик</span>
     </a>
-    <a href="admin.html" class="bottom-nav-item">
+    <a href="admin.html" class="bottom-nav-item admin-nav-item is-hidden">
       <svg class="icon" aria-hidden="true">
         <use href="assets/sprite.svg#icon-edit"></use>
       </svg>

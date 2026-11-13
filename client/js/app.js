@@ -129,6 +129,7 @@
 
   const AppState = {
     theme: 'dark',
+    authMode: 'register',
     activeModal: null,
     activeCheckoutCard: null,
     checkoutMode: 'qr',
@@ -221,6 +222,7 @@
 
     // Cards list & toolbar (index.html)
     DOM.cardsContainer = document.getElementById('wallet-cards-container');
+    DOM.walletToolbar = document.querySelector('.wallet-toolbar-deck');
     DOM.btnAddCard = document.getElementById('btn-add-card');
     DOM.cardSearchInput = document.getElementById('card-search-input');
     DOM.cardFilterBtns = document.querySelectorAll('.filter-bar .filter-btn[data-cat], .filter-bar .filter-btn[data-store]');
@@ -258,8 +260,48 @@
     // Auth
     DOM.authOpenBtn = document.getElementById('auth-open-btn');
     DOM.mobileAuthBtn = document.getElementById('mobile-auth-btn');
+    DOM.headerLogoutBtn = document.getElementById('header-logout-btn');
     DOM.authForm = document.getElementById('auth-form');
     DOM.authBtnLabel = document.getElementById('auth-btn-label');
+    DOM.authModalTitle = document.getElementById('auth-modal-title');
+    DOM.authModeTabs = document.getElementById('auth-mode-tabs');
+    DOM.authModeBtns = document.querySelectorAll('[data-auth-mode]');
+    DOM.authNameGroup = document.getElementById('auth-name-group');
+    DOM.authNameInput = document.getElementById('auth-name-input');
+    DOM.authEmailInput = document.getElementById('auth-email-input');
+    DOM.authPasswordInput = document.getElementById('auth-password-input');
+    DOM.authNameError = document.getElementById('auth-name-error');
+    DOM.authEmailError = document.getElementById('auth-email-error');
+    DOM.authPasswordError = document.getElementById('auth-password-error');
+    DOM.authSubmitBtn = document.getElementById('auth-submit-btn');
+    DOM.authGuestBrowseBtn = document.getElementById('auth-guest-browse-btn');
+    DOM.authForgotRow = document.getElementById('auth-forgot-row');
+    DOM.authForgotOpenBtn = document.getElementById('auth-forgot-open-btn');
+    DOM.authVerifyForm = document.getElementById('auth-verify-form');
+    DOM.authVerifyDesc = document.getElementById('auth-verify-desc');
+    DOM.authVerifyDevHint = document.getElementById('auth-verify-dev-hint');
+    DOM.authVerifyCodeInput = document.getElementById('auth-verify-code-input');
+    DOM.authVerifyError = document.getElementById('auth-verify-error');
+    DOM.authVerifySubmitBtn = document.getElementById('auth-verify-submit-btn');
+    DOM.authResendBtn = document.getElementById('auth-resend-btn');
+    DOM.authVerifyBackBtn = document.getElementById('auth-verify-back-btn');
+    DOM.authResetForm = document.getElementById('auth-reset-form');
+    DOM.authResetDesc = document.getElementById('auth-reset-desc');
+    DOM.authResetDevHint = document.getElementById('auth-reset-dev-hint');
+    DOM.authResetEmailInput = document.getElementById('auth-reset-email-input');
+    DOM.authResetEmailError = document.getElementById('auth-reset-email-error');
+    DOM.authResetStep2Fields = document.getElementById('auth-reset-step2-fields');
+    DOM.authResetCodeInput = document.getElementById('auth-reset-code-input');
+    DOM.authResetCodeError = document.getElementById('auth-reset-code-error');
+    DOM.authResetPasswordInput = document.getElementById('auth-reset-password-input');
+    DOM.authResetPasswordError = document.getElementById('auth-reset-password-error');
+    DOM.authResetSubmitBtn = document.getElementById('auth-reset-submit-btn');
+    DOM.authResetBackBtn = document.getElementById('auth-reset-back-btn');
+    DOM.authProfileView = document.getElementById('auth-profile-view');
+    DOM.authProfileRole = document.getElementById('auth-profile-role');
+    DOM.authProfileName = document.getElementById('auth-profile-name');
+    DOM.authProfileEmail = document.getElementById('auth-profile-email');
+    DOM.authLogoutBtn = document.getElementById('auth-logout-btn');
   }
 
   /* ─── 3. Theme Engine ────────────────────────────────────────────────────── */
@@ -374,12 +416,11 @@
       });
     }
 
-    // Mobile auth button in drawer
+    // Mobile auth button in drawer (close drawer cleanly before auth modal opens)
     const mobileAuthBtn = document.getElementById('mobile-auth-btn');
-    if (mobileAuthBtn && DOM.authModal) {
+    if (mobileAuthBtn) {
       mobileAuthBtn.addEventListener('click', () => {
         toggleMenu(true);
-        openModal(DOM.authModal);
       });
     }
 
@@ -467,6 +508,12 @@
     if (!AppState.activeModal || AppState.activeModal === target) {
       AppState.activeModal = null;
       document.body.classList.remove('is-locked', 'has-page-modal', 'has-header-dropdown');
+    }
+
+    if (target === DOM.authModal) {
+      try {
+        sessionStorage.setItem('@aurelia_guest_dismissed', '1');
+      } catch (_) {}
     }
 
     target._closeTimer = setTimeout(() => {
@@ -897,16 +944,103 @@
   async function initWalletPage() {
     if (!DOM.cardsContainer) return;
 
-    if (window.AureliaAPI) {
+    const user = (window.AureliaAPI && typeof window.AureliaAPI.getCurrentUser === 'function')
+      ? window.AureliaAPI.getCurrentUser()
+      : null;
+
+    if (user && window.AureliaAPI) {
       AppState.cards = await window.AureliaAPI.getCards();
+    } else {
+      AppState.cards = [];
     }
+
     renderCards();
     initCardForm();
     initCardFilters();
+
+    if (!user && DOM.authModal) {
+      let dismissed = false;
+      try {
+        dismissed = Boolean(sessionStorage.getItem('@aurelia_guest_dismissed'));
+      } catch (_) {}
+      if (!dismissed) {
+        setTimeout(() => {
+          const stillGuest = !(window.AureliaAPI && window.AureliaAPI.getCurrentUser());
+          if (stillGuest && !AppState.activeModal) {
+            setAuthModalMode('register');
+            openModal(DOM.authModal);
+          }
+        }, 260);
+      }
+    }
   }
 
   function renderCards() {
     if (!DOM.cardsContainer) return;
+
+    const user = (window.AureliaAPI && typeof window.AureliaAPI.getCurrentUser === 'function')
+      ? window.AureliaAPI.getCurrentUser()
+      : null;
+
+    if (!user) {
+      if (DOM.btnAddCard) DOM.btnAddCard.classList.add('is-hidden');
+      if (DOM.walletToolbar) DOM.walletToolbar.classList.add('is-hidden');
+
+      DOM.cardsContainer.innerHTML = `
+        <article class="wallet-locked-card reveal-item is-visible">
+          <div class="wallet-locked-icon-wrap" aria-hidden="true">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-lock"></use>
+            </svg>
+            <svg class="icon wallet-locked-qr-sub" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-qr"></use>
+            </svg>
+          </div>
+          <p class="wallet-locked-kicker">Приватний гаманець закрито</p>
+          <h3 class="wallet-locked-title">Персональний гаманець QR-карток</h3>
+          <p class="wallet-locked-desc">Зареєструйтесь за допомогою Email, щоб зберігати власні картки Сільпо, АТБ, Близенько, Сімі та сканувати їх на касі навіть без інтернету</p>
+          <div class="wallet-locked-actions">
+            <button type="button" id="locked-wallet-auth-btn" class="btn btn-primary">Створити акаунт / Увійти</button>
+            <a href="catalog.html" class="btn btn-secondary">Переглянути акції супермаркетів →</a>
+          </div>
+        </article>
+      `;
+
+      const lockedAuthBtn = document.getElementById('locked-wallet-auth-btn');
+      if (lockedAuthBtn && DOM.authModal) {
+        lockedAuthBtn.addEventListener('click', () => {
+          setAuthModalMode('register');
+          openModal(DOM.authModal);
+        });
+      }
+      return;
+    }
+
+    if (DOM.btnAddCard) DOM.btnAddCard.classList.remove('is-hidden');
+    if (DOM.walletToolbar) DOM.walletToolbar.classList.remove('is-hidden');
+
+    if (AppState.cards.length === 0) {
+      DOM.cardsContainer.innerHTML = `
+        <div class="wallet-empty-state">
+          <svg class="icon icon-lg" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-qr"></use>
+          </svg>
+          <h3 class="wallet-empty-title">Ваш гаманець порожній — додайте свою першу картку Сільпо, АТБ або Близенько</h3>
+          <p class="wallet-empty-desc">Усі ваші картки надійно зберігаються у вашому приватному акаунті та доступні на касі навіть без інтернету.</p>
+          <div class="wallet-locked-actions">
+            <button type="button" class="btn btn-primary" id="empty-add-btn">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/sprite.svg#icon-plus"></use>
+              </svg>
+              <span>+ Додати першу картку</span>
+            </button>
+          </div>
+        </div>
+      `;
+      const emptyAdd = document.getElementById('empty-add-btn');
+      if (emptyAdd) emptyAdd.addEventListener('click', openAddCardForm);
+      return;
+    }
 
     let filtered = AppState.cards;
 
@@ -1597,20 +1731,22 @@
 
         return `
           <div class="store-price-row price-row ${isBest ? 'is-best' : ''}">
-            <div class="store-price-brand">
-              <span class="store-price-brand-left cat-${storeCat.key}">
-                <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#${storeCat.icon}"></use>
-                </svg>
-                <span class="store-tile-name">${meta.name}</span>
-              </span>
-              ${isBest && priceEntries.length > 1 ? '<span class="best-price-badge">Лідер</span>' : ''}
+            <div class="price-row-top">
+              <div class="store-price-brand">
+                <span class="store-price-brand-left cat-${storeCat.key}">
+                  <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
+                    <use href="assets/sprite.svg#${storeCat.icon}"></use>
+                  </svg>
+                  <span class="store-tile-name">${meta.name}</span>
+                </span>
+                ${isBest && priceEntries.length > 1 ? '<span class="best-price-badge">Лідер</span>' : ''}
+              </div>
+              <div class="store-price-val">
+                <span class="store-tile-price">${p.toFixed(2)} ₴</span>
+                ${oldPrice && oldPrice > p ? `<span class="store-tile-old">${oldPrice.toFixed(2)} ₴</span>` : ''}
+              </div>
             </div>
-            <div class="store-price-val">
-              <span class="store-tile-price">${p.toFixed(2)} ₴</span>
-              <span class="store-tile-old">${oldPrice && oldPrice > p ? `${oldPrice.toFixed(2)} ₴` : '—'}</span>
-            </div>
-            <div class="store-tile-foot">
+            <div class="price-row-bottom store-tile-foot">
               <span class="store-tile-status">${discPct > 0 ? `-${discPct}% Акція` : (isBest ? 'Найнижча ціна' : 'Звичайна ціна')}</span>
               ${verifyLink}
             </div>
@@ -1651,11 +1787,11 @@
           </div>
 
           <!-- Таблиця цін за наявними мережами -->
-          <div class="product-stores-list">
+          <div class="product-stores-list price-list">
             ${storesHtml}
           </div>
 
-          <div class="product-price-row price-row">
+          <div class="product-price-row">
             <div class="product-price-summary">
               <span class="product-savings-label">${spreadSavings > 0 ? `Вигода: до ${spreadSavings.toFixed(2)} ₴` : (priceEntries.length > 1 ? 'Найкраща ціна від' : 'Актуальна ціна')}</span>
               <span class="price-current">${priceCurrentHtml}</span>
@@ -2360,46 +2496,448 @@
   }
 
   /* ─── 11. Auth Modal & Session Controller ────────────────────────────────── */
-  function initAuth() {
-    // Restore existing logged in user session label on page load
-    if (window.AureliaAPI && typeof window.AureliaAPI.getCurrentUser === 'function') {
-      const user = window.AureliaAPI.getCurrentUser();
-      if (user && DOM.authBtnLabel) {
-        DOM.authBtnLabel.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Кабінет');
+  function clearAuthErrors() {
+    if (DOM.authNameError) DOM.authNameError.textContent = '';
+    if (DOM.authEmailError) DOM.authEmailError.textContent = '';
+    if (DOM.authPasswordError) DOM.authPasswordError.textContent = '';
+    if (DOM.authVerifyError) DOM.authVerifyError.textContent = '';
+    if (DOM.authResetEmailError) DOM.authResetEmailError.textContent = '';
+    if (DOM.authResetCodeError) DOM.authResetCodeError.textContent = '';
+    if (DOM.authResetPasswordError) DOM.authResetPasswordError.textContent = '';
+  }
+
+  function showDevOtpHint(el, devCode) {
+    if (!el) return;
+    if (devCode) {
+      el.textContent = `Тестовий код (без SMTP/Brevo): ${devCode}`;
+      el.classList.remove('is-hidden');
+    } else {
+      el.textContent = '';
+      el.classList.add('is-hidden');
+    }
+  }
+
+  function setAuthModalMode(mode, meta = {}) {
+    const validModes = ['register', 'login', 'verify', 'forgot', 'reset-confirm', 'profile'];
+    const targetMode = validModes.includes(mode) ? mode : 'register';
+    AppState.authMode = targetMode;
+    clearAuthErrors();
+
+    if (meta.email) {
+      AppState.pendingAuthEmail = String(meta.email).trim().toLowerCase();
+    }
+
+    const isProfile = targetMode === 'profile';
+    const isVerify = targetMode === 'verify';
+    const isForgot = targetMode === 'forgot';
+    const isResetConfirm = targetMode === 'reset-confirm';
+    const isReset = isForgot || isResetConfirm;
+    const isRegister = targetMode === 'register';
+    const isLogin = targetMode === 'login';
+    const isMainForm = isRegister || isLogin;
+
+    if (DOM.authModeTabs) DOM.authModeTabs.classList.toggle('is-hidden', !isMainForm);
+    if (DOM.authForm) DOM.authForm.classList.toggle('is-hidden', !isMainForm);
+    if (DOM.authVerifyForm) DOM.authVerifyForm.classList.toggle('is-hidden', !isVerify);
+    if (DOM.authResetForm) DOM.authResetForm.classList.toggle('is-hidden', !isReset);
+    if (DOM.authProfileView) DOM.authProfileView.classList.toggle('is-hidden', !isProfile);
+
+    if (DOM.authModeBtns) {
+      DOM.authModeBtns.forEach(btn => {
+        const active = btn.dataset.authMode === targetMode;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-pressed', String(active));
+      });
+    }
+
+    if (DOM.authNameGroup) DOM.authNameGroup.classList.toggle('is-hidden', !isRegister);
+    if (DOM.authForgotRow) DOM.authForgotRow.classList.toggle('is-hidden', !isLogin);
+
+    if (DOM.authModalTitle) {
+      const titles = {
+        profile: 'Особистий кабінет',
+        register: 'Реєстрація в AURELIA UA',
+        login: 'Вхід до AURELIA UA',
+        verify: 'Підтвердження Email',
+        forgot: 'Відновлення пароля',
+        'reset-confirm': 'Новий пароль'
+      };
+      DOM.authModalTitle.textContent = titles[targetMode] || 'Вхід до AURELIA UA';
+    }
+
+    if (DOM.authSubmitBtn) {
+      DOM.authSubmitBtn.textContent = isRegister ? 'Створити акаунт' : 'Увійти';
+    }
+    if (DOM.authPasswordInput) {
+      DOM.authPasswordInput.placeholder = isRegister ? 'Щонайменше 6 символів' : 'Введіть ваш пароль';
+    }
+
+    if (isVerify) {
+      const targetEmail = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+      if (DOM.authVerifyDesc) {
+        DOM.authVerifyDesc.textContent = meta.message
+          || (targetEmail
+            ? `Ми надіслали 6-значний код підтвердження на ${targetEmail}.`
+            : 'Ми надіслали 6-значний код підтвердження на вашу електронну пошту.');
+      }
+      showDevOtpHint(DOM.authVerifyDevHint, meta.devCode);
+      if (DOM.authVerifyCodeInput) {
+        DOM.authVerifyCodeInput.value = '';
+        setTimeout(() => DOM.authVerifyCodeInput && DOM.authVerifyCodeInput.focus(), 60);
+      }
+    } else if (isReset) {
+      if (DOM.authResetEmailInput) {
+        const fallbackEmail = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+        if (!DOM.authResetEmailInput.value && fallbackEmail) {
+          DOM.authResetEmailInput.value = fallbackEmail;
+        }
+        DOM.authResetEmailInput.readOnly = isResetConfirm;
+      }
+      if (DOM.authResetStep2Fields) {
+        DOM.authResetStep2Fields.classList.toggle('is-hidden', !isResetConfirm);
+      }
+      if (DOM.authResetDesc) {
+        DOM.authResetDesc.textContent = isResetConfirm
+          ? (meta.message || `Введіть 6-значний код, надісланий на ${DOM.authResetEmailInput ? DOM.authResetEmailInput.value : 'ваш Email'}, та новий пароль.`)
+          : 'Вкажіть вашу електронну пошту — ми надішлемо 6-значний код для скидання пароля.';
+      }
+      showDevOtpHint(DOM.authResetDevHint, isResetConfirm ? meta.devCode : '');
+      if (DOM.authResetSubmitBtn) {
+        DOM.authResetSubmitBtn.textContent = isResetConfirm ? 'Оновити пароль' : 'Надіслати код';
+      }
+      if (isResetConfirm && DOM.authResetCodeInput) {
+        DOM.authResetCodeInput.value = '';
+        if (DOM.authResetPasswordInput) DOM.authResetPasswordInput.value = '';
+        setTimeout(() => DOM.authResetCodeInput && DOM.authResetCodeInput.focus(), 60);
+      }
+    }
+  }
+
+  function updateAuthUI() {
+    const user = (window.AureliaAPI && typeof window.AureliaAPI.getCurrentUser === 'function')
+      ? window.AureliaAPI.getCurrentUser()
+      : null;
+
+    const displayName = user
+      ? (user.name || (user.email ? user.email.split('@')[0] : 'Кабінет'))
+      : 'Увійти';
+
+    if (DOM.authBtnLabel) {
+      DOM.authBtnLabel.textContent = displayName;
+    }
+    if (DOM.authOpenBtn) {
+      DOM.authOpenBtn.setAttribute('aria-label', user ? `Кабінет: ${displayName}` : 'Увійти або зареєструватися');
+    }
+    if (DOM.headerLogoutBtn) {
+      DOM.headerLogoutBtn.classList.toggle('is-hidden', !user);
+    }
+    if (DOM.mobileAuthBtn) {
+      const mobileSpan = DOM.mobileAuthBtn.querySelector('span');
+      if (mobileSpan) {
+        mobileSpan.textContent = user ? `Кабінет • ${displayName}` : 'Увійти / Реєстрація';
       }
     }
 
-    const triggerAuth = () => openModal(DOM.authModal);
-    if (DOM.authOpenBtn) DOM.authOpenBtn.addEventListener('click', triggerAuth);
-    if (DOM.mobileAuthBtn) DOM.mobileAuthBtn.addEventListener('click', triggerAuth);
+    if (user && DOM.authProfileView) {
+      if (DOM.authProfileName) DOM.authProfileName.textContent = displayName;
+      if (DOM.authProfileEmail) DOM.authProfileEmail.textContent = user.email || '';
+      if (DOM.authProfileRole) {
+        DOM.authProfileRole.textContent = user.role === 'ADMIN' ? 'Адміністратор' : 'Персональний гаманець';
+      }
+    }
+
+    const isAdmin = Boolean(user && user.role === 'ADMIN');
+    document.querySelectorAll('.admin-nav-item').forEach(el => {
+      el.classList.toggle('is-hidden', !isAdmin);
+    });
+    document.querySelectorAll('a[href="admin.html"]').forEach(link => {
+      const parentLi = link.closest('li');
+      if (parentLi && parentLi.parentElement && (parentLi.parentElement.classList.contains('nav-menu-list') || parentLi.parentElement.classList.contains('mobile-nav-list'))) {
+        parentLi.classList.toggle('is-hidden', !isAdmin);
+      } else {
+        link.classList.toggle('is-hidden', !isAdmin);
+      }
+    });
+  }
+
+  async function handleLogout() {
+    if (window.AureliaAPI && typeof window.AureliaAPI.logout === 'function') {
+      await window.AureliaAPI.logout();
+    }
+    AppState.cards = [];
+    if (DOM.authForm) DOM.authForm.reset();
+    closeModal(DOM.authModal);
+    updateAuthUI();
+
+    if (DOM.cardsContainer) {
+      renderCards();
+    }
+    if (window.location.pathname.endsWith('admin.html')) {
+      window.location.href = 'index.html';
+    }
+  }
+
+  function openAuthModalForCurrentUser() {
+    if (!DOM.authModal) return;
+    const user = (window.AureliaAPI && typeof window.AureliaAPI.getCurrentUser === 'function')
+      ? window.AureliaAPI.getCurrentUser()
+      : null;
+    if (user) {
+      setAuthModalMode('profile');
+    } else if (AppState.authMode === 'profile') {
+      setAuthModalMode('register');
+    } else {
+      setAuthModalMode(AppState.authMode || 'register');
+    }
+    openModal(DOM.authModal);
+  }
+
+  function initAuth() {
+    updateAuthUI();
+
+    // Silently refresh active JWT profile on startup if online
+    if (window.AureliaAPI && typeof window.AureliaAPI.getMe === 'function' && window.AureliaAPI.getCurrentUser()) {
+      window.AureliaAPI.getMe().then((freshUser) => {
+        updateAuthUI();
+        if (!freshUser && DOM.cardsContainer) {
+          AppState.cards = [];
+          renderCards();
+        }
+      }).catch(() => {});
+    }
+
+    if (DOM.authOpenBtn) DOM.authOpenBtn.addEventListener('click', openAuthModalForCurrentUser);
+    if (DOM.mobileAuthBtn) DOM.mobileAuthBtn.addEventListener('click', openAuthModalForCurrentUser);
+    if (DOM.headerLogoutBtn) DOM.headerLogoutBtn.addEventListener('click', handleLogout);
+    if (DOM.authLogoutBtn) DOM.authLogoutBtn.addEventListener('click', handleLogout);
+
+    if (DOM.authModeBtns) {
+      DOM.authModeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          setAuthModalMode(btn.dataset.authMode);
+        });
+      });
+    }
+
+    if (DOM.authGuestBrowseBtn) {
+      DOM.authGuestBrowseBtn.addEventListener('click', () => {
+        try {
+          sessionStorage.setItem('@aurelia_guest_dismissed', '1');
+        } catch (_) {}
+        closeModal(DOM.authModal);
+        if (DOM.cardsContainer) {
+          window.location.href = 'catalog.html';
+        }
+      });
+    }
+
+    if (DOM.authForgotOpenBtn) {
+      DOM.authForgotOpenBtn.addEventListener('click', () => {
+        const typedEmail = DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '';
+        if (DOM.authResetEmailInput) DOM.authResetEmailInput.value = typedEmail;
+        setAuthModalMode('forgot', { email: typedEmail });
+      });
+    }
+
+    if (DOM.authVerifyBackBtn) {
+      DOM.authVerifyBackBtn.addEventListener('click', () => {
+        setAuthModalMode('login');
+      });
+    }
+
+    if (DOM.authResetBackBtn) {
+      DOM.authResetBackBtn.addEventListener('click', () => {
+        setAuthModalMode('login');
+      });
+    }
+
+    const finishAuthenticatedSession = async () => {
+      try {
+        sessionStorage.setItem('@aurelia_guest_dismissed', '1');
+      } catch (_) {}
+
+      if (DOM.authForm) DOM.authForm.reset();
+      if (DOM.authVerifyForm) DOM.authVerifyForm.reset();
+      if (DOM.authResetForm) DOM.authResetForm.reset();
+      AppState.pendingAuthEmail = '';
+
+      closeModal(DOM.authModal);
+      updateAuthUI();
+
+      if (DOM.cardsContainer && window.AureliaAPI) {
+        AppState.cards = await window.AureliaAPI.getCards();
+        renderCards();
+      }
+    };
 
     if (DOM.authForm) {
       DOM.authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const emailInput = document.getElementById('auth-email-input');
-        const passInput = document.getElementById('auth-password-input');
-        const errEl = document.getElementById('auth-email-error');
-        if (errEl) errEl.textContent = '';
+        clearAuthErrors();
 
-        const email = emailInput ? emailInput.value.trim() : '';
-        const pass = passInput ? passInput.value.trim() : '';
+        const name = DOM.authNameInput ? DOM.authNameInput.value.trim() : '';
+        const email = DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '';
+        const pass = DOM.authPasswordInput ? DOM.authPasswordInput.value : '';
 
-        if (!email || !pass) {
-          if (errEl) errEl.textContent = 'Введіть пошту та пароль.';
+        let hasErr = false;
+        if (AppState.authMode === 'register' && name && name.length < 2) {
+          if (DOM.authNameError) DOM.authNameError.textContent = 'Ім’я має містити щонайменше 2 символи.';
+          hasErr = true;
+        }
+        if (!email || !email.includes('@')) {
+          if (DOM.authEmailError) DOM.authEmailError.textContent = 'Вкажіть коректну адресу електронної пошти.';
+          hasErr = true;
+        }
+        if (!pass || pass.length < 6) {
+          if (DOM.authPasswordError) DOM.authPasswordError.textContent = 'Пароль повинен містити щонайменше 6 символів.';
+          hasErr = true;
+        }
+        if (hasErr) return;
+
+        if (DOM.authSubmitBtn) DOM.authSubmitBtn.disabled = true;
+
+        try {
+          let res = null;
+          if (window.AureliaAPI) {
+            if (AppState.authMode === 'register') {
+              res = await window.AureliaAPI.register(name, email, pass);
+            } else {
+              res = await window.AureliaAPI.login(email, pass);
+            }
+          }
+
+          if (res && res.requiresVerification) {
+            setAuthModalMode('verify', {
+              email: res.email || email,
+              message: res.message,
+              devCode: res.devCode
+            });
+            return;
+          }
+
+          await finishAuthenticatedSession();
+        } catch (err) {
+          if (DOM.authEmailError) {
+            DOM.authEmailError.textContent = err.message || 'Не вдалося виконати авторизацію.';
+          }
+        } finally {
+          if (DOM.authSubmitBtn) DOM.authSubmitBtn.disabled = false;
+        }
+      });
+    }
+
+    if (DOM.authVerifyForm) {
+      DOM.authVerifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAuthErrors();
+
+        const email = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+        const code = DOM.authVerifyCodeInput ? DOM.authVerifyCodeInput.value.replace(/\D/g, '').slice(0, 6) : '';
+
+        if (!/^\d{6}$/.test(code)) {
+          if (DOM.authVerifyError) DOM.authVerifyError.textContent = 'Введіть коректний 6-значний код підтвердження.';
           return;
         }
 
+        if (DOM.authVerifySubmitBtn) DOM.authVerifySubmitBtn.disabled = true;
         try {
           if (window.AureliaAPI) {
-            const res = await window.AureliaAPI.login(email, pass);
-            const user = (res && res.user) ? res.user : res;
-            if (DOM.authBtnLabel) DOM.authBtnLabel.textContent = user?.name || email.split('@')[0];
-          } else {
-            if (DOM.authBtnLabel) DOM.authBtnLabel.textContent = email.split('@')[0];
+            await window.AureliaAPI.verifyEmail(email, code);
           }
-          closeModal(DOM.authModal);
+          await finishAuthenticatedSession();
         } catch (err) {
-          if (errEl) errEl.textContent = err.message || 'Невірний email або пароль.';
+          if (DOM.authVerifyError) {
+            DOM.authVerifyError.textContent = err.message || 'Невірний або прострочений код.';
+          }
+        } finally {
+          if (DOM.authVerifySubmitBtn) DOM.authVerifySubmitBtn.disabled = false;
+        }
+      });
+    }
+
+    if (DOM.authResendBtn) {
+      DOM.authResendBtn.addEventListener('click', async () => {
+        clearAuthErrors();
+        const email = AppState.pendingAuthEmail || (DOM.authEmailInput ? DOM.authEmailInput.value.trim().toLowerCase() : '');
+        if (!email) {
+          if (DOM.authVerifyError) DOM.authVerifyError.textContent = 'Вкажіть email перед повторним надсиланням коду.';
+          return;
+        }
+
+        DOM.authResendBtn.disabled = true;
+        try {
+          const res = window.AureliaAPI ? await window.AureliaAPI.resendVerification(email) : null;
+          setAuthModalMode('verify', {
+            email,
+            message: res && res.message ? res.message : `Новий 6-значний код надіслано на ${email}.`,
+            devCode: res && res.devCode
+          });
+        } catch (err) {
+          if (DOM.authVerifyError) {
+            DOM.authVerifyError.textContent = err.message || 'Не вдалося надіслати код повторно.';
+          }
+        } finally {
+          DOM.authResendBtn.disabled = false;
+        }
+      });
+    }
+
+    if (DOM.authResetForm) {
+      DOM.authResetForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAuthErrors();
+
+        const email = DOM.authResetEmailInput ? DOM.authResetEmailInput.value.trim().toLowerCase() : '';
+        if (!email || !email.includes('@')) {
+          if (DOM.authResetEmailError) DOM.authResetEmailError.textContent = 'Вкажіть коректну адресу електронної пошти.';
+          return;
+        }
+
+        if (AppState.authMode === 'forgot') {
+          if (DOM.authResetSubmitBtn) DOM.authResetSubmitBtn.disabled = true;
+          try {
+            const res = window.AureliaAPI ? await window.AureliaAPI.forgotPassword(email) : null;
+            setAuthModalMode('reset-confirm', {
+              email,
+              message: res && res.message,
+              devCode: res && res.devCode
+            });
+          } catch (err) {
+            if (DOM.authResetEmailError) {
+              DOM.authResetEmailError.textContent = err.message || 'Не вдалося надіслати код відновлення.';
+            }
+          } finally {
+            if (DOM.authResetSubmitBtn) DOM.authResetSubmitBtn.disabled = false;
+          }
+          return;
+        }
+
+        const code = DOM.authResetCodeInput ? DOM.authResetCodeInput.value.replace(/\D/g, '').slice(0, 6) : '';
+        const newPassword = DOM.authResetPasswordInput ? DOM.authResetPasswordInput.value : '';
+
+        let hasErr = false;
+        if (!/^\d{6}$/.test(code)) {
+          if (DOM.authResetCodeError) DOM.authResetCodeError.textContent = 'Введіть коректний 6-значний код.';
+          hasErr = true;
+        }
+        if (!newPassword || newPassword.length < 6) {
+          if (DOM.authResetPasswordError) DOM.authResetPasswordError.textContent = 'Новий пароль має містити щонайменше 6 символів.';
+          hasErr = true;
+        }
+        if (hasErr) return;
+
+        if (DOM.authResetSubmitBtn) DOM.authResetSubmitBtn.disabled = true;
+        try {
+          if (window.AureliaAPI) {
+            await window.AureliaAPI.resetPassword(email, code, newPassword);
+          }
+          await finishAuthenticatedSession();
+        } catch (err) {
+          if (DOM.authResetCodeError) {
+            DOM.authResetCodeError.textContent = err.message || 'Не вдалося оновити пароль.';
+          }
+        } finally {
+          if (DOM.authResetSubmitBtn) DOM.authResetSubmitBtn.disabled = false;
         }
       });
     }

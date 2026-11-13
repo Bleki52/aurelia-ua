@@ -30,6 +30,21 @@
     AUTH: 'aurelia_auth_data'
   };
 
+  // Clear legacy unauthenticated global cards cache so demo cards never leak
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.CARDS);
+    }
+  } catch (_) {}
+
+  function getUserCardsStorageKey(user) {
+    const activeUser = user || getCurrentUser();
+    if (!activeUser || activeUser.id === undefined || activeUser.id === null || activeUser.id === '') {
+      return null;
+    }
+    return `@aurelia_cards_user_${activeUser.id}`;
+  }
+
   const SELECTED_STORES_KEY = '@aurelia_selected_stores';
   const DEFAULT_CITY = 'ivano-frankivsk';
   const SELECTED_CITY_KEY = '@aurelia_selected_city';
@@ -790,67 +805,138 @@
       clearTimeout(timer);
 
       if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        const err = new Error(errData.error || `HTTP Error: ${res.status}`);
+        err.status = res.status;
+        err.code = errData.code || 'HTTP_ERROR';
+        err.isHttpError = true;
+        throw err;
       }
 
       return await res.json();
     } catch (err) {
       clearTimeout(timer);
-      // Seamlessly execute offline/mock fallback
+      if (!fallbackFn || (err && err.isHttpError && options && options.throwOnHttpError)) {
+        throw err;
+      }
+      // Seamlessly execute offline/network fallback
       return await fallbackFn();
     }
   }
 
-  /* ─── 1. CARDS API ───────────────────────────────────────────────────────── */
+  /* ─── 1. CARDS API (Strictly Per-User Isolated) ──────────────────────────── */
   async function getCards() {
-    return fetchWithFallback('/cards', { method: 'GET' }, () => {
-      return getStorage(STORAGE_KEYS.CARDS, SEED_CARDS);
-    });
+    const user = getCurrentUser();
+    const userKey = getUserCardsStorageKey(user);
+    if (!user || !user.token || !userKey) {
+      return [];
+    }
+
+    try {
+      const cards = await fetchWithFallback('/cards', {
+        method: 'GET',
+        throwOnHttpError: true
+      }, () => {
+        return getStorage(userKey, []);
+      });
+      const list = Array.isArray(cards) ? cards : [];
+      setStorage(userKey, list);
+      return list;
+    } catch (err) {
+      if (err && err.isHttpError && err.status === 401) {
+        await logout();
+        return [];
+      }
+      return getStorage(userKey, []);
+    }
   }
 
   async function createCard(cardData) {
+    const user = getCurrentUser();
+    const userKey = getUserCardsStorageKey(user);
+    if (!user || !user.token || !userKey) {
+      throw new Error('Будь ласка, увійдіть в акаунт для збереження карток.');
+    }
+
     const res = await fetchWithFallback('/cards', {
       method: 'POST',
-      body: JSON.stringify(cardData)
+      body: JSON.stringify(cardData),
+      throwOnHttpError: true
     }, () => {
-      const cards = getStorage(STORAGE_KEYS.CARDS, SEED_CARDS);
+      const cards = getStorage(userKey, []);
       const newCard = Object.assign({
         id: 'card-' + Date.now(),
+        user_id: user.id,
         createdAt: new Date().toISOString()
       }, cardData);
       cards.unshift(newCard);
-      setStorage(STORAGE_KEYS.CARDS, cards);
+      setStorage(userKey, cards);
       return newCard;
     });
-    return res && res.card ? res.card : res;
+
+    const created = res && res.card ? res.card : res;
+    if (created && created.id) {
+      const cached = getStorage(userKey, []);
+      const filtered = cached.filter(c => String(c.id) !== String(created.id));
+      filtered.unshift(created);
+      setStorage(userKey, filtered);
+    }
+    return created;
   }
 
   async function updateCard(id, cardData) {
+    const user = getCurrentUser();
+    const userKey = getUserCardsStorageKey(user);
+    if (!user || !user.token || !userKey) {
+      throw new Error('Будь ласка, увійдіть в акаунт для редагування карток.');
+    }
+
     const res = await fetchWithFallback(`/cards/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(cardData)
+      body: JSON.stringify(cardData),
+      throwOnHttpError: true
     }, () => {
-      const cards = getStorage(STORAGE_KEYS.CARDS, SEED_CARDS);
+      const cards = getStorage(userKey, []);
       const idx = cards.findIndex(c => String(c.id) === String(id));
       if (idx === -1) throw new Error('Картку не знайдено.');
       cards[idx] = Object.assign({}, cards[idx], cardData, {
         updatedAt: new Date().toISOString()
       });
-      setStorage(STORAGE_KEYS.CARDS, cards);
+      setStorage(userKey, cards);
       return cards[idx];
     });
-    return res && res.card ? res.card : res;
+
+    const updated = res && res.card ? res.card : res;
+    if (updated && updated.id) {
+      const cached = getStorage(userKey, []);
+      const idx = cached.findIndex(c => String(c.id) === String(updated.id));
+      if (idx !== -1) {
+        cached[idx] = updated;
+        setStorage(userKey, cached);
+      }
+    }
+    return updated;
   }
 
   async function deleteCard(id) {
+    const user = getCurrentUser();
+    const userKey = getUserCardsStorageKey(user);
+    if (!user || !user.token || !userKey) {
+      throw new Error('Будь ласка, увійдіть в акаунт для видалення карток.');
+    }
+
     const res = await fetchWithFallback(`/cards/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      throwOnHttpError: true
     }, () => {
-      let cards = getStorage(STORAGE_KEYS.CARDS, SEED_CARDS);
+      let cards = getStorage(userKey, []);
       cards = cards.filter(c => String(c.id) !== String(id));
-      setStorage(STORAGE_KEYS.CARDS, cards);
+      setStorage(userKey, cards);
       return { success: true, id };
     });
+
+    const cached = getStorage(userKey, []);
+    setStorage(userKey, cached.filter(c => String(c.id) !== String(id)));
     return res && res.id ? res : { success: true, id };
   }
 
@@ -1412,20 +1498,28 @@
 
   /* ─── 4. AUTH API ────────────────────────────────────────────────────────── */
   async function login(email, password) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
     const res = await fetchWithFallback('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: cleanEmail, password }),
+      throwOnHttpError: true
     }, () => {
-      if (!email || !password) throw new Error('Вкажіть email та пароль.');
+      if (!cleanEmail || !password) throw new Error('Вкажіть email та пароль.');
       const user = {
-        name: email.split('@')[0],
-        email: email,
-        role: email.includes('admin') ? 'ADMIN' : 'USER',
+        id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
+        name: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        is_verified: true,
         token: 'mock-jwt-token-' + Date.now()
       };
       setStorage(STORAGE_KEYS.AUTH, user);
       return { user, token: user.token };
     });
+
+    if (res && res.requiresVerification) {
+      return res;
+    }
 
     const userObj = res && res.user
       ? Object.assign({}, res.user, { token: res.token })
@@ -1438,15 +1532,56 @@
   }
 
   async function register(name, email, password) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanName = String(name || '').trim() || cleanEmail.split('@')[0];
     const res = await fetchWithFallback('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name: cleanName, email: cleanEmail, password }),
+      throwOnHttpError: true
     }, () => {
-      if (!email || !password) throw new Error('Заповніть усі обов’язкові поля.');
+      if (!cleanEmail || !password) throw new Error('Заповніть усі обов’язкові поля.');
+      if (password.length < 6) throw new Error('Пароль повинен містити щонайменше 6 символів.');
+      const devCode = '123456';
+      return {
+        requiresVerification: true,
+        email: cleanEmail,
+        name: cleanName,
+        message: 'Код підтвердження надіслано на ваш Email',
+        devCode
+      };
+    });
+
+    if (res && res.requiresVerification) {
+      return res;
+    }
+
+    const userObj = res && res.user
+      ? Object.assign({}, res.user, { token: res.token })
+      : res;
+
+    if (userObj && (userObj.token || userObj.email)) {
+      setStorage(STORAGE_KEYS.AUTH, userObj);
+    }
+    return userObj;
+  }
+
+  async function verifyEmail(email, code) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanCode = String(code || '').trim();
+    const res = await fetchWithFallback('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email: cleanEmail, code: cleanCode }),
+      throwOnHttpError: true
+    }, () => {
+      if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
+        throw new Error('Вкажіть коректний 6-значний код підтвердження.');
+      }
       const user = {
-        name: name || email.split('@')[0],
-        email: email,
-        role: 'USER',
+        id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
+        name: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        is_verified: true,
         token: 'mock-jwt-token-' + Date.now()
       };
       setStorage(STORAGE_KEYS.AUTH, user);
@@ -1463,8 +1598,98 @@
     return userObj;
   }
 
+  async function resendVerification(email) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    return fetchWithFallback('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email: cleanEmail }),
+      throwOnHttpError: true
+    }, () => ({
+      requiresVerification: true,
+      email: cleanEmail,
+      message: 'Новий 6-значний код підтвердження надіслано на ваш Email',
+      devCode: '123456'
+    }));
+  }
+
+  async function forgotPassword(email) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    return fetchWithFallback('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email: cleanEmail }),
+      throwOnHttpError: true
+    }, () => ({
+      success: true,
+      email: cleanEmail,
+      message: 'Код для відновлення пароля надіслано на Email',
+      devCode: '123456'
+    }));
+  }
+
+  async function resetPassword(email, code, newPassword) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanCode = String(code || '').trim();
+    const res = await fetchWithFallback('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email: cleanEmail, code: cleanCode, newPassword }),
+      throwOnHttpError: true
+    }, () => {
+      if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
+        throw new Error('Вкажіть коректний 6-значний код.');
+      }
+      if (!newPassword || newPassword.length < 6) {
+        throw new Error('Новий пароль повинен містити щонайменше 6 символів.');
+      }
+      const user = {
+        id: 'local_' + cleanEmail.replace(/[^a-z0-9]/gi, '_'),
+        name: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        role: cleanEmail.includes('admin') ? 'ADMIN' : 'USER',
+        is_verified: true,
+        token: 'mock-jwt-token-' + Date.now()
+      };
+      setStorage(STORAGE_KEYS.AUTH, user);
+      return { user, token: user.token };
+    });
+
+    const userObj = res && res.user
+      ? Object.assign({}, res.user, { token: res.token })
+      : res;
+
+    if (userObj && (userObj.token || userObj.email)) {
+      setStorage(STORAGE_KEYS.AUTH, userObj);
+    }
+    return userObj;
+  }
+
+  async function getMe() {
+    const current = getCurrentUser();
+    if (!current || !current.token) return null;
+    try {
+      const res = await fetchWithFallback('/auth/me', {
+        method: 'GET',
+        throwOnHttpError: true
+      });
+      if (res && res.user) {
+        const updated = Object.assign({}, res.user, { token: current.token });
+        setStorage(STORAGE_KEYS.AUTH, updated);
+        return updated;
+      }
+      return current;
+    } catch (err) {
+      if (err && err.isHttpError && err.status === 401) {
+        await logout();
+        return null;
+      }
+      return current;
+    }
+  }
+
   async function logout() {
-    localStorage.removeItem(STORAGE_KEYS.AUTH);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.AUTH);
+      localStorage.removeItem(STORAGE_KEYS.CARDS);
+    } catch (_) {}
     return { success: true };
   }
 
@@ -1497,6 +1722,11 @@
     // Auth
     login,
     register,
+    verifyEmail,
+    resendVerification,
+    forgotPassword,
+    resetPassword,
+    getMe,
     logout,
     getCurrentUser,
     // Store Personalization & Taxonomy

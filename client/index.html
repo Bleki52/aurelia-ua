@@ -39,7 +39,7 @@
           <li><a href="index.html" class="nav-link is-active" aria-current="page">Гаманець</a></li>
           <li><a href="catalog.html" class="nav-link">Ціни та Акції</a></li>
           <li><a href="basket.html" class="nav-link">Розумний Кошик</a></li>
-          <li><a href="admin.html" class="nav-link">Адмін-панель</a></li>
+          <li class="admin-nav-item is-hidden"><a href="admin.html" class="nav-link">Адмін-панель</a></li>
         </ul>
       </nav>
 
@@ -74,9 +74,15 @@
 
         <button type="button" id="auth-open-btn" class="btn-auth header-hide-mobile" aria-label="Увійти в кабінет">
           <svg class="icon icon-sm" aria-hidden="true">
-            <use href="assets/sprite.svg#icon-check"></use>
+            <use href="assets/sprite.svg#icon-user"></use>
           </svg>
           <span id="auth-btn-label" class="auth-btn-text">Увійти</span>
+        </button>
+
+        <button type="button" id="header-logout-btn" class="btn-icon btn-logout is-hidden header-hide-mobile" aria-label="Вийти з акаунту" title="Вийти з акаунту">
+          <svg class="icon icon-sm" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-logout"></use>
+          </svg>
         </button>
 
         <button type="button" id="burger-menu-btn" class="burger-btn" aria-label="Відкрити меню" aria-expanded="false" aria-controls="mobile-nav">
@@ -134,7 +140,7 @@
             <span>Розумний Кошик</span>
           </a>
         </li>
-        <li>
+        <li class="admin-nav-item is-hidden">
           <a href="admin.html" class="mobile-nav-link">
             <svg class="icon" aria-hidden="true">
               <use href="assets/sprite.svg#icon-edit"></use>
@@ -227,313 +233,21 @@
     <section class="wallet-section" aria-label="Список карток лояльності">
       <h2 class="visually-hidden">Мої картки</h2>
       <div class="cards-grid" id="wallet-cards-container">
-        <!-- Картка Сільпо -->
-        <article class="loyalty-card reveal-item scroll-item" data-store="silpo" data-cat="groceries" data-card-id="card-silpo-1">
-          <div class="card-body-stack">
-            <div class="card-top">
-              <div class="card-brand">
-                <div class="card-title-group">
-                  <span class="card-category-tag">
-                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#cat-groceries"></use>
-                    </svg>
-                    <span>Продукти · Власний Рахунок</span>
-                  </span>
-                  <h3 class="card-store-name">Сільпо</h3>
-                </div>
-              </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="card-silpo-1" aria-label="Відкрити картку Сільпо для сканування на касі">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-qr"></use>
-                </svg>
-              </button>
-            </div>
-
-            <div class="card-number-wrapper">
-              <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">9900 0124 8831</div>
-            </div>
-
-            <div class="card-note-box">
-              <div class="card-note-header">
-                <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="card-silpo-1" aria-label="Редагувати картку Сільпо">
-                  <span>Редагувати</span>
-                  <svg class="icon icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#icon-edit"></use>
-                  </svg>
-                </button>
-              </div>
-              <p class="card-note-text">142.50 балів</p>
-            </div>
+        <article class="wallet-locked-card reveal-item is-visible">
+          <div class="wallet-locked-icon-wrap" aria-hidden="true">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-lock"></use>
+            </svg>
+            <svg class="icon wallet-locked-qr-sub" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-qr"></use>
+            </svg>
           </div>
-
-          <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="card-silpo-1">
-              <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-qr"></use>
-              </svg>
-              <span>Торкніться для показу QR</span>
-            </button>
-            <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="card-silpo-1">
-                <span>Відкрити</span>
-                <span aria-hidden="true">›</span>
-              </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="card-silpo-1" aria-label="Видалити картку Сільпо">
-                <svg class="icon icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <!-- Картка АТБ -->
-        <article class="loyalty-card reveal-item scroll-item" data-store="atb" data-cat="groceries" data-card-id="card-atb-1">
-          <div class="card-body-stack">
-            <div class="card-top">
-              <div class="card-brand">
-                <div class="card-title-group">
-                  <span class="card-category-tag">
-                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#cat-groceries"></use>
-                    </svg>
-                    <span>Продукти · Картка АТБ</span>
-                  </span>
-                  <h3 class="card-store-name">АТБ-Маркет</h3>
-                </div>
-              </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="card-atb-1" aria-label="Відкрити картку АТБ для сканування на касі">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-barcode"></use>
-                </svg>
-              </button>
-            </div>
-
-            <div class="card-number-wrapper">
-              <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">4149 4991 0023</div>
-            </div>
-
-            <div class="card-note-box">
-              <div class="card-note-header">
-                <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="card-atb-1" aria-label="Редагувати картку АТБ">
-                  <span>Редагувати</span>
-                  <svg class="icon icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#icon-edit"></use>
-                  </svg>
-                </button>
-              </div>
-              <p class="card-note-text">Знижка до 5%</p>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="card-atb-1">
-              <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-barcode"></use>
-              </svg>
-              <span>Торкніться для показу коду</span>
-            </button>
-            <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="card-atb-1">
-                <span>Відкрити</span>
-                <span aria-hidden="true">›</span>
-              </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="card-atb-1" aria-label="Видалити картку АТБ">
-                <svg class="icon icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <!-- Картка NOVUS -->
-        <article class="loyalty-card reveal-item scroll-item" data-store="novus" data-cat="groceries" data-card-id="card-novus-1">
-          <div class="card-body-stack">
-            <div class="card-top">
-              <div class="card-brand">
-                <div class="card-title-group">
-                  <span class="card-category-tag">
-                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#cat-groceries"></use>
-                    </svg>
-                    <span>Продукти · Програма Ваша Картка</span>
-                  </span>
-                  <h3 class="card-store-name">NOVUS</h3>
-                </div>
-              </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="card-novus-1" aria-label="Відкрити картку NOVUS для сканування на касі">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-qr"></use>
-                </svg>
-              </button>
-            </div>
-
-            <div class="card-number-wrapper">
-              <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">2900 0041 8552</div>
-            </div>
-
-            <div class="card-note-box">
-              <div class="card-note-header">
-                <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="card-novus-1" aria-label="Редагувати картку NOVUS">
-                  <span>Редагувати</span>
-                  <svg class="icon icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#icon-edit"></use>
-                  </svg>
-                </button>
-              </div>
-              <p class="card-note-text">85.00 грн бонусів</p>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="card-novus-1">
-              <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-qr"></use>
-              </svg>
-              <span>Торкніться для показу QR</span>
-            </button>
-            <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="card-novus-1">
-                <span>Відкрити</span>
-                <span aria-hidden="true">›</span>
-              </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="card-novus-1" aria-label="Видалити картку NOVUS">
-                <svg class="icon icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <!-- Картка VARUS -->
-        <article class="loyalty-card reveal-item scroll-item" data-store="varus" data-cat="groceries" data-card-id="card-varus-1">
-          <div class="card-body-stack">
-            <div class="card-top">
-              <div class="card-brand">
-                <div class="card-title-group">
-                  <span class="card-category-tag">
-                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#cat-groceries"></use>
-                    </svg>
-                    <span>Продукти · VARUS Poshuk</span>
-                  </span>
-                  <h3 class="card-store-name">VARUS</h3>
-                </div>
-              </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="card-varus-1" aria-label="Відкрити картку VARUS для сканування на касі">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-barcode"></use>
-                </svg>
-              </button>
-            </div>
-
-            <div class="card-number-wrapper">
-              <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">7700 8923 1104</div>
-            </div>
-
-            <div class="card-note-box">
-              <div class="card-note-header">
-                <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="card-varus-1" aria-label="Редагувати картку VARUS">
-                  <span>Редагувати</span>
-                  <svg class="icon icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#icon-edit"></use>
-                  </svg>
-                </button>
-              </div>
-              <p class="card-note-text">230 бонусів</p>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="card-varus-1">
-              <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-barcode"></use>
-              </svg>
-              <span>Торкніться для показу коду</span>
-            </button>
-            <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="card-varus-1">
-                <span>Відкрити</span>
-                <span aria-hidden="true">›</span>
-              </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="card-varus-1" aria-label="Видалити картку VARUS">
-                <svg class="icon icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <!-- Картка METRO -->
-        <article class="loyalty-card reveal-item scroll-item" data-store="metro" data-cat="groceries" data-card-id="card-metro-1">
-          <div class="card-body-stack">
-            <div class="card-top">
-              <div class="card-brand">
-                <div class="card-title-group">
-                  <span class="card-category-tag">
-                    <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
-                      <use href="assets/sprite.svg#cat-groceries"></use>
-                    </svg>
-                    <span>Продукти · METRO Club</span>
-                  </span>
-                  <h3 class="card-store-name">METRO</h3>
-                </div>
-              </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="card-metro-1" aria-label="Відкрити картку METRO для сканування на касі">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-qr"></use>
-                </svg>
-              </button>
-            </div>
-
-            <div class="card-number-wrapper">
-              <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">5002 9110 3381</div>
-            </div>
-
-            <div class="card-note-box">
-              <div class="card-note-header">
-                <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="card-metro-1" aria-label="Редагувати картку METRO">
-                  <span>Редагувати</span>
-                  <svg class="icon icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#icon-edit"></use>
-                  </svg>
-                </button>
-              </div>
-              <p class="card-note-text">Партнерська ціна</p>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="card-metro-1">
-              <svg class="icon icon-sm" aria-hidden="true">
-                <use href="assets/sprite.svg#icon-qr"></use>
-              </svg>
-              <span>Торкніться для показу QR</span>
-            </button>
-            <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="card-metro-1">
-                <span>Відкрити</span>
-                <span aria-hidden="true">›</span>
-              </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="card-metro-1" aria-label="Видалити картку METRO">
-                <svg class="icon icon-xs" aria-hidden="true">
-                  <use href="assets/sprite.svg#icon-trash"></use>
-                </svg>
-              </button>
-            </div>
+          <p class="wallet-locked-kicker">Приватний гаманець закрито</p>
+          <h3 class="wallet-locked-title">Персональний гаманець QR-карток</h3>
+          <p class="wallet-locked-desc">Зареєструйтесь за допомогою Email, щоб зберігати власні картки Сільпо, АТБ, Близенько, Сімі та сканувати їх на касі навіть без інтернету</p>
+          <div class="wallet-locked-actions">
+            <button type="button" id="locked-wallet-auth-btn" class="btn btn-primary">Створити акаунт / Увійти</button>
+            <a href="catalog.html" class="btn btn-secondary">Переглянути акції супермаркетів →</a>
           </div>
         </article>
       </div>
@@ -675,11 +389,11 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО 3: Авторизація / Кабінет (#auth-modal) -->
+  <!-- МОДАЛЬНЕ ВІКНО 3: Авторизація / Реєстрація / Кабінет (#auth-modal) -->
   <div id="auth-modal" class="modal-backdrop header-dropdown-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h2 id="auth-modal-title" class="modal-title">Вхід до AURELIA UA</h2>
+        <h2 id="auth-modal-title" class="modal-title">Реєстрація в AURELIA UA</h2>
         <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно входу">
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-close"></use>
@@ -687,7 +401,18 @@
         </button>
       </div>
 
+      <div id="auth-mode-tabs" class="auth-mode-tabs" role="group" aria-label="Режим авторизації">
+        <button type="button" class="auth-mode-btn is-active" data-auth-mode="register" aria-pressed="true">Реєстрація</button>
+        <button type="button" class="auth-mode-btn" data-auth-mode="login" aria-pressed="false">Вхід</button>
+      </div>
+
       <form id="auth-form" class="modal-body" novalidate>
+        <div id="auth-name-group" class="form-group">
+          <label for="auth-name-input" class="form-label">Ваше ім’я</label>
+          <input type="text" id="auth-name-input" name="name" class="form-input" placeholder="Наприклад: Олександр">
+          <span class="field-error" id="auth-name-error"></span>
+        </div>
+
         <div class="form-group">
           <label for="auth-email-input" class="form-label">Електронна пошта</label>
           <input type="email" id="auth-email-input" name="email" class="form-input" placeholder="user@example.com" required>
@@ -696,15 +421,77 @@
 
         <div class="form-group">
           <label for="auth-password-input" class="form-label">Пароль</label>
-          <input type="password" id="auth-password-input" name="password" class="form-input" placeholder="Введіть ваш пароль" required>
+          <input type="password" id="auth-password-input" name="password" class="form-input" placeholder="Щонайменше 6 символів" required>
           <span class="field-error" id="auth-password-error"></span>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
-          <button type="submit" class="btn btn-primary">Увійти</button>
+        <div id="auth-forgot-row" class="auth-forgot-row is-hidden">
+          <button type="button" id="auth-forgot-open-btn" class="btn-link auth-forgot-link">Забули пароль?</button>
+        </div>
+
+        <div class="modal-footer auth-modal-footer">
+          <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-full">Створити акаунт</button>
+          <button type="button" id="auth-guest-browse-btn" class="btn btn-ghost btn-full">Переглянути акції без входу</button>
         </div>
       </form>
+
+      <form id="auth-verify-form" class="modal-body is-hidden" novalidate>
+        <p class="auth-step-desc" id="auth-verify-desc">Ми надіслали 6-значний код підтвердження на вашу електронну пошту.</p>
+        <p class="auth-dev-code-hint is-hidden" id="auth-verify-dev-hint"></p>
+
+        <div class="form-group">
+          <label for="auth-verify-code-input" class="form-label">6-значний код підтвердження</label>
+          <input type="text" id="auth-verify-code-input" name="verification_code" class="form-input auth-otp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>
+          <span class="field-error" id="auth-verify-error"></span>
+        </div>
+
+        <div class="modal-footer auth-modal-footer">
+          <button type="submit" id="auth-verify-submit-btn" class="btn btn-primary btn-full">Підтвердити</button>
+          <button type="button" id="auth-resend-btn" class="btn btn-secondary btn-full">Надіслати код ще раз</button>
+          <button type="button" id="auth-verify-back-btn" class="btn btn-ghost btn-full">Назад до входу</button>
+        </div>
+      </form>
+
+      <form id="auth-reset-form" class="modal-body is-hidden" novalidate>
+        <p class="auth-step-desc" id="auth-reset-desc">Вкажіть вашу електронну пошту — ми надішлемо 6-значний код для скидання пароля.</p>
+        <p class="auth-dev-code-hint is-hidden" id="auth-reset-dev-hint"></p>
+
+        <div class="form-group">
+          <label for="auth-reset-email-input" class="form-label">Електронна пошта</label>
+          <input type="email" id="auth-reset-email-input" name="reset_email" class="form-input" placeholder="user@example.com" required>
+          <span class="field-error" id="auth-reset-email-error"></span>
+        </div>
+
+        <div id="auth-reset-step2-fields" class="is-hidden">
+          <div class="form-group">
+            <label for="auth-reset-code-input" class="form-label">6-значний код з листа</label>
+            <input type="text" id="auth-reset-code-input" name="reset_code" class="form-input auth-otp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+            <span class="field-error" id="auth-reset-code-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="auth-reset-password-input" class="form-label">Новий пароль</label>
+            <input type="password" id="auth-reset-password-input" name="new_password" class="form-input" placeholder="Щонайменше 6 символів">
+            <span class="field-error" id="auth-reset-password-error"></span>
+          </div>
+        </div>
+
+        <div class="modal-footer auth-modal-footer">
+          <button type="submit" id="auth-reset-submit-btn" class="btn btn-primary btn-full">Надіслати код</button>
+          <button type="button" id="auth-reset-back-btn" class="btn btn-ghost btn-full">Назад до входу</button>
+        </div>
+      </form>
+
+      <div id="auth-profile-view" class="modal-body is-hidden">
+        <div class="auth-profile-card">
+          <span class="auth-profile-badge" id="auth-profile-role">Особистий акаунт</span>
+          <h3 class="auth-profile-name" id="auth-profile-name">Користувач</h3>
+          <p class="auth-profile-email" id="auth-profile-email">user@example.com</p>
+        </div>
+        <div class="modal-footer auth-modal-footer">
+          <button type="button" id="auth-logout-btn" class="btn btn-secondary btn-full">Вийти з акаунту</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1175,7 +962,7 @@
           <a href="index.html">Гаманець</a>
           <a href="catalog.html">Ціни та Акції</a>
           <a href="basket.html">Розумний Кошик</a>
-          <a href="admin.html">Адмін-панель</a>
+          <a href="admin.html" class="admin-nav-item is-hidden">Адмін-панель</a>
         </nav>
       </div>
     </div>
@@ -1201,7 +988,7 @@
       </svg>
       <span class="bottom-nav-label">Кошик</span>
     </a>
-    <a href="admin.html" class="bottom-nav-item">
+    <a href="admin.html" class="bottom-nav-item admin-nav-item is-hidden">
       <svg class="icon" aria-hidden="true">
         <use href="assets/sprite.svg#icon-edit"></use>
       </svg>

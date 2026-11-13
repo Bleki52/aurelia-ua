@@ -7,16 +7,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { optionalAuth } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
 /**
  * GET /api/cards
- * Returns all cards for the user (or default seed cards).
+ * Returns all personal loyalty cards belonging strictly to the authenticated user.
  */
-router.get('/', optionalAuth, async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : 1;
-    const cards = await db.getCards(userId);
+    const cards = await db.getCardsByUser(req.user.id);
     return res.status(200).json(cards);
   } catch (err) {
     console.error('Помилка отримання карток:', err);
@@ -29,11 +28,11 @@ router.get('/', optionalAuth, async (req, res) => {
 
 /**
  * GET /api/cards/:id
- * Returns a specific card by ID.
+ * Returns a specific card belonging to the authenticated user.
  */
-router.get('/:id', optionalAuth, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
-    const card = await db.getCardById(req.params.id);
+    const card = await db.getCardById(req.user.id, req.params.id);
     if (!card) {
       return res.status(404).json({
         error: 'Картку не знайдено.',
@@ -52,9 +51,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 /**
  * POST /api/cards
- * Creates a new loyalty card with strict server-side validation.
+ * Creates a new loyalty card scoped to the authenticated user.
  */
-router.post('/', optionalAuth, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const { store, card_number, number, qr_payload, qrPayload, program, points, note, cashback, screenshot_data, screenshotDataUrl } = req.body || {};
 
@@ -76,7 +75,6 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
-    const userId = req.user ? req.user.id : 1;
     const cardPayload = {
       store: storeSlug,
       program: program || '',
@@ -87,7 +85,7 @@ router.post('/', optionalAuth, async (req, res) => {
       screenshot_data: screenshot_data || screenshotDataUrl || null
     };
 
-    const created = await db.createCard(cardPayload, userId);
+    const created = await db.createCard(req.user.id, cardPayload);
     return res.status(201).json({
       message: 'Картку лояльності успішно додано.',
       card: created
@@ -103,12 +101,12 @@ router.post('/', optionalAuth, async (req, res) => {
 
 /**
  * PUT /api/cards/:id
- * Updates an existing loyalty card.
+ * Updates an existing loyalty card belonging to the authenticated user.
  */
-router.put('/:id', optionalAuth, async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const id = req.params.id;
-    const existing = await db.getCardById(id);
+    const existing = await db.getCardById(req.user.id, id);
     if (!existing) {
       return res.status(404).json({
         error: 'Картку для оновлення не знайдено.',
@@ -116,7 +114,7 @@ router.put('/:id', optionalAuth, async (req, res) => {
       });
     }
 
-    const updated = await db.updateCard(id, req.body);
+    const updated = await db.updateCard(req.user.id, id, req.body);
     return res.status(200).json({
       message: 'Картку лояльності оновлено.',
       card: updated
@@ -132,12 +130,12 @@ router.put('/:id', optionalAuth, async (req, res) => {
 
 /**
  * DELETE /api/cards/:id
- * Deletes a loyalty card.
+ * Deletes a loyalty card belonging to the authenticated user.
  */
-router.delete('/:id', optionalAuth, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const id = req.params.id;
-    const success = await db.deleteCard(id);
+    const success = await db.deleteCard(req.user.id, id);
     if (!success) {
       return res.status(404).json({
         error: 'Картку для видалення не знайдено.',
