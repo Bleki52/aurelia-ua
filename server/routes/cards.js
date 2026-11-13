@@ -56,9 +56,10 @@ router.get('/:id', optionalAuth, async (req, res) => {
  */
 router.post('/', optionalAuth, async (req, res) => {
   try {
-    const { store, card_number, number, qr_payload, program, points, note, cashback, screenshot_data, screenshotDataUrl } = req.body || {};
+    const { store, card_number, number, qr_payload, qrPayload, program, points, note, cashback, screenshot_data, screenshotDataUrl } = req.body || {};
 
-    const cardNumber = (card_number || number || qr_payload || '').toString().trim();
+    const resolvedQrPayload = (qr_payload || qrPayload || '').toString();
+    const cardNumber = (card_number || number || resolvedQrPayload || '').toString().trim();
     const storeSlug = (store || '').toString().trim();
 
     if (!storeSlug) {
@@ -80,7 +81,7 @@ router.post('/', optionalAuth, async (req, res) => {
       store: storeSlug,
       program: program || '',
       card_number: cardNumber,
-      qr_payload: qr_payload || cardNumber,
+      qr_payload: resolvedQrPayload || cardNumber,
       points: points || note || '',
       cashback: cashback || '',
       screenshot_data: screenshot_data || screenshotDataUrl || null

@@ -699,6 +699,7 @@ async function getCardById(id) {
 }
 
 async function createCard(cardData, userId) {
+  const persistedQr = cardData.qr_payload || cardData.qrPayload || cardData.card_number || cardData.number;
   if (isPostgres) {
     const res = await pgPool.query(
       `INSERT INTO loyalty_cards (user_id, store, program, card_number, qr_payload, points, cashback, screenshot_data)
@@ -708,7 +709,7 @@ async function createCard(cardData, userId) {
         cardData.store,
         cardData.program || '',
         cardData.card_number || cardData.number,
-        cardData.qr_payload || cardData.number,
+        persistedQr,
         cardData.points || cardData.note || '',
         cardData.cashback || '',
         cardData.screenshot_data || cardData.screenshotDataUrl || null
@@ -724,7 +725,7 @@ async function createCard(cardData, userId) {
     store: cardData.store,
     program: cardData.program || '',
     card_number: cardData.card_number || cardData.number,
-    qr_payload: cardData.qr_payload || cardData.number,
+    qr_payload: persistedQr,
     points: cardData.points || cardData.note || '',
     cashback: cardData.cashback || '',
     screenshot_data: cardData.screenshot_data || cardData.screenshotDataUrl || null,
@@ -736,6 +737,7 @@ async function createCard(cardData, userId) {
 }
 
 async function updateCard(id, cardData) {
+  const persistedQr = cardData.qr_payload || cardData.qrPayload || cardData.card_number || cardData.number;
   if (isPostgres) {
     const res = await pgPool.query(
       `UPDATE loyalty_cards SET
@@ -751,7 +753,7 @@ async function updateCard(id, cardData) {
         cardData.store,
         cardData.program,
         cardData.card_number || cardData.number,
-        cardData.qr_payload || cardData.number,
+        persistedQr,
         cardData.points || cardData.note,
         cardData.cashback,
         cardData.screenshot_data || cardData.screenshotDataUrl,
@@ -767,7 +769,7 @@ async function updateCard(id, cardData) {
     ...store.loyalty_cards[idx],
     ...cardData,
     card_number: cardData.card_number || cardData.number || store.loyalty_cards[idx].card_number,
-    qr_payload: cardData.qr_payload || cardData.number || store.loyalty_cards[idx].qr_payload
+    qr_payload: persistedQr || store.loyalty_cards[idx].qr_payload
   };
   saveLocalStore(store);
   return formatCard(store.loyalty_cards[idx]);

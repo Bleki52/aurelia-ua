@@ -133,6 +133,8 @@
     checkoutMode: 'qr',
     editingCardId: null,
     uploadedScreenshotUrl: null,
+    decodedQrPayload: null,
+    decodedQrFormat: null,
     filterStore: 'all',
     filterCategory: 'all',
     searchQuery: '',
@@ -685,14 +687,33 @@
   }
 
   /* ─── 7. Checkout Register Modal & Code Rendering (Wallet) ───────────────── */
+  function formatCardNumberDisplay(rawNum) {
+    const clean = String(rawNum || '').replace(/\s+/g, '').trim();
+    if (!clean) return '••••';
+    if (/^\d+$/.test(clean)) {
+      return clean.replace(/(\d{4})/g, '$1 ').trim();
+    }
+    return String(rawNum || '').trim();
+  }
+
+  function extractCardDigitsForDisplay(rawValue) {
+    if (window.AureliaQR && typeof window.AureliaQR.extractCardNumber === 'function') {
+      return window.AureliaQR.extractCardNumber(rawValue);
+    }
+    const raw = String(rawValue || '').trim();
+    const match13 = raw.match(/(?<!\d)\d{13}(?!\d)/);
+    if (match13) return match13[0];
+    const matchAny = raw.match(/\d{8,18}/);
+    return matchAny ? matchAny[0] : raw;
+  }
+
   function openCheckoutModal(card) {
     AppState.activeCheckoutCard = card;
     AppState.checkoutMode = card.format === 'barcode' ? 'barcode' : 'qr';
 
     if (DOM.checkoutDigits) {
       const numStr = String(card.number || card.card_number || '');
-      const formatted = numStr.replace(/(\d{4})/g, '$1 ').trim();
-      DOM.checkoutDigits.textContent = formatted || '••••';
+      DOM.checkoutDigits.textContent = formatCardNumberDisplay(numStr);
     }
     if (DOM.checkoutStore) {
       const meta = STORE_META[card.store] || STORE_META.other;
@@ -718,23 +739,23 @@
     if (!DOM.checkoutSurface || !AppState.activeCheckoutCard) return;
     const card = AppState.activeCheckoutCard;
     const mode = AppState.checkoutMode;
-    const numStr = String(card.number || card.card_number || '');
+    const numStr = String(card.number || card.card_number || '').replace(/\s+/g, '');
     const qrVal = String(card.qrPayload || card.qr_payload || numStr);
 
     DOM.checkoutSurface.innerHTML = '';
 
     if (mode === 'qr') {
       if (window.AureliaQR) {
-        DOM.checkoutSurface.innerHTML = window.AureliaQR.generateQRSvgString(qrVal, {
-          size: 210,
+        window.AureliaQR.renderQR(qrVal, DOM.checkoutSurface, {
+          size: 220,
           color: '#000000',
           bgColor: '#FFFFFF'
         });
       }
     } else if (mode === 'barcode') {
       if (window.AureliaQR) {
-        DOM.checkoutSurface.innerHTML = window.AureliaQR.generateBarcodeSvgString(numStr, {
-          barHeight: 80,
+        window.AureliaQR.renderBarcode(numStr || qrVal, DOM.checkoutSurface, {
+          barHeight: 84,
           showText: true,
           color: '#000000',
           bgColor: '#FFFFFF'
@@ -824,7 +845,7 @@
       const meta = STORE_META[card.store] || STORE_META.other;
       const catMeta = resolveEntityCategory(card);
       const numStr = String(card.number || card.card_number || '');
-      const formattedNumber = numStr.replace(/(\d{4})/g, '$1 ').trim();
+      const formattedNumber = formatCardNumberDisplay(numStr);
       const actionIcon = card.format === 'barcode' ? 'icon-barcode' : 'icon-qr';
       const scanHint = card.format === 'barcode' ? 'Торкніться для показу коду' : 'Торкніться для показу QR';
 
@@ -942,6 +963,8 @@
   function openAddCardForm() {
     AppState.editingCardId = null;
     AppState.uploadedScreenshotUrl = null;
+    AppState.decodedQrPayload = null;
+    AppState.decodedQrFormat = null;
     if (DOM.cardForm) DOM.cardForm.reset();
     if (DOM.cardModalTitle) DOM.cardModalTitle.textContent = 'Додати картку лояльності';
     if (DOM.cardFileStatus) DOM.cardFileStatus.textContent = 'Натисніть або перетягніть скріншот сюди';
@@ -952,6 +975,8 @@
   function openEditCardForm(card) {
     AppState.editingCardId = card.id;
     AppState.uploadedScreenshotUrl = card.screenshotDataUrl || card.screenshot_data || null;
+    AppState.decodedQrPayload = card.qrPayload || card.qr_payload || null;
+    AppState.decodedQrFormat = card.format || null;
     clearCardFormErrors();
 
     if (DOM.cardModalTitle) DOM.cardModalTitle.textContent = 'Редагувати картку лояльності';
@@ -988,9 +1013,15 @@
             AppState.uploadedScreenshotUrl = result.dataUrl;
 
             if (result.success && result.rawValue) {
-              if (DOM.cardNumberInput) DOM.cardNumberInput.value = result.rawValue;
-              if (DOM.cardFileStatus) DOM.cardFileStatus.textContent = `Зчитано код: ${result.rawValue} ✓`;
+              // Store exact unmodified QR string in decodedQrPayload; extract human-readable number for display
+              AppState.decodedQrPayload = result.rawValue;
+              AppState.decodedQrFormat = result.format || 'qr_code';
+              const displayCardNum = result.cardNumber || extractCardDigitsForDisplay(result.rawValue);
+              if (DOM.cardNumberInput) DOM.cardNumberInput.value = displayCardNum;
+              if (DOM.cardFileStatus) DOM.cardFileStatus.textContent = `Зчитано код: ${formatCardNumberDisplay(displayCardNum)} ✓`;
             } else {
+              AppState.decodedQrPayload = null;
+              AppState.decodedQrFormat = null;
               if (DOM.cardFileStatus) DOM.cardFileStatus.textContent = `Скріншот збережено ✓ (${file.name})`;
             }
           } catch (err) {
@@ -1007,7 +1038,7 @@
         clearCardFormErrors();
 
         const store = (DOM.cardStoreSelect?.value || '').trim();
-        const number = (DOM.cardNumberInput?.value || '').trim();
+        const rawInput = (DOM.cardNumberInput?.value || '').trim();
         const note = (DOM.cardNoteInput?.value || '').trim();
 
         let hasError = false;
@@ -1015,22 +1046,43 @@
           if (DOM.cardStoreError) DOM.cardStoreError.textContent = 'Оберіть мережу супермаркетів.';
           hasError = true;
         }
-        if (!number || number.length < 4) {
+        if (!rawInput || rawInput.length < 4) {
           if (DOM.cardNumberError) DOM.cardNumberError.textContent = 'Введіть коректний номер картки (від 4 символів).';
           hasError = true;
         }
 
         if (hasError) return;
 
+        const normalizedInputDigits = /^[\d\s]+$/.test(rawInput) ? rawInput.replace(/\s+/g, '') : rawInput;
+        const decodedExtracted = AppState.decodedQrPayload ? extractCardDigitsForDisplay(AppState.decodedQrPayload) : '';
+        const shouldUseDecodedQr = Boolean(
+          AppState.decodedQrPayload &&
+          (rawInput === AppState.decodedQrPayload || normalizedInputDigits === decodedExtracted)
+        );
+
+        const exactQrPayload = shouldUseDecodedQr ? AppState.decodedQrPayload : rawInput;
+        const cardDisplayNum = shouldUseDecodedQr
+          ? (decodedExtracted || normalizedInputDigits)
+          : normalizedInputDigits;
+
+        const isQrDecoded = AppState.decodedQrFormat && AppState.decodedQrFormat.toLowerCase().includes('qr');
+        const resolvedFormat = isQrDecoded
+          ? 'qr'
+          : (AppState.decodedQrFormat && AppState.decodedQrFormat !== 'screenshot_only' && AppState.decodedQrFormat !== 'detected_digits'
+            ? 'barcode'
+            : (/^\d+$/.test(cardDisplayNum) && ['atb', 'varus', 'epicentr'].includes(store) ? 'barcode' : 'qr'));
+
         const meta = STORE_META[store] || STORE_META.other;
         const cardPayload = {
           store,
           storeName: meta.name,
           program: meta.program,
-          number,
-          qrPayload: number,
+          number: cardDisplayNum,
+          card_number: cardDisplayNum,
+          qrPayload: exactQrPayload,
+          qr_payload: exactQrPayload,
           note,
-          format: /^\d+$/.test(number) && number.length >= 12 ? 'barcode' : 'qr',
+          format: resolvedFormat,
           screenshotDataUrl: AppState.uploadedScreenshotUrl
         };
 
