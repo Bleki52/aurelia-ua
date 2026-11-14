@@ -3144,15 +3144,29 @@
       await window.AureliaAPI.logout();
     }
     AppState.cards = [];
+    AppState.basket = (window.AureliaAPI && typeof window.AureliaAPI.getBasket === 'function')
+      ? await window.AureliaAPI.getBasket()
+      : [];
+    if (DOM.basketCountBadge) {
+      const count = AppState.basket.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+      DOM.basketCountBadge.textContent = String(count);
+    }
     if (DOM.authLoginForm) DOM.authLoginForm.reset();
     if (DOM.authRegisterForm) DOM.authRegisterForm.reset();
     if (DOM.authVerifyForm) DOM.authVerifyForm.reset();
     if (DOM.authResetForm) DOM.authResetForm.reset();
     closeModal(DOM.authModal);
     updateAuthUI();
+    initImpersonationBanner();
 
     if (DOM.cardsContainer) {
       renderCards();
+    }
+    if (DOM.catalogContainer) {
+      renderCatalog();
+    }
+    if (DOM.basketItemsContainer) {
+      renderBasket();
     }
     if (window.location.pathname.endsWith('admin.html')) {
       window.location.href = 'index.html';
@@ -3175,10 +3189,13 @@
   function initAuth() {
     updateAuthUI();
 
-    // Silently refresh active JWT profile on startup if online
+    // Silently refresh active JWT profile & per-user basket on startup if online
     if (window.AureliaAPI && typeof window.AureliaAPI.getMe === 'function' && window.AureliaAPI.getCurrentUser()) {
       window.AureliaAPI.getMe().then((freshUser) => {
         updateAuthUI();
+        if (freshUser && typeof window.AureliaAPI.syncUserBasketFromServer === 'function') {
+          window.AureliaAPI.syncUserBasketFromServer().catch(() => {});
+        }
         if (!freshUser && DOM.cardsContainer) {
           AppState.cards = [];
           renderCards();
@@ -3256,6 +3273,15 @@
       if (DOM.cardsContainer && window.AureliaAPI) {
         AppState.cards = await window.AureliaAPI.getCards();
         renderCards();
+      }
+      if (window.AureliaAPI && typeof window.AureliaAPI.getBasket === 'function') {
+        AppState.basket = await window.AureliaAPI.getBasket();
+        if (DOM.basketCountBadge) {
+          const count = AppState.basket.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+          DOM.basketCountBadge.textContent = String(count);
+        }
+        if (DOM.catalogContainer) renderCatalog();
+        if (DOM.basketItemsContainer) renderBasket();
       }
     };
 
@@ -3699,10 +3725,51 @@
 
   function initServiceWorker() {
     if ('serviceWorker' in navigator && (window.location.protocol.startsWith('http') || window.location.protocol.startsWith('https'))) {
+      let hadController = Boolean(navigator.serviceWorker.controller);
+      let refreshing = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) {
+          hadController = true;
+          return;
+        }
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+
+      const activateWaitingWorker = (worker) => {
+        if (worker) {
+          worker.postMessage({ type: 'SKIP_WAITING' });
+        }
+      };
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
           .then((reg) => {
             console.log('✅ [PWA] Service Worker успішно активовано:', reg.scope);
+
+            if (reg.waiting) {
+              activateWaitingWorker(reg.waiting);
+            }
+
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  activateWaitingWorker(newWorker);
+                }
+              });
+            });
+
+            reg.update().catch(() => {});
+
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') {
+                reg.update().catch(() => {});
+              }
+            });
           })
           .catch((err) => {
             console.warn('⚠️ [PWA] Помилка реєстрації Service Worker:', err);
@@ -3754,8 +3821,8 @@
     exitBtn.id = 'btn-exit-impersonation';
     exitBtn.className = 'btn btn-primary btn-sm impersonation-exit-btn';
     exitBtn.textContent = `Повернутися в Адмін (${adminName})`;
-    exitBtn.addEventListener('click', () => {
-      window.AureliaAPI.returnFromImpersonation();
+    exitBtn.addEventListener('click', async () => {
+      await window.AureliaAPI.returnFromImpersonation();
       window.location.href = 'admin.html';
     });
 
@@ -3782,6 +3849,16 @@
     window.addEventListener('aurelia:basket-cleared', () => {
       AppState.basket = [];
       if (DOM.basketCountBadge) DOM.basketCountBadge.textContent = '0';
+      if (DOM.basketItemsContainer) renderBasket();
+      if (DOM.catalogContainer) renderCatalog();
+    });
+
+    window.addEventListener('aurelia:basket-updated', (e) => {
+      AppState.basket = (e && e.detail && Array.isArray(e.detail.basket)) ? e.detail.basket : [];
+      if (DOM.basketCountBadge) {
+        const count = AppState.basket.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+        DOM.basketCountBadge.textContent = String(count);
+      }
       if (DOM.basketItemsContainer) renderBasket();
       if (DOM.catalogContainer) renderCatalog();
     });

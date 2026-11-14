@@ -771,13 +771,17 @@
     if (!DOM.usersTbody) return;
     const readOnly = isReadOnlyQA();
     const q = AdminState.userSearchQuery.toLowerCase();
+    const cleanCodeQuery = q.replace(/^(#|id\s*:?\s*)/i, '').trim();
 
     const filtered = AdminState.users.filter((u) => {
       if (!q) return true;
+      const clientCode = String(u.client_code || '').toLowerCase();
       return (
         String(u.name || '').toLowerCase().includes(q) ||
         String(u.email || '').toLowerCase().includes(q) ||
-        String(u.role || '').toLowerCase().includes(q)
+        String(u.role || '').toLowerCase().includes(q) ||
+        clientCode.includes(q) ||
+        (cleanCodeQuery.length > 0 && clientCode.includes(cleanCodeQuery))
       );
     });
 
@@ -798,6 +802,9 @@
       const displayName = u.name || (u.email ? u.email.split('@')[0] : 'Користувач');
       const role = String(u.role || 'USER').toUpperCase();
       const roleClass = role === 'ADMIN' ? 'is-admin' : (role === 'QA' ? 'is-qa' : 'is-user');
+      const clientCodeBadge = u.client_code
+        ? `<span class="user-client-id-badge" title="Унікальний 6-значний ID клієнта">ID: ${escapeHtml(u.client_code)}</span>`
+        : '';
       const verifiedBadge = u.is_verified
         ? '<span class="user-verify-badge is-verified">Підтверджено</span>'
         : '<span class="user-verify-badge is-pending">Очікує</span>';
@@ -830,7 +837,10 @@
         <tr>
           <td>
             <div class="admin-user-cell">
-              <strong class="admin-user-name">${escapeHtml(displayName)}</strong>
+              <div class="admin-user-name-row">
+                <strong class="admin-user-name">${escapeHtml(displayName)}</strong>
+                ${clientCodeBadge}
+              </div>
               <span class="admin-user-email">${escapeHtml(u.email || '')}</span>
               <div class="admin-user-badges">
                 <span class="user-role-badge ${roleClass}">${escapeHtml(role)}</span>

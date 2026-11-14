@@ -134,9 +134,42 @@ function buildSeedProductPrices(prods) {
   return list;
 }
 
+function generateRandomSixDigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function generateUniqueLocalClientCode(usedCodesSet) {
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const candidate = generateRandomSixDigitCode();
+    if (!usedCodesSet.has(candidate)) {
+      usedCodesSet.add(candidate);
+      return candidate;
+    }
+  }
+  const fallback = String(100000 + (usedCodesSet.size % 900000));
+  usedCodesSet.add(fallback);
+  return fallback;
+}
+
 function reconcileLocalUsers(rawUsers) {
   let changed = false;
+  const usedCodes = new Set();
+
+  if (Array.isArray(rawUsers)) {
+    rawUsers.forEach((u) => {
+      if (u && /^\d{6}$/.test(String(u.client_code || ''))) {
+        usedCodes.add(String(u.client_code));
+      }
+    });
+  }
+
   const users = Array.isArray(rawUsers) ? rawUsers.filter(Boolean).map(u => {
+    const hasValidCode = /^\d{6}$/.test(String(u.client_code || ''));
+    const nextClientCode = hasValidCode
+      ? String(u.client_code)
+      : generateUniqueLocalClientCode(usedCodes);
+    if (!hasValidCode) changed = true;
+
     const staffMatch = STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === String(u.email || '').toLowerCase());
     if (staffMatch) {
       const needsUpdate =
@@ -151,6 +184,7 @@ function reconcileLocalUsers(rawUsers) {
         name: staffMatch.name,
         email: staffMatch.email,
         role: staffMatch.role,
+        client_code: nextClientCode,
         password_hash: u.password_hash || staffMatch.password_hash,
         is_verified: true,
         verification_code: null,
@@ -180,6 +214,7 @@ function reconcileLocalUsers(rawUsers) {
     return {
       ...u,
       role: safeRole,
+      client_code: nextClientCode,
       is_verified: verifiedVal,
       verification_code: u.verification_code !== undefined ? u.verification_code : null,
       verification_expires: u.verification_expires !== undefined ? u.verification_expires : null,
@@ -197,7 +232,8 @@ function reconcileLocalUsers(rawUsers) {
       const maxId = users.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0);
       users.push({
         ...staff,
-        id: users.some(u => Number(u.id) === staff.id) ? maxId + 1 : staff.id
+        id: users.some(u => Number(u.id) === staff.id) ? maxId + 1 : staff.id,
+        client_code: generateUniqueLocalClientCode(usedCodes)
       });
       changed = true;
     } else if (
@@ -215,8 +251,9 @@ function reconcileLocalUsers(rawUsers) {
 
 function loadLocalStore() {
   if (!fs.existsSync(LOCAL_STORE_PATH)) {
+    const { users } = reconcileLocalUsers(STAFF_ACCOUNTS.map(u => ({ ...u })));
     const initialData = {
-      users: STAFF_ACCOUNTS.map(u => ({ ...u })),
+      users,
       loyalty_cards: SEED_CARDS,
       products: SEED_PRODUCTS,
       product_prices: buildSeedProductPrices(SEED_PRODUCTS)
@@ -241,8 +278,9 @@ function loadLocalStore() {
     return parsed;
   } catch (err) {
     console.error('Помилка зчитування local-store.json:', err);
+    const { users } = reconcileLocalUsers(STAFF_ACCOUNTS.map(u => ({ ...u })));
     return {
-      users: STAFF_ACCOUNTS.map(u => ({ ...u })),
+      users,
       loyalty_cards: SEED_CARDS,
       products: SEED_PRODUCTS,
       product_prices: buildSeedProductPrices(SEED_PRODUCTS)
@@ -256,6 +294,35 @@ function saveLocalStore(data) {
   } catch (err) {
     console.error('Помилка запису в local-store.json:', err);
   }
+}
+
+async function generateUniqueClientCode() {
+  const localCodes = new Set();
+  if (fs.existsSync(LOCAL_STORE_PATH)) {
+    try {
+      const store = loadLocalStore();
+      (store.users || []).forEach((u) => {
+        if (u && /^\d{6}$/.test(String(u.client_code || ''))) {
+          localCodes.add(String(u.client_code));
+        }
+      });
+    } catch (_) {}
+  }
+
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const candidate = generateRandomSixDigitCode();
+    if (localCodes.has(candidate)) continue;
+    if (isPostgres && pgPool) {
+      const exists = await pgPool.query(
+        'SELECT 1 FROM users WHERE client_code = $1 LIMIT 1',
+        [candidate]
+      );
+      if (exists.rowCount > 0) continue;
+    }
+    return candidate;
+  }
+
+  return generateRandomSixDigitCode();
 }
 
 /* ─── Database Initialization ────────────────────────────────────────────── */
@@ -382,6 +449,7 @@ async function initDatabase() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT NULL;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_data JSONB DEFAULT '[]'::jsonb;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_cleared_at TIMESTAMP DEFAULT NULL;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS client_code VARCHAR(6);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
         ALTER TABLE loyalty_cards ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
         CREATE INDEX IF NOT EXISTS idx_loyalty_cards_user_id ON loyalty_cards(user_id);
@@ -417,10 +485,11 @@ async function initDatabase() {
           [staff.email]
         );
         if (existingStaff.rowCount === 0) {
+          const staffClientCode = await generateUniqueClientCode();
           await pgPool.query(
-            `INSERT INTO users (name, email, password_hash, role, is_verified, verification_code, verification_expires)
-             VALUES ($1, $2, $3, $4, TRUE, NULL, NULL)`,
-            [staff.name, staff.email, staff.password_hash, staff.role]
+            `INSERT INTO users (name, email, password_hash, role, client_code, is_verified, verification_code, verification_expires)
+             VALUES ($1, $2, $3, $4, $5, TRUE, NULL, NULL)`,
+            [staff.name, staff.email, staff.password_hash, staff.role, staffClientCode]
           );
         } else {
           await pgPool.query(
@@ -437,6 +506,16 @@ async function initDatabase() {
           );
         }
       }
+
+      // Backfill unique 6-digit client_code for any existing users without one (non-destructive)
+      const missingCodeRows = await pgPool.query(
+        "SELECT id FROM users WHERE client_code IS NULL OR client_code !~ '^[0-9]{6}$' ORDER BY id ASC"
+      );
+      for (const row of missingCodeRows.rows) {
+        const newCode = await generateUniqueClientCode();
+        await pgPool.query('UPDATE users SET client_code = $1 WHERE id = $2', [newCode, row.id]);
+      }
+
       console.log('✅ Персонал @aurelia.ua (bleki [ADMIN], Qa1 [QA], Qa2 [QA]) синхронізовано у PostgreSQL.');
 
       // Seed loyalty cards if empty
@@ -528,7 +607,15 @@ async function findUserById(id) {
   const store = loadLocalStore();
   const u = store.users.find(user => String(user.id) === String(id));
   if (!u) return null;
-  const { password_hash, verification_code, verification_expires, reset_code, reset_expires, ...safeUser } = u;
+  const {
+    password_hash,
+    verification_code,
+    verification_expires,
+    reset_code,
+    reset_expires,
+    client_code,
+    ...safeUser
+  } = u;
   return safeUser;
 }
 
@@ -544,12 +631,77 @@ function computeIsUserOnline(lastSeenAt) {
 function sanitizeBasketArray(raw) {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter(Boolean)
-    .map(item => ({
-      productId: String(item.productId || item.id || ''),
-      qty: Math.max(1, parseInt(item.qty, 10) || 1)
-    }))
+    .filter(item => item && (item.productId !== undefined || item.id !== undefined))
+    .slice(0, 200)
+    .map(item => {
+      const entry = {
+        productId: String(item.productId !== undefined ? item.productId : item.id),
+        qty: Math.max(1, Math.min(999, parseInt(item.qty, 10) || 1))
+      };
+      if (item.title) entry.title = String(item.title).slice(0, 200);
+      if (item.unit) entry.unit = String(item.unit).slice(0, 32);
+      return entry;
+    })
     .filter(item => item.productId.length > 0);
+}
+
+async function getUserBasket(userId) {
+  if (!userId) return null;
+  if (isPostgres) {
+    const res = await pgPool.query(
+      'SELECT basket_data, basket_cleared_at FROM users WHERE id = $1 LIMIT 1',
+      [userId]
+    );
+    if (res.rowCount === 0) return null;
+    const row = res.rows[0];
+    return {
+      basket: sanitizeBasketArray(row.basket_data),
+      basketClearedAt: row.basket_cleared_at || null
+    };
+  }
+  const store = loadLocalStore();
+  const user = store.users.find(u => String(u.id) === String(userId));
+  if (!user) return null;
+  return {
+    basket: sanitizeBasketArray(user.basket_data),
+    basketClearedAt: user.basket_cleared_at || null
+  };
+}
+
+async function saveUserBasket(userId, basketItems) {
+  if (!userId) return null;
+  const cleanBasket = sanitizeBasketArray(basketItems);
+  const basketCount = cleanBasket.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+  const nowIso = new Date().toISOString();
+
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET basket_data = $2::jsonb, last_seen_at = NOW()
+       WHERE id = $1
+       RETURNING basket_data, basket_cleared_at`,
+      [userId, JSON.stringify(cleanBasket)]
+    );
+    if (res.rowCount === 0) return null;
+    const row = res.rows[0];
+    return {
+      basket: sanitizeBasketArray(row.basket_data),
+      basketClearedAt: row.basket_cleared_at || null,
+      basketCount
+    };
+  }
+
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) return null;
+  store.users[idx].basket_data = cleanBasket;
+  store.users[idx].last_seen_at = nowIso;
+  saveLocalStore(store);
+  return {
+    basket: cleanBasket,
+    basketClearedAt: store.users[idx].basket_cleared_at || null,
+    basketCount
+  };
 }
 
 async function touchUserActivity(userId, options = {}) {
@@ -617,7 +769,7 @@ async function touchUserActivity(userId, options = {}) {
 async function getAllUsersForAdmin() {
   if (isPostgres) {
     const usersRes = await pgPool.query(
-      `SELECT id, name, email, role, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at
+      `SELECT id, name, email, role, client_code, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at
        FROM users
        ORDER BY id ASC`
     );
@@ -648,6 +800,7 @@ async function getAllUsersForAdmin() {
         name: u.name || (u.email ? u.email.split('@')[0] : 'Користувач'),
         email: u.email,
         role: getEffectiveUserRole(u),
+        client_code: u.client_code || null,
         is_verified: Boolean(u.is_verified),
         created_at: u.created_at,
         last_seen_at: u.last_seen_at || null,
@@ -683,6 +836,7 @@ async function getAllUsersForAdmin() {
         name: u.name || (u.email ? u.email.split('@')[0] : 'Користувач'),
         email: u.email,
         role: getEffectiveUserRole(u),
+        client_code: u.client_code || null,
         is_verified: Boolean(u.is_verified),
         created_at: u.created_at || null,
         last_seen_at: u.last_seen_at || null,
@@ -760,7 +914,7 @@ async function updateUserByAdmin(userId, updates = {}) {
         `UPDATE users
          SET name = $2, email = $3, role = $4, is_verified = $5, password_hash = $6
          WHERE id = $1
-         RETURNING id, name, email, role, is_verified, last_seen_at, basket_cleared_at, created_at`,
+         RETURNING id, name, email, role, client_code, is_verified, last_seen_at, basket_cleared_at, created_at`,
         [userId, nextName, nextEmail, requestedRole, nextVerified, updates.password_hash]
       );
       return res.rows[0] || null;
@@ -769,7 +923,7 @@ async function updateUserByAdmin(userId, updates = {}) {
       `UPDATE users
        SET name = $2, email = $3, role = $4, is_verified = $5
        WHERE id = $1
-       RETURNING id, name, email, role, is_verified, last_seen_at, basket_cleared_at, created_at`,
+       RETURNING id, name, email, role, client_code, is_verified, last_seen_at, basket_cleared_at, created_at`,
       [userId, nextName, nextEmail, requestedRole, nextVerified]
     );
     return res.rows[0] || null;
@@ -830,12 +984,13 @@ async function createUser({
   verification_code = null,
   verification_expires = null
 }) {
+  const clientCode = await generateUniqueClientCode();
   if (isPostgres) {
     const res = await pgPool.query(
-      `INSERT INTO users (name, email, password_hash, role, is_verified, verification_code, verification_expires)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (name, email, password_hash, role, client_code, is_verified, verification_code, verification_expires, basket_data)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, '[]'::jsonb)
        RETURNING id, name, email, role, is_verified, created_at`,
-      [name, email, password_hash, role || 'USER', Boolean(is_verified), verification_code, verification_expires]
+      [name, email, password_hash, role || 'USER', clientCode, Boolean(is_verified), verification_code, verification_expires]
     );
     return res.rows[0];
   }
@@ -847,6 +1002,7 @@ async function createUser({
     email,
     password_hash,
     role: role || 'USER',
+    client_code: clientCode,
     is_verified: Boolean(is_verified),
     verification_code: verification_code || null,
     verification_expires: verification_expires || null,
@@ -859,7 +1015,7 @@ async function createUser({
   };
   store.users.push(newUser);
   saveLocalStore(store);
-  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = newUser;
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, client_code: _cc, ...safeUser } = newUser;
   return safeUser;
 }
 
@@ -1918,6 +2074,9 @@ module.exports = {
   setPasswordResetCode,
   resetUserPassword,
   touchUserActivity,
+  generateUniqueClientCode,
+  getUserBasket,
+  saveUserBasket,
   getAllUsersForAdmin,
   updateUserByAdmin,
   deleteUserCardByAdmin,

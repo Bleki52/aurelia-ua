@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role VARCHAR(20) DEFAULT 'USER',
+    client_code VARCHAR(6),
     is_verified BOOLEAN DEFAULT FALSE,
     verification_code VARCHAR(12),
     verification_expires TIMESTAMP,

@@ -1,12 +1,12 @@
 /**
  * ============================================================================
- * AURELIA UA — Offline-First Service Worker (v5)
- * Instant offline supermarket checkout, local caching & robust PWA runtime
+ * AURELIA UA — Network-First Auto-Updating Service Worker
+ * Guarantees online users always receive the newest deployment immediately,
+ * while preserving 100% offline QR wallet functionality at checkout.
  * ============================================================================
  */
 
-const CACHE_NAME = 'aurelia-ua-v23';
-const RUNTIME_API_CACHE = 'aurelia-ua-api-v23';
+const CACHE_NAME = 'aurelia-ua-v1794677429615';
 
 const PRECACHE_ASSETS = [
   './',
@@ -27,26 +27,26 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
 });
 
 self.addEventListener('activate', (event) => {
-  const currentCaches = [CACHE_NAME, RUNTIME_API_CACHE];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((name) => {
-          if (!currentCaches.includes(name)) {
-            return caches.delete(name);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.map((key) => (key !== CACHE_NAME ? caches.delete(key) : null))
+      ))
+      .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {
@@ -58,21 +58,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip non-HTTP(S) protocols
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+  // Skip non-HTTP(S) protocols and browser-internal only-if-cached cross-origin requests
+  if ((url.protocol !== 'http:' && url.protocol !== 'https:') ||
+      (request.cache === 'only-if-cached' && request.mode !== 'same-origin')) {
     return;
   }
 
-  // 1. API Requests -> Network-First; cache ONLY public unauthenticated catalog/health endpoints
+  // 1. API GET Requests -> Network-First (cache ONLY public unauthenticated catalog/health endpoints)
   if (url.pathname.includes('/api/')) {
     const isPublicCatalog = url.pathname.includes('/api/products') || url.pathname.includes('/api/health');
     const hasAuth = request.headers && request.headers.has('Authorization');
+
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-cache' })
         .then((response) => {
           if (isPublicCatalog && !hasAuth && response && response.status === 200) {
             const clone = response.clone();
-            caches.open(RUNTIME_API_CACHE).then((cache) => cache.put(request, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
         })
@@ -90,57 +92,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Navigation Requests -> Cache-First / Stale-While-Revalidate with 404 fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const clone = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            return cached || caches.match('./404.html') || caches.match('404.html');
-          });
-
-        return cached || fetchPromise;
-      })
-    );
-    return;
-  }
-
-  // 3. Static Assets (CSS, JS, SVG, Web Fonts, Images, Screenshots) -> Cache-First
+  // 2. HTML Navigation & All Static Assets (CSS, JS, SVG, Images) -> Network-First with Cache Fallback
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) {
-        // Asynchronously update in background for freshness (Stale-While-Revalidate)
-        fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const clone = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-          })
-          .catch(() => { /* Offline fallback — quiet */ });
-        return cached;
-      }
+    fetch(request, { cache: 'no-cache' })
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
 
-      return fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          if (request.destination === 'image') {
-            return caches.match('./assets/favicon.svg');
-          }
-        });
-    })
+        if (request.mode === 'navigate') {
+          return (await caches.match('./404.html')) || (await caches.match('404.html')) || Response.error();
+        }
+        if (request.destination === 'image') {
+          return (await caches.match('./assets/favicon.svg')) || Response.error();
+        }
+        return Response.error();
+      })
   );
 });

@@ -499,12 +499,82 @@ async function heartbeat(req, res) {
     return res.status(200).json({
       status: 'ok',
       lastSeenAt: activity.last_seen_at || new Date().toISOString(),
-      basketClearedAt: activity.basket_cleared_at || null
+      basketClearedAt: activity.basket_cleared_at || null,
+      basketCount: Array.isArray(activity.basket_data)
+        ? activity.basket_data.reduce((sum, item) => sum + Math.max(1, parseInt(item?.qty, 10) || 1), 0)
+        : 0
     });
   } catch (err) {
     console.error('Помилка оновлення heartbeat:', err);
     return res.status(500).json({
       error: 'Помилка синхронізації активності користувача.',
+      code: 'SERVER_ERROR'
+    });
+  }
+}
+
+/**
+ * GET /api/auth/basket
+ * Returns the authenticated user's strictly isolated basket from users.basket_data.
+ */
+async function getBasket(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        error: 'Потрібна авторизація.',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    await db.touchUserActivity(req.user.id);
+    const data = await db.getUserBasket(req.user.id);
+    if (!data) {
+      return res.status(404).json({
+        error: 'Користувача не знайдено.',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    return res.status(200).json({
+      basket: data.basket,
+      basketClearedAt: data.basketClearedAt
+    });
+  } catch (err) {
+    console.error('Помилка отримання кошика користувача:', err);
+    return res.status(500).json({
+      error: 'Не вдалося завантажити кошик користувача.',
+      code: 'SERVER_ERROR'
+    });
+  }
+}
+
+/**
+ * PUT /api/auth/basket
+ * Replaces the authenticated user's strictly isolated basket in users.basket_data.
+ */
+async function updateBasket(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        error: 'Потрібна авторизація.',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const rawBasket = Array.isArray(req.body?.basket) ? req.body.basket : [];
+    const result = await db.saveUserBasket(req.user.id, rawBasket);
+    if (!result) {
+      return res.status(404).json({
+        error: 'Користувача не знайдено.',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Помилка збереження кошика користувача:', err);
+    return res.status(500).json({
+      error: 'Не вдалося зберегти кошик користувача.',
       code: 'SERVER_ERROR'
     });
   }
@@ -518,6 +588,8 @@ module.exports = {
   forgotPassword,
   resetPassword,
   me,
-  heartbeat
+  heartbeat,
+  getBasket,
+  updateBasket
 };
 

@@ -298,11 +298,36 @@ class W3CAuditor {
     return { file: fileLabel, errors, warnings };
   }
 
+  bumpServiceWorkerVersion() {
+    const swPath = path.join(CLIENT_DIR, 'sw.js');
+    if (!fs.existsSync(swPath)) {
+      this.log('client/sw.js не знайдено — автооновлення CACHE_NAME пропущено.', 'warn');
+      return null;
+    }
+
+    const nextCacheName = `aurelia-ua-v${Date.now()}`;
+    const raw = fs.readFileSync(swPath, 'utf8');
+    const updated = raw.replace(
+      /const\s+CACHE_NAME\s*=\s*['"][^'"]+['"]\s*;/,
+      `const CACHE_NAME = '${nextCacheName}';`
+    );
+
+    if (updated === raw) {
+      this.log('Не вдалося оновити CACHE_NAME у client/sw.js.', 'warn');
+      return null;
+    }
+
+    fs.writeFileSync(swPath, updated, 'utf8');
+    this.log(`Service Worker CACHE_NAME автоматично оновлено: ${nextCacheName}`, 'pass');
+    return nextCacheName;
+  }
+
   run() {
     console.log('================================================================');
     console.log(' AURELIA UA — АВТОМАТИЧНИЙ АУДИТ ВІДПОВІДНОСТІ W3C ТА КУРСОВОГО ');
     console.log('================================================================\n');
 
+    this.bumpServiceWorkerVersion();
     const fileResults = HTML_FILES.map(f => this.auditFile(f));
 
     fileResults.forEach(r => {

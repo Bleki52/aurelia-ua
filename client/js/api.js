@@ -27,16 +27,17 @@
   const STORAGE_KEYS = {
     CARDS: 'aurelia_cards_data',
     PRODUCTS: 'aurelia_products_data',
-    BASKET: 'aurelia_basket_data',
     AUTH: 'aurelia_auth_data'
   };
-  const BASKET_CLEARED_ACK_KEY = '@aurelia_basket_cleared_ack';
   const ADMIN_RETURN_TOKEN_KEY = '@aurelia_admin_return_token';
 
-  // Clear legacy unauthenticated global cards cache so demo cards never leak
+  // Clear legacy unauthenticated global caches so cards and baskets never leak across accounts
   try {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.CARDS);
+      localStorage.removeItem('@aurelia_basket');
+      localStorage.removeItem('aurelia_basket_data');
+      localStorage.removeItem('@aurelia_basket_cleared_ack');
     }
   } catch (_) {}
 
@@ -46,6 +47,22 @@
       return null;
     }
     return `@aurelia_cards_user_${activeUser.id}`;
+  }
+
+  function getBasketStorageKey(userOverride) {
+    const activeUser = userOverride !== undefined ? userOverride : getCurrentUser();
+    if (activeUser && activeUser.id !== undefined && activeUser.id !== null && String(activeUser.id).trim() !== '') {
+      return `@aurelia_basket_user_${activeUser.id}`;
+    }
+    return '@aurelia_basket_guest';
+  }
+
+  function getBasketClearedAckKey(userOverride) {
+    const activeUser = userOverride !== undefined ? userOverride : getCurrentUser();
+    if (activeUser && activeUser.id !== undefined && activeUser.id !== null && String(activeUser.id).trim() !== '') {
+      return `@aurelia_basket_cleared_ack_${activeUser.id}`;
+    }
+    return null;
   }
 
   const SELECTED_STORES_KEY = '@aurelia_selected_stores';
@@ -861,11 +878,112 @@
     });
   }
 
-  /* ─── 3. BASKET & HEARTBEAT API ────────────────────────────────────────── */
+  /* ─── 3. BASKET & HEARTBEAT API (Strictly Per-User Isolated) ────────────── */
   const LEGACY_SEED_BASKET_IDS = new Set(['prod-1', 'prod-3', 'prod-4']);
 
+  function sanitizeClientBasket(items) {
+    if (!Array.isArray(items)) return [];
+    return items
+      .filter(item => item && item.productId !== undefined && item.productId !== null && String(item.productId).trim() !== '' && Number(item.qty) > 0)
+      .map(item => {
+        const entry = {
+          productId: item.productId,
+          qty: Math.max(1, Math.min(999, parseInt(item.qty, 10) || 1))
+        };
+        if (item.title) entry.title = String(item.title);
+        if (item.unit) entry.unit = String(item.unit);
+        return entry;
+      });
+  }
+
+  function checkAndApplyBasketCleared(user, basketClearedAt) {
+    if (!user || user.id === undefined || user.id === null || !basketClearedAt) return false;
+    const ackKey = getBasketClearedAckKey(user);
+    if (!ackKey) return false;
+
+    const serverClearedMs = Date.parse(basketClearedAt);
+    if (!Number.isFinite(serverClearedMs) || serverClearedMs <= 0) return false;
+
+    let lastClearedAckAt = null;
+    try {
+      lastClearedAckAt = localStorage.getItem(ackKey);
+    } catch (_) {}
+    const clientAckMs = lastClearedAckAt ? Date.parse(lastClearedAckAt) : 0;
+
+    if (!Number.isFinite(clientAckMs) || serverClearedMs > clientAckMs) {
+      setStorage(getBasketStorageKey(user), []);
+      try {
+        localStorage.setItem(ackKey, String(basketClearedAt));
+      } catch (_) {}
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('aurelia:basket-cleared', {
+          detail: { basketClearedAt, clearedAt: basketClearedAt, userId: user.id }
+        }));
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function saveBasket(items, options = {}) {
+    const user = getCurrentUser();
+    const basketKey = getBasketStorageKey(user);
+    const cleanItems = sanitizeClientBasket(items);
+    setStorage(basketKey, cleanItems);
+
+    if (user && user.token && user.id !== undefined && user.id !== null && !options.skipServerSync) {
+      fetchWithFallback('/auth/basket', {
+        method: 'PUT',
+        body: JSON.stringify({ basket: cleanItems }),
+        throwOnHttpError: true
+      }).then((res) => {
+        if (res && res.basketClearedAt) {
+          const ackKey = getBasketClearedAckKey(user);
+          if (ackKey) {
+            try {
+              localStorage.setItem(ackKey, String(res.basketClearedAt));
+            } catch (_) {}
+          }
+        }
+      }).catch(() => {});
+    }
+
+    return cleanItems;
+  }
+
+  async function syncUserBasketFromServer() {
+    const user = getCurrentUser();
+    if (!user || !user.token || user.id === undefined || user.id === null) {
+      return sanitizeClientBasket(getStorage('@aurelia_basket_guest', []));
+    }
+
+    const basketKey = getBasketStorageKey(user);
+    try {
+      const data = await fetchWithFallback('/auth/basket', {
+        method: 'GET',
+        throwOnHttpError: true
+      });
+
+      if (data && data.basketClearedAt && checkAndApplyBasketCleared(user, data.basketClearedAt)) {
+        return [];
+      }
+
+      const serverBasket = sanitizeClientBasket(data && data.basket ? data.basket : []);
+      saveBasket(serverBasket, { skipServerSync: true });
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('aurelia:basket-updated', {
+          detail: { basket: serverBasket, userId: user.id }
+        }));
+      }
+      return serverBasket;
+    } catch (_) {
+      return sanitizeClientBasket(getStorage(basketKey, []));
+    }
+  }
+
   async function getBasket() {
-    const raw = getStorage(STORAGE_KEYS.BASKET, []);
+    const basketKey = getBasketStorageKey();
+    const raw = getStorage(basketKey, []);
     if (!Array.isArray(raw) || raw.length === 0) return [];
     const catalog = getStorage(STORAGE_KEYS.PRODUCTS, []);
     if (Array.isArray(catalog) && catalog.length > 0) {
@@ -878,14 +996,14 @@
         return Number(item.qty) > 0;
       });
       if (cleaned.length !== raw.length) {
-        setStorage(STORAGE_KEYS.BASKET, cleaned);
+        setStorage(basketKey, cleaned);
       }
-      return cleaned;
+      return sanitizeClientBasket(cleaned);
     }
-    return raw.filter(item => item && Number(item.qty) > 0);
+    return sanitizeClientBasket(raw);
   }
 
-  async function toggleBasketItem(productId, qty, meta) {
+  async function toggleBasketItem(productId, qty = 1, meta = null) {
     const basket = await getBasket();
     const pid = String(productId);
     let itemTitle = (meta && meta.title) || '';
@@ -923,29 +1041,39 @@
       });
     }
 
-    setStorage(STORAGE_KEYS.BASKET, basket);
-    try {
-      localStorage.setItem('@aurelia_basket', JSON.stringify(basket));
-    } catch (_) {}
-    sendHeartbeat().catch(() => {});
-    return basket;
+    return saveBasket(basket);
+  }
+
+  async function updateBasketQty(productId, delta = 1) {
+    const basket = await getBasket();
+    const pid = String(productId);
+    const idx = basket.findIndex(item => String(item.productId) === pid);
+    if (idx === -1) return basket;
+
+    const nextQty = (Number(basket[idx].qty) || 1) + Number(delta || 0);
+    if (nextQty <= 0) {
+      basket.splice(idx, 1);
+    } else {
+      basket[idx].qty = nextQty;
+    }
+
+    return saveBasket(basket);
   }
 
   async function clearBasket() {
-    setStorage(STORAGE_KEYS.BASKET, []);
-    try {
-      localStorage.removeItem('@aurelia_basket');
-    } catch (_) {}
-    sendHeartbeat().catch(() => {});
-    return [];
+    return saveBasket([]);
   }
 
   async function sendHeartbeat() {
     const current = getCurrentUser();
-    if (!current || !current.token) return null;
+    if (!current || !current.token || current.id === undefined || current.id === null) return null;
 
-    const basket = await getBasket();
-    const lastClearedAckAt = localStorage.getItem(BASKET_CLEARED_ACK_KEY) || null;
+    const basket = sanitizeClientBasket(getStorage(getBasketStorageKey(current), []));
+    const ackKey = getBasketClearedAckKey(current);
+    let lastClearedAckAt = null;
+    try {
+      lastClearedAckAt = ackKey ? localStorage.getItem(ackKey) : null;
+    } catch (_) {}
 
     try {
       const res = await fetchWithFallback('/auth/heartbeat', {
@@ -955,20 +1083,7 @@
       });
 
       if (res && res.basketClearedAt) {
-        const serverClearedMs = new Date(res.basketClearedAt).getTime();
-        const clientAckMs = lastClearedAckAt ? new Date(lastClearedAckAt).getTime() : 0;
-        if (serverClearedMs > 0 && (!clientAckMs || isNaN(clientAckMs) || serverClearedMs > clientAckMs)) {
-          setStorage(STORAGE_KEYS.BASKET, []);
-          try {
-            localStorage.removeItem('@aurelia_basket');
-            localStorage.setItem(BASKET_CLEARED_ACK_KEY, res.basketClearedAt);
-          } catch (_) {}
-          if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-            window.dispatchEvent(new CustomEvent('aurelia:basket-cleared', {
-              detail: { basketClearedAt: res.basketClearedAt }
-            }));
-          }
-        }
+        checkAndApplyBasketCleared(current, res.basketClearedAt);
       }
       return res;
     } catch (_) {
@@ -1008,7 +1123,7 @@
     }, fallbackFn);
   }
 
-  function persistAuthResponse(res) {
+  async function persistAuthResponse(res) {
     if (res && res.requiresVerification) {
       return res;
     }
@@ -1018,6 +1133,9 @@
 
     if (userObj && (userObj.token || userObj.email)) {
       setStorage(STORAGE_KEYS.AUTH, userObj);
+      if (userObj.id !== undefined && userObj.id !== null) {
+        await syncUserBasketFromServer();
+      }
     }
     return userObj;
   }
@@ -1237,6 +1355,7 @@
       impersonatedBy: currentAdmin?.name || 'bleki'
     });
     setStorage(STORAGE_KEYS.AUTH, impersonatedSession);
+    await syncUserBasketFromServer();
     return impersonatedSession;
   }
 
@@ -1251,13 +1370,14 @@
     }
   }
 
-  function returnFromImpersonation() {
+  async function returnFromImpersonation() {
     const adminSession = getAdminReturnSession();
     try {
       localStorage.removeItem(ADMIN_RETURN_TOKEN_KEY);
     } catch (_) {}
     if (adminSession) {
       setStorage(STORAGE_KEYS.AUTH, adminSession);
+      await syncUserBasketFromServer();
       return { restored: true, user: adminSession };
     }
     return { restored: false, user: null };
@@ -1282,9 +1402,13 @@
     getLastSyncTime,
     getStoresStatus,
     // Basket & Activity Sync
+    getBasketStorageKey,
     getBasket,
+    saveBasket,
     toggleBasketItem,
+    updateBasketQty,
     clearBasket,
+    syncUserBasketFromServer,
     sendHeartbeat,
     // Admin Customer Management
     getAdminUsers,

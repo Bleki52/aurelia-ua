@@ -58,5 +58,17 @@ router.get('/me', verifyToken, authController.me);
  */
 router.post('/heartbeat', verifyToken, authController.heartbeat);
 
+/**
+ * GET /api/auth/basket
+ * Returns strictly isolated per-user shopping basket.
+ */
+router.get('/basket', verifyToken, authController.getBasket);
+
+/**
+ * PUT /api/auth/basket
+ * Saves strictly isolated per-user shopping basket.
+ */
+router.put('/basket', verifyToken, authController.updateBasket);
+
 module.exports = router;
 
