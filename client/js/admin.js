@@ -24,11 +24,11 @@
 
   const STORES = (window.AureliaAPI && Array.isArray(window.AureliaAPI.ALL_STORE_IDS))
     ? window.AureliaAPI.ALL_STORE_IDS
-    : ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'eva', 'prostor', 'avrora', 'epicentr'];
+    : ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket', 'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr'];
 
   const STORE_NAMES = Object.keys(API_STORE_META).length > 0
     ? Object.fromEntries(Object.entries(API_STORE_META).map(([k, v]) => [k, v.name]))
-    : { silpo: 'Сільпо', atb: 'АТБ-Маркет', novus: 'NOVUS', metro: 'METRO', varus: 'VARUS', auchan: 'АШАН', epicentrk_food: 'Епіцентр Food', velmart: 'Велмарт', thrash: 'Траш! ТРАШ!', simi: 'Сімі', blyzenko: 'Близенько', taistra: 'Тайстра', arsen: 'Арсен', rukavychka: 'Рукавичка', eva: 'EVA', prostor: 'Prostor', avrora: 'Аврора Мультимаркет', epicentr: 'Епіцентр К' };
+    : { silpo: 'Сільпо', atb: 'АТБ-Маркет', novus: 'NOVUS', metro: 'METRO', varus: 'VARUS', auchan: 'АШАН', epicentrk_food: 'Епіцентр Food', velmart: 'Велмарт', fora: 'Фора', eko: 'ЕКО-Маркет', ultramarket: 'Ультрамаркет', megamarket: 'МегаМаркет', thrash: 'Траш! ТРАШ!', simi: 'Сімі', blyzenko: 'Близенько', taistra: 'Тайстра', arsen: 'Арсен', rukavychka: 'Рукавичка', torba: 'Торба', sviy_market: 'Свій Маркет', nash_kray: 'Наш Край', spar: 'SPAR', eva: 'EVA', prostor: 'Prostor', avrora: 'Аврора Мультимаркет', epicentr: 'Епіцентр К' };
 
   const CATEGORY_HIERARCHY = {
     'Продукти': [
@@ -518,8 +518,8 @@
           alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
           return;
         }
-        const cityToSync = DOM.citySelect ? DOM.citySelect.value : 'ivano-frankivsk';
-        const actualCity = cityToSync === 'all' ? 'ivano-frankivsk' : cityToSync;
+        const cityToSync = DOM.citySelect ? DOM.citySelect.value : 'all';
+        const actualCity = cityToSync || 'all';
         try {
           DOM.btnSync.disabled = true;
           if (DOM.syncLabel) DOM.syncLabel.textContent = `Синхронізація (${CITY_NAMES[actualCity] || actualCity})...`;
@@ -823,6 +823,14 @@
           }).join('')}</div>`;
 
       const basketCount = Number(u.basket_count) || 0;
+      const userCityId = u.selected_city || 'ivano-frankivsk';
+      const userCityName = CITY_NAMES[userCityId] || userCityId;
+      const userStoresList = Array.isArray(u.selected_stores) ? u.selected_stores : [];
+      const userStoresNames = userStoresList.map(s => STORE_NAMES[s] || s).join(', ');
+      const storesBadgeText = userStoresList.length > 0
+        ? `Мережі: ${userStoresList.length}`
+        : 'Мережі: за замовч.';
+
       const actionsHtml = readOnly
         ? '<span class="table-readonly-badge">Тільки перегляд</span>'
         : `
@@ -845,6 +853,8 @@
               <div class="admin-user-badges">
                 <span class="user-role-badge ${roleClass}">${escapeHtml(role)}</span>
                 ${verifiedBadge}
+                <span class="user-pref-badge">${escapeHtml(`Місто: ${userCityName}`)}</span>
+                <span class="user-pref-badge" title="${escapeHtml(userStoresNames || 'Усі мережі міста')}">${escapeHtml(storesBadgeText)}</span>
               </div>
             </div>
           </td>

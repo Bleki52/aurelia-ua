@@ -6082,6 +6082,18 @@ body.has-header-dropdown .mobile-bottom-nav {
   color: #f59e0b;
 }
 
+.user-pref-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
 .user-online-badge {
   display: inline-flex;
   align-items: center;

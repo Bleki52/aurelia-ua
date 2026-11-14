@@ -6,7 +6,7 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'aurelia-ua-v1794677429615';
+const CACHE_NAME = 'aurelia-ua-v1794692201668';
 
 const PRECACHE_ASSETS = [
   './',

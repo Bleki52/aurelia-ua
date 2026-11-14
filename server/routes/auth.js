@@ -54,9 +54,15 @@ router.get('/me', verifyToken, authController.me);
 
 /**
  * POST /api/auth/heartbeat
- * Updates last_seen_at and syncs basket state for admin tracking / remote basket clearing.
+ * Updates last_seen_at and syncs basket state + user city/store preferences for admin tracking.
  */
 router.post('/heartbeat', verifyToken, authController.heartbeat);
+
+/**
+ * PUT /api/auth/preferences
+ * Syncs authenticated user's selectedCity, selectedStores, and optional basket to backend.
+ */
+router.put('/preferences', verifyToken, authController.updatePreferences);
 
 /**
  * GET /api/auth/basket

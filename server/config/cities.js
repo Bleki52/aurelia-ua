@@ -8,14 +8,22 @@
 
 const DEFAULT_CITY = 'ivano-frankivsk';
 
+const ALL_STORE_IDS = [
+  'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart',
+  'fora', 'eko', 'ultramarket', 'megamarket',
+  'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'torba', 'sviy_market', 'nash_kray', 'spar',
+  'eva', 'prostor', 'avrora', 'epicentr'
+];
+
 const CITIES = {
   'ivano-frankivsk': {
     id: 'ivano-frankivsk',
     name: 'Івано-Франківськ',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'arsen',
-      'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'eko', 'arsen',
+      'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b5a-55fb-6864-9a0f-d54e0a9fe643', // вул. Мазепи, 168А
     silpoAddress: 'вул. Мазепи, 168А',
@@ -23,7 +31,11 @@ const CITIES = {
       metro: ['48215627'], // METRO Ivano-Frankivsk DRIVE (Вовчинецька 225М)
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867130'], // Torba Tatariv / Ivano-Frankivsk region DRIVE
+      eko: ['482800030'],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'lviv': {
@@ -31,8 +43,9 @@ const CITIES = {
     name: 'Львів',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'arsen',
-      'rukavychka', 'blyzenko', 'simi', 'thrash', 'eva', 'prostor', 'avrora', 'novus'
+      'silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'ultramarket', 'arsen',
+      'rukavychka', 'blyzenko', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora', 'novus'
     ],
     silpoBranchId: '1edb6b12-3f2d-681e-9a93-eb10f39e9fe0', // вул. Кульпарківська, 226А
     silpoAddress: 'вул. Кульпарківська, 226А',
@@ -40,7 +53,11 @@ const CITIES = {
       metro: ['48215637'], // METRO Lviv DRIVE
       auchan: ['48246409'], // Auchan Lviv DRIVE
       novus: ['482010201'], // NOVUS Lviv
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867220'],
+      eko: [],
+      ultramarket: ['48277601'],
+      megamarket: []
     }
   },
   'ternopil': {
@@ -49,7 +66,8 @@ const CITIES = {
     region: 'Західна Україна',
     activeStores: [
       'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-      'blyzenko', 'thrash', 'taistra', 'eva', 'prostor', 'avrora'
+      'blyzenko', 'thrash', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b5d-ae47-6e5c-b897-a302e997617d', // вул. Петлюри, 2Б
     silpoAddress: 'вул. Петлюри, 2Б',
@@ -57,7 +75,11 @@ const CITIES = {
       metro: [],
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867220'],
+      eko: [],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'lutsk': {
@@ -65,8 +87,9 @@ const CITIES = {
     name: 'Луцьк',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-      'blyzenko', 'thrash', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'epicentrk_food', 'eko', 'rukavychka', 'simi',
+      'blyzenko', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b56-f57d-6c56-b993-639d81d4aac4', // вул. Кравчука, 23
     silpoAddress: 'вул. Кравчука, 23',
@@ -74,7 +97,11 @@ const CITIES = {
       metro: [],
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867220'],
+      eko: ['482800030'],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'chernivtsi': {
@@ -82,8 +109,9 @@ const CITIES = {
     name: 'Чернівці',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'metro', 'epicentrk_food', 'rukavychka',
-      'taistra', 'thrash', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'metro', 'epicentrk_food', 'eko', 'rukavychka',
+      'taistra', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b5b-831e-60fc-bf42-a302e997617d', // вул. Героїв Майдану, 71
     silpoAddress: 'вул. Героїв Майдану, 71',
@@ -91,7 +119,11 @@ const CITIES = {
       metro: ['48215628'], // METRO Chernivtsi DRIVE
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867104'], // Torba Chernivtsi
+      eko: ['482800030'],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'rivne': {
@@ -99,8 +131,9 @@ const CITIES = {
     name: 'Рівне',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'metro', 'novus', 'epicentrk_food', 'rukavychka',
-      'simi', 'thrash', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'metro', 'novus', 'fora', 'eko', 'epicentrk_food', 'rukavychka',
+      'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b55-2691-60a6-b134-d54e0a9fe643', // вул. Київська, 69
     silpoAddress: 'вул. Київська, 69',
@@ -108,7 +141,11 @@ const CITIES = {
       metro: ['48215634'], // METRO Rivne DRIVE
       novus: ['48201022'], // NOVUS Rivne DRIVE
       auchan: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867220'], // Torba Rivne
+      eko: ['482800030'],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'uzhhorod': {
@@ -116,8 +153,9 @@ const CITIES = {
     name: 'Ужгород',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-      'thrash', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'fora', 'epicentrk_food', 'rukavychka', 'simi',
+      'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b59-2df4-63d0-bb41-d54e0a9fe643', // вул. Швабська, 3
     silpoAddress: 'вул. Швабська, 3',
@@ -125,7 +163,11 @@ const CITIES = {
       metro: [],
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867130'],
+      eko: [],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'khmelnytskyi': {
@@ -133,8 +175,9 @@ const CITIES = {
     name: 'Хмельницький',
     region: 'Західна Україна',
     activeStores: [
-      'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'taistra',
-      'thrash', 'eva', 'prostor', 'avrora'
+      'silpo', 'atb', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'taistra',
+      'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar',
+      'eva', 'prostor', 'avrora'
     ],
     silpoBranchId: '1edb6b6b-6ceb-6496-ac30-33779385ece7', // вул. Шевченка, 34
     silpoAddress: 'вул. Шевченка, 34',
@@ -142,7 +185,11 @@ const CITIES = {
       metro: [],
       auchan: [],
       novus: [],
-      epicentrk_food: []
+      epicentrk_food: [],
+      torba: ['482867104'],
+      eko: ['482800030'],
+      ultramarket: [],
+      megamarket: []
     }
   },
   'kyiv': {
@@ -151,7 +198,8 @@ const CITIES = {
     region: 'Центральна Україна',
     activeStores: [
       'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan',
-      'epicentrk_food', 'velmart', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr'
+      'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket',
+      'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr'
     ],
     silpoBranchId: '1ed43e73-051b-6842-a111-a5ad042eb496', // просп. Володимира Івасюка, 46
     silpoAddress: 'просп. Володимира Івасюка, 46',
@@ -159,13 +207,37 @@ const CITIES = {
       novus: ['482010105', '48201029'],
       metro: ['48215611', '48215610'],
       auchan: ['48246401', '48246407'],
-      epicentrk_food: ['482374007']
+      epicentrk_food: ['482374007'],
+      torba: [],
+      eko: ['482800030', '482800245'],
+      ultramarket: ['48277601', '48277602'],
+      megamarket: ['48267601', '48267602']
     }
   }
 };
 
 function getCityConfig(cityId) {
   const normalized = String(cityId || '').toLowerCase().trim();
+  if (normalized === 'all') {
+    return {
+      id: 'all',
+      name: 'Усі міста',
+      region: 'Усі регіони України',
+      activeStores: [...ALL_STORE_IDS],
+      silpoBranchId: CITIES[DEFAULT_CITY].silpoBranchId,
+      silpoAddress: CITIES[DEFAULT_CITY].silpoAddress,
+      zakazStores: {
+        novus: ['482010105', '482010201', '48201022'],
+        metro: ['48215627', '48215637', '48215611', '48215628', '48215634'],
+        auchan: ['48246409', '48246401'],
+        epicentrk_food: ['482374007'],
+        torba: ['482867130', '482867104', '482867220'],
+        eko: ['482800030', '482800245'],
+        ultramarket: ['48277601', '48277602'],
+        megamarket: ['48267601', '48267602']
+      }
+    };
+  }
   return CITIES[normalized] || CITIES[DEFAULT_CITY];
 }
 
@@ -181,6 +253,7 @@ function isStoreInCity(storeId, cityId) {
 
 module.exports = {
   DEFAULT_CITY,
+  ALL_STORE_IDS,
   CITIES,
   getCityConfig,
   getAllCities,

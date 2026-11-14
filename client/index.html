@@ -57,7 +57,7 @@
             <use href="assets/sprite.svg#icon-sliders"></use>
           </svg>
           <span class="stores-btn-text">Мої мережі</span>
-          <span class="stores-count-badge" id="header-stores-count">18</span>
+          <span class="stores-count-badge" id="header-stores-count">26</span>
         </button>
 
         <button type="button" id="btn-pwa-install" class="btn-pwa-install is-hidden header-hide-mobile" aria-label="Встановити додаток AURELIA UA">
@@ -105,7 +105,7 @@
           <svg class="icon" aria-hidden="true">
             <use href="assets/sprite.svg#icon-sliders"></use>
           </svg>
-          <span>Мої мережі (<span class="mobile-stores-count">18</span>)</span>
+          <span>Мої мережі (<span class="mobile-stores-count">26</span>)</span>
         </button>
 
         <button type="button" id="mobile-pwa-install" class="btn-drawer-action is-hidden" aria-label="Встановити додаток AURELIA UA">
@@ -336,6 +336,10 @@
               <option value="auchan">АШАН</option>
               <option value="epicentrk_food">Епіцентр Food</option>
               <option value="velmart">Велмарт</option>
+              <option value="fora">Фора</option>
+              <option value="eko">ЕКО-Маркет</option>
+              <option value="ultramarket">Ультрамаркет</option>
+              <option value="megamarket">МегаМаркет</option>
             </optgroup>
             <optgroup label="Локальні та біля дому">
               <option value="thrash">Траш! ТРАШ!</option>
@@ -344,6 +348,10 @@
               <option value="taistra">Тайстра</option>
               <option value="arsen">Арсен</option>
               <option value="rukavychka">Рукавичка</option>
+              <option value="torba">Торба</option>
+              <option value="sviy_market">Свій Маркет</option>
+              <option value="nash_kray">Наш Край</option>
+              <option value="spar">SPAR</option>
             </optgroup>
             <optgroup label="Краса, Дім та Щоденні">
               <option value="eva">EVA</option>
@@ -539,35 +547,35 @@
           <div class="city-list-grid">
             <button type="button" class="city-select-btn is-active" data-city-id="ivano-frankivsk">
               <span class="city-btn-name">Івано-Франківськ</span>
-              <span class="city-btn-meta">14 мереж • Сільпо Мазепи, METRO</span>
+              <span class="city-btn-meta">19 мереж • Сільпо, METRO, Торба, ЕКО</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="lviv">
               <span class="city-btn-name">Львів</span>
-              <span class="city-btn-meta">14 мереж • Кульпарківська, Ашан, METRO</span>
+              <span class="city-btn-meta">19 мереж • Сільпо, Ашан, METRO, Близенько</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="ternopil">
               <span class="city-btn-name">Тернопіль</span>
-              <span class="city-btn-meta">11 мереж • Сільпо Петлюри, Епіцентр</span>
+              <span class="city-btn-meta">15 мереж • Сільпо, Епіцентр, Тайстра, Торба</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="lutsk">
               <span class="city-btn-name">Луцьк</span>
-              <span class="city-btn-meta">11 мереж • Сільпо Кравчука, METRO</span>
+              <span class="city-btn-meta">16 мереж • Сільпо, ЕКО, Наш Край, SPAR</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="chernivtsi">
               <span class="city-btn-name">Чернівці</span>
-              <span class="city-btn-meta">12 мереж • Сільпо Головна, METRO</span>
+              <span class="city-btn-meta">16 мереж • Сільпо, METRO, Тайстра, Торба</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="rivne">
               <span class="city-btn-name">Рівне</span>
-              <span class="city-btn-meta">13 мереж • Сільпо Гагаріна, NOVUS, METRO</span>
+              <span class="city-btn-meta">18 мереж • Сільпо, NOVUS, METRO, Фора</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="uzhhorod">
               <span class="city-btn-name">Ужгород</span>
-              <span class="city-btn-meta">10 мереж • Сільпо Минайська, Епіцентр</span>
+              <span class="city-btn-meta">15 мереж • Сільпо, Фора, Сімі, Торба</span>
             </button>
             <button type="button" class="city-select-btn" data-city-id="khmelnytskyi">
               <span class="city-btn-name">Хмельницький</span>
-              <span class="city-btn-meta">11 мереж • Сільпо Свободи, Таврія</span>
+              <span class="city-btn-meta">16 мереж • Сільпо, Фора, ЕКО, Тайстра</span>
             </button>
           </div>
         </div>
@@ -581,7 +589,7 @@
           <div class="city-list-grid">
             <button type="button" class="city-select-btn" data-city-id="kyiv">
               <span class="city-btn-name">Київ</span>
-              <span class="city-btn-meta">15 мереж • Всі національні гіпермаркети</span>
+              <span class="city-btn-meta">18 мереж • Фора, ЕКО, Ультрамаркет, МегаМаркет</span>
             </button>
           </div>
         </div>
@@ -609,7 +617,7 @@
         <p class="stores-modal-subtitle">Оберіть торговельні мережі, якими ви користуєтеся. AURELIA UA персоналізує каталог, підрахунок кошика та відображення карток.</p>
 
         <div class="stores-quick-actions">
-          <button type="button" class="btn-link" id="btn-stores-select-all">Обрати всі (18)</button>
+          <button type="button" class="btn-link" id="btn-stores-select-all">Обрати всі (26)</button>
           <span class="quick-action-sep" aria-hidden="true">|</span>
           <button type="button" class="btn-link" id="btn-stores-select-core">Тільки основні (5)</button>
           <span class="quick-action-sep" aria-hidden="true">|</span>
@@ -621,7 +629,7 @@
           <div class="stores-cluster">
             <h3 class="stores-cluster-title">
               <span>Національні супермаркети</span>
-              <span class="cluster-badge">8 мереж</span>
+              <span class="cluster-badge">12 мереж</span>
             </h3>
             <div class="stores-toggle-grid">
               <!-- Сільпо -->
@@ -759,6 +767,74 @@
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>
               </div>
+
+              <!-- Фора -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-fora" class="store-toggle-input" value="fora" checked>
+                <label for="store-toggle-fora" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Фора</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Фора Club</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- ЕКО-Маркет -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-eko" class="store-toggle-input" value="eko" checked>
+                <label for="store-toggle-eko" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">ЕКО-Маркет</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Подяка щодня</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Ультрамаркет -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-ultramarket" class="store-toggle-input" value="ultramarket" checked>
+                <label for="store-toggle-ultramarket" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Ультрамаркет</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Ultra Club</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- МегаМаркет -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-megamarket" class="store-toggle-input" value="megamarket" checked>
+                <label for="store-toggle-megamarket" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">МегаМаркет</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Мега Клуб</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -766,7 +842,7 @@
           <div class="stores-cluster">
             <h3 class="stores-cluster-title">
               <span>Локальні та біля дому</span>
-              <span class="cluster-badge">6 мереж</span>
+              <span class="cluster-badge">10 мереж</span>
             </h3>
             <div class="stores-toggle-grid">
               <!-- Траш! -->
@@ -866,6 +942,74 @@
                   <span class="store-toggle-meta">
                     <span class="store-toggle-name">Рукавичка</span>
                     <span class="store-toggle-subrow"><span class="store-toggle-program">Родина Рукавичка</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Торба -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-torba" class="store-toggle-input" value="torba" checked>
+                <label for="store-toggle-torba" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Торба</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Торба Бонус</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Свій Маркет -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-sviy_market" class="store-toggle-input" value="sviy_market" checked>
+                <label for="store-toggle-sviy_market" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Свій Маркет</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Свій Клуб</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- Наш Край -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-nash_kray" class="store-toggle-input" value="nash_kray" checked>
+                <label for="store-toggle-nash_kray" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">Наш Край</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">Наш Край Bonus</span></span>
+                  </span>
+                  <span class="store-toggle-switch" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <!-- SPAR -->
+              <div class="store-toggle-card">
+                <input type="checkbox" id="store-toggle-spar" class="store-toggle-input" value="spar" checked>
+                <label for="store-toggle-spar" class="store-toggle-label">
+                  <span class="store-modal-icon-box cat-groceries" aria-hidden="true">
+                    <svg class="icon icon-stroke" aria-hidden="true">
+                      <use href="assets/sprite.svg#cat-groceries"></use>
+                    </svg>
+                  </span>
+                  <span class="store-toggle-meta">
+                    <span class="store-toggle-name">SPAR</span>
+                    <span class="store-toggle-subrow"><span class="store-toggle-program">My SPAR</span></span>
                   </span>
                   <span class="store-toggle-switch" aria-hidden="true"></span>
                 </label>

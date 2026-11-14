@@ -2378,46 +2378,6 @@
         resetAllCatalogFilters();
       });
     }
-
-    // Live synchronization button in catalog
-    if (DOM.btnCatalogSync) {
-      DOM.btnCatalogSync.addEventListener('click', async () => {
-        try {
-          DOM.btnCatalogSync.disabled = true;
-          if (DOM.catalogSyncLabel) DOM.catalogSyncLabel.textContent = 'Синхронізація...';
-          if (DOM.catalogSyncStatus) {
-            DOM.catalogSyncStatus.classList.add('is-syncing');
-            DOM.catalogSyncStatus.textContent = 'Отримання свіжих цін із супермаркетів...';
-          }
-
-          if (window.AureliaAPI && typeof window.AureliaAPI.syncProducts === 'function') {
-            const fresh = await window.AureliaAPI.syncProducts();
-            if (Array.isArray(fresh) && fresh.length > 0) {
-              AppState.products = fresh;
-              renderCatalog();
-            }
-          }
-
-          const syncTime = (window.AureliaAPI && typeof window.AureliaAPI.getLastSyncTime === 'function' ? window.AureliaAPI.getLastSyncTime() : null) || new Date().toISOString();
-          updateCatalogSyncBadge(syncTime);
-
-          if (DOM.catalogSyncLabel) DOM.catalogSyncLabel.textContent = 'Оновлено!';
-          setTimeout(() => {
-            if (DOM.catalogSyncLabel) DOM.catalogSyncLabel.textContent = 'Оновити актуальні акції';
-            DOM.btnCatalogSync.disabled = false;
-            if (DOM.catalogSyncStatus) DOM.catalogSyncStatus.classList.remove('is-syncing');
-          }, 1800);
-        } catch (err) {
-          console.error('Помилка оновлення акцій:', err);
-          if (DOM.catalogSyncLabel) DOM.catalogSyncLabel.textContent = 'Помилка';
-          setTimeout(() => {
-            if (DOM.catalogSyncLabel) DOM.catalogSyncLabel.textContent = 'Оновити актуальні акції';
-            DOM.btnCatalogSync.disabled = false;
-            if (DOM.catalogSyncStatus) DOM.catalogSyncStatus.classList.remove('is-syncing');
-          }, 1800);
-        }
-      });
-    }
   }
 
   /* ─── 10. Smart Basket & Two-Mode Optimizer Controller (basket.html) ────── */

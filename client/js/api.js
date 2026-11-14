@@ -69,36 +69,49 @@
   const DEFAULT_CITY = 'ivano-frankivsk';
   const SELECTED_CITY_KEY = '@aurelia_selected_city';
 
+  const ALL_STORE_IDS = [
+    'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart',
+    'fora', 'eko', 'ultramarket', 'megamarket',
+    'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'torba', 'sviy_market', 'nash_kray', 'spar',
+    'eva', 'prostor', 'avrora', 'epicentr'
+  ];
+
+  const CORE_STORE_IDS = ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan'];
+
   const CITIES = Object.fromEntries([
-    ['ivano-frankivsk', 'Івано-Франківськ', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'arsen', 'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'eva', 'prostor', 'avrora']],
-    ['lviv', 'Львів', 'Західна Україна', ['silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'arsen', 'rukavychka', 'blyzenko', 'simi', 'thrash', 'eva', 'prostor', 'avrora', 'novus']],
-    ['ternopil', 'Тернопіль', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'taistra', 'eva', 'prostor', 'avrora']],
-    ['lutsk', 'Луцьк', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'eva', 'prostor', 'avrora']],
-    ['chernivtsi', 'Чернівці', 'Західна Україна', ['silpo', 'atb', 'metro', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'eva', 'prostor', 'avrora']],
-    ['rivne', 'Рівне', 'Західна Україна', ['silpo', 'atb', 'metro', 'novus', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'eva', 'prostor', 'avrora']],
-    ['uzhhorod', 'Ужгород', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'eva', 'prostor', 'avrora']],
-    ['khmelnytskyi', 'Хмельницький', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'eva', 'prostor', 'avrora']],
-    ['kyiv', 'Київ', 'Центральна Україна', ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr']]
+    ['ivano-frankivsk', 'Івано-Франківськ', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'eko', 'arsen', 'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['lviv', 'Львів', 'Західна Україна', ['silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'ultramarket', 'arsen', 'rukavychka', 'blyzenko', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'novus']],
+    ['ternopil', 'Тернопіль', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['lutsk', 'Луцьк', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'eko', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['chernivtsi', 'Чернівці', 'Західна Україна', ['silpo', 'atb', 'metro', 'epicentrk_food', 'eko', 'rukavychka', 'taistra', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['rivne', 'Рівне', 'Західна Україна', ['silpo', 'atb', 'metro', 'novus', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['uzhhorod', 'Ужгород', 'Західна Україна', ['silpo', 'atb', 'fora', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['khmelnytskyi', 'Хмельницький', 'Західна Україна', ['silpo', 'atb', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
+    ['kyiv', 'Київ', 'Центральна Україна', ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr']]
   ].map(([id, name, region, activeStores]) => [id, { id, name, region, activeStores }]));
 
   function getSelectedCity() {
     try {
       const city = localStorage.getItem(SELECTED_CITY_KEY);
-      if (city && CITIES[city]) return city;
+      if (city && (city === 'all' || CITIES[city])) return city;
     } catch (_) {}
     return DEFAULT_CITY;
   }
 
   function setSelectedCity(cityId) {
-    const valid = CITIES[cityId] ? cityId : DEFAULT_CITY;
+    const valid = cityId === 'all' ? 'all' : (CITIES[cityId] ? cityId : DEFAULT_CITY);
     try {
       localStorage.setItem(SELECTED_CITY_KEY, valid);
     } catch (_) {}
+    syncUserPreferences({ selectedCity: valid });
     return valid;
   }
 
   function getCityConfig(cityId) {
     const c = cityId || getSelectedCity();
+    if (c === 'all') {
+      return { id: 'all', name: 'Усі міста', region: 'Вся Україна', activeStores: [...ALL_STORE_IDS] };
+    }
     return CITIES[c] || CITIES[DEFAULT_CITY];
   }
 
@@ -106,25 +119,29 @@
     return Object.values(CITIES);
   }
 
-  function isStoreInCurrentCity(storeId) {
-    const config = getCityConfig(getSelectedCity());
+  function isStoreInCity(storeId, cityId) {
+    const config = getCityConfig(cityId || getSelectedCity());
     const s = String(storeId || '').toLowerCase().trim();
     return config.activeStores.includes(s);
   }
 
-  /* ─── 18 Supported Ukrainian Retail Chains in 3 Clusters ───────────────── */
+  function isStoreInCurrentCity(storeId) {
+    return isStoreInCity(storeId, getSelectedCity());
+  }
+
+  /* ─── 26 Supported Ukrainian Retail Chains in 3 Clusters ───────────────── */
   const STORE_CLUSTERS = [
     {
       id: 'national',
       title: 'Національні супермаркети',
       desc: 'Великі загальнонаціональні мережі та гіпермаркети',
-      stores: ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart']
+      stores: ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket']
     },
     {
       id: 'local',
       title: 'Локальні та біля дому',
       desc: 'Зручні щоденні маркети біля дому та регіональні мережі',
-      stores: ['thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka']
+      stores: ['thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'torba', 'sviy_market', 'nash_kray', 'spar']
     },
     {
       id: 'daily',
@@ -133,14 +150,6 @@
       stores: ['eva', 'prostor', 'avrora', 'epicentr']
     }
   ];
-
-  const ALL_STORE_IDS = [
-    'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart',
-    'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka',
-    'eva', 'prostor', 'avrora', 'epicentr'
-  ];
-
-  const CORE_STORE_IDS = ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan'];
 
   const CATEGORY_META = {
     groceries: { key: 'groceries', icon: 'cat-groceries', label: 'Продукти' },
@@ -159,6 +168,10 @@
     auchan:          { name: 'АШАН', program: 'Auchan Club', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
     epicentrk_food:  { name: 'Епіцентр Food', program: 'Food Market', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'балів' },
     velmart:         { name: 'Велмарт', program: 'Велмарт Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+    fora:            { name: 'Фора', program: 'Фора Club', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'балів' },
+    eko:             { name: 'ЕКО-Маркет', program: 'Подяка щодня', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
+    ultramarket:     { name: 'Ультрамаркет', program: 'Ultra Club', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'знижка' },
+    megamarket:      { name: 'МегаМаркет', program: 'Мега Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'national', badgeText: 'бонусів' },
 
     // 2. Локальні та біля дому (Продукти)
     thrash:          { name: 'Траш! (Thrash!)', program: 'Траш Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
@@ -167,6 +180,10 @@
     taistra:         { name: 'Тайстра', program: 'Тайстра Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
     arsen:           { name: 'Арсен', program: 'Арсен Сім’я', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
     rukavychka:      { name: 'Рукавичка', program: 'Родина Рукавичка', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
+    torba:           { name: 'Торба', program: 'Торба Бонус', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
+    sviy_market:     { name: 'Свій Маркет', program: 'Свій Клуб', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'знижка' },
+    nash_kray:       { name: 'Наш Край', program: 'Наш Край Bonus', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'балів' },
+    spar:            { name: 'SPAR', program: 'My SPAR', categoryKey: 'groceries', logo: 'cat-groceries', cluster: 'local', badgeText: 'бонусів' },
 
     // 3. Краса, Дім та Щоденні
     eva:             { name: 'EVA', program: 'EVA Мозаїка', categoryKey: 'beauty', logo: 'cat-beauty', cluster: 'daily', badgeText: 'мозаїка' },
@@ -201,6 +218,7 @@
       localStorage.setItem(SELECTED_STORES_KEY, JSON.stringify(list));
       localStorage.setItem('aurelia_selected_stores', JSON.stringify(list));
     } catch (_) {}
+    syncUserPreferences({ selectedStores: list });
     return list;
   }
 
@@ -1064,11 +1082,37 @@
     return saveBasket([]);
   }
 
+  async function syncUserPreferences(prefs = {}) {
+    const current = getCurrentUser();
+    if (!current || !current.token || current.id === undefined || current.id === null) return null;
+
+    const payload = {};
+    if (prefs.selectedCity !== undefined) {
+      payload.selectedCity = prefs.selectedCity;
+    }
+    if (Array.isArray(prefs.selectedStores)) {
+      payload.selectedStores = prefs.selectedStores;
+    }
+    if (Object.keys(payload).length === 0) return null;
+
+    try {
+      return await fetchWithFallback('/auth/preferences', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+        throwOnHttpError: true
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+
   async function sendHeartbeat() {
     const current = getCurrentUser();
     if (!current || !current.token || current.id === undefined || current.id === null) return null;
 
     const basket = sanitizeClientBasket(getStorage(getBasketStorageKey(current), []));
+    const selectedCity = getSelectedCity();
+    const selectedStores = getSelectedStores();
     const ackKey = getBasketClearedAckKey(current);
     let lastClearedAckAt = null;
     try {
@@ -1078,7 +1122,7 @@
     try {
       const res = await fetchWithFallback('/auth/heartbeat', {
         method: 'POST',
-        body: JSON.stringify({ basket, lastClearedAckAt }),
+        body: JSON.stringify({ basket, lastClearedAckAt, selectedCity, selectedStores }),
         throwOnHttpError: true
       });
 
@@ -1409,6 +1453,7 @@
     updateBasketQty,
     clearBasket,
     syncUserBasketFromServer,
+    syncUserPreferences,
     sendHeartbeat,
     // Admin Customer Management
     getAdminUsers,
@@ -1444,6 +1489,7 @@
     setSelectedCity,
     getCityConfig,
     getAllCities,
+    isStoreInCity,
     isStoreInCurrentCity
   };
 });

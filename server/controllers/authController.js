@@ -48,7 +48,9 @@ function sanitizeUserPayload(user) {
     name: user.name,
     email: user.email,
     role: getSafeRoleForUser(user),
-    is_verified: Boolean(user.is_verified)
+    is_verified: Boolean(user.is_verified),
+    selected_city: user.selected_city || 'ivano-frankivsk',
+    selected_stores: Array.isArray(user.selected_stores) ? user.selected_stores : []
   };
 }
 
@@ -479,14 +481,16 @@ async function me(req, res) {
 
 /**
  * POST /api/auth/heartbeat
- * Tracks authenticated user's online activity and synchronizes shopping basket count / remote clear state.
+ * Tracks authenticated user's online activity and synchronizes basket, selectedCity, selectedStores.
  */
 async function heartbeat(req, res) {
   try {
-    const { basket, lastClearedAckAt } = req.body || {};
+    const { basket, lastClearedAckAt, selectedCity, selectedStores } = req.body || {};
     const activity = await db.touchUserActivity(req.user.id, {
       basket: Array.isArray(basket) ? basket : undefined,
-      lastClearedAckAt: lastClearedAckAt || null
+      lastClearedAckAt: lastClearedAckAt || null,
+      selectedCity: selectedCity !== undefined ? selectedCity : undefined,
+      selectedStores: Array.isArray(selectedStores) ? selectedStores : undefined
     });
 
     if (!activity) {
@@ -500,6 +504,8 @@ async function heartbeat(req, res) {
       status: 'ok',
       lastSeenAt: activity.last_seen_at || new Date().toISOString(),
       basketClearedAt: activity.basket_cleared_at || null,
+      selectedCity: activity.selected_city || 'ivano-frankivsk',
+      selectedStores: Array.isArray(activity.selected_stores) ? activity.selected_stores : [],
       basketCount: Array.isArray(activity.basket_data)
         ? activity.basket_data.reduce((sum, item) => sum + Math.max(1, parseInt(item?.qty, 10) || 1), 0)
         : 0
@@ -508,6 +514,47 @@ async function heartbeat(req, res) {
     console.error('Помилка оновлення heartbeat:', err);
     return res.status(500).json({
       error: 'Помилка синхронізації активності користувача.',
+      code: 'SERVER_ERROR'
+    });
+  }
+}
+
+/**
+ * PUT /api/auth/preferences
+ * Syncs authenticated user's selectedCity, selectedStores, and optional basket.
+ */
+async function updatePreferences(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        error: 'Потрібна авторизація.',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const { selectedCity, selectedStores, basket } = req.body || {};
+    const updated = await db.updateUserPreferences(req.user.id, {
+      selectedCity,
+      selectedStores: Array.isArray(selectedStores) ? selectedStores : undefined,
+      basket: Array.isArray(basket) ? basket : undefined
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        error: 'Користувача не знайдено.',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    return res.status(200).json({
+      status: 'ok',
+      selectedCity: updated.selected_city || 'ivano-frankivsk',
+      selectedStores: Array.isArray(updated.selected_stores) ? updated.selected_stores : []
+    });
+  } catch (err) {
+    console.error('Помилка збереження налаштувань користувача:', err);
+    return res.status(500).json({
+      error: 'Не вдалося зберегти налаштування користувача.',
       code: 'SERVER_ERROR'
     });
   }
@@ -589,6 +636,7 @@ module.exports = {
   resetPassword,
   me,
   heartbeat,
+  updatePreferences,
   getBasket,
   updateBasket
 };

@@ -44,7 +44,7 @@ const DEFAULT_HEADERS = {
   'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7'
 };
 
-/* ─── 18 Supported Ukrainian Supermarket Chains ─────────────────────────── */
+/* ─── 26 Supported Ukrainian Supermarket Chains ─────────────────────────── */
 const ALL_18_STORES = [
   { store: 'silpo', name: 'Сільпо', defaultDomain: 'silpo.ua' },
   { store: 'atb', name: 'АТБ-Маркет', defaultDomain: 'atbmarket.com' },
@@ -54,12 +54,20 @@ const ALL_18_STORES = [
   { store: 'auchan', name: 'АШАН', defaultDomain: 'auchan.zakaz.ua' },
   { store: 'epicentrk_food', name: 'Епіцентр Food', defaultDomain: 'epicentrfood.zakaz.ua' },
   { store: 'velmart', name: 'Велмарт', defaultDomain: 'velmart.ua' },
+  { store: 'fora', name: 'Фора', defaultDomain: 'fora.ua' },
+  { store: 'eko', name: 'ЕКО-Маркет', defaultDomain: 'eko.zakaz.ua' },
+  { store: 'ultramarket', name: 'Ультрамаркет', defaultDomain: 'ultramarket.zakaz.ua' },
+  { store: 'megamarket', name: 'МегаМаркет', defaultDomain: 'megamarket.zakaz.ua' },
   { store: 'thrash', name: 'Траш!', defaultDomain: 'thrash.ua' },
   { store: 'simi', name: 'Сімі', defaultDomain: 'simi.ua' },
   { store: 'blyzenko', name: 'Близенько', defaultDomain: 'blyzenko.ua' },
   { store: 'taistra', name: 'Тайстра', defaultDomain: 'taistra.com.ua' },
   { store: 'arsen', name: 'Арсен', defaultDomain: 'arsen.ua' },
   { store: 'rukavychka', name: 'Рукавичка', defaultDomain: 'market.rukavychka.ua' },
+  { store: 'torba', name: 'Торба', defaultDomain: 'torba.zakaz.ua' },
+  { store: 'sviy_market', name: 'Свій Маркет', defaultDomain: 'sviymarket.com' },
+  { store: 'nash_kray', name: 'Наш Край', defaultDomain: 'nashkraj.ua' },
+  { store: 'spar', name: 'SPAR', defaultDomain: 'spar.ua' },
   { store: 'eva', name: 'EVA', defaultDomain: 'eva.ua' },
   { store: 'prostor', name: 'Prostor', defaultDomain: 'prostor.ua' },
   { store: 'avrora', name: 'Аврора', defaultDomain: 'avrora.ua' },
@@ -94,6 +102,10 @@ function isStoreUrlConsistent(store, url) {
   if (s === 'silpo') return u.includes('silpo.ua');
   if (s === 'atb') return u.includes('atbmarket.com');
   if (s === 'epicentrk_food') return u.includes('epicentrfood.zakaz.ua') || u.includes('epicentrk.ua');
+  if (s === 'fora') return u.includes('fora.ua');
+  if (s === 'eko') return u.includes('eko.zakaz.ua') || u.includes('ekomarket.ua');
+  if (s === 'ultramarket') return u.includes('ultramarket.zakaz.ua') || u.includes('ultramarket.ua');
+  if (s === 'megamarket') return u.includes('megamarket.zakaz.ua') || u.includes('megamarket.ua');
   if (s === 'thrash') return u.includes('thrash.ua');
   if (s === 'avrora') return u.includes('avrora.ua');
   if (s === 'rukavychka') return u.includes('market.rukavychka.ua') || u.includes('rukavychka.ua');
@@ -104,6 +116,10 @@ function isStoreUrlConsistent(store, url) {
   if (s === 'eva') return u.includes('eva.ua');
   if (s === 'taistra') return u.includes('taistra.com.ua');
   if (s === 'arsen') return u.includes('arsen.ua');
+  if (s === 'torba') return u.includes('torba.zakaz.ua') || u.includes('torba.ua');
+  if (s === 'sviy_market') return u.includes('sviymarket.com');
+  if (s === 'nash_kray') return u.includes('nashkraj.ua');
+  if (s === 'spar') return u.includes('spar.ua');
   if (s === 'epicentr') return u.includes('epicentrk.ua');
 
   return false;
@@ -132,6 +148,30 @@ function resolveStoreIdentity(url, expectedStoreKey) {
   } else if (u.includes('epicentrfood.zakaz.ua')) {
     detectedKey = 'epicentrk_food';
     detectedName = 'Епіцентр Food';
+  } else if (u.includes('fora.ua')) {
+    detectedKey = 'fora';
+    detectedName = 'Фора';
+  } else if (u.includes('eko.zakaz.ua') || u.includes('ekomarket.ua')) {
+    detectedKey = 'eko';
+    detectedName = 'ЕКО-Маркет';
+  } else if (u.includes('ultramarket.zakaz.ua') || u.includes('ultramarket.ua')) {
+    detectedKey = 'ultramarket';
+    detectedName = 'Ультрамаркет';
+  } else if (u.includes('megamarket.zakaz.ua') || u.includes('megamarket.ua')) {
+    detectedKey = 'megamarket';
+    detectedName = 'МегаМаркет';
+  } else if (u.includes('torba.zakaz.ua') || u.includes('torba.ua')) {
+    detectedKey = 'torba';
+    detectedName = 'Торба';
+  } else if (u.includes('sviymarket.com')) {
+    detectedKey = 'sviy_market';
+    detectedName = 'Свій Маркет';
+  } else if (u.includes('nashkraj.ua')) {
+    detectedKey = 'nash_kray';
+    detectedName = 'Наш Край';
+  } else if (u.includes('spar.ua')) {
+    detectedKey = 'spar';
+    detectedName = 'SPAR';
   } else if (u.includes('thrash.ua')) {
     detectedKey = 'thrash';
     detectedName = 'Траш!';
@@ -141,6 +181,30 @@ function resolveStoreIdentity(url, expectedStoreKey) {
   } else if (u.includes('market.rukavychka.ua') || u.includes('rukavychka.ua')) {
     detectedKey = 'rukavychka';
     detectedName = 'Рукавичка';
+  } else if (u.includes('prostor.ua')) {
+    detectedKey = 'prostor';
+    detectedName = 'Prostor';
+  } else if (u.includes('eva.ua')) {
+    detectedKey = 'eva';
+    detectedName = 'EVA';
+  } else if (u.includes('velmart.ua')) {
+    detectedKey = 'velmart';
+    detectedName = 'Велмарт';
+  } else if (u.includes('simi.ua') || u.includes('sim23.ua')) {
+    detectedKey = 'simi';
+    detectedName = 'Сімі';
+  } else if (u.includes('blyzenko.ua')) {
+    detectedKey = 'blyzenko';
+    detectedName = 'Близенько';
+  } else if (u.includes('taistra.com.ua')) {
+    detectedKey = 'taistra';
+    detectedName = 'Тайстра';
+  } else if (u.includes('arsen.ua')) {
+    detectedKey = 'arsen';
+    detectedName = 'Арсен';
+  } else if (u.includes('epicentrk.ua')) {
+    detectedKey = 'epicentr';
+    detectedName = 'Епіцентр';
   } else if (u.includes('atbmarket.com')) {
     detectedKey = 'atb';
     detectedName = 'АТБ-Маркет';
@@ -672,23 +736,24 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT) 
 }
 
 /* ─── 1. SILPO Public Catalog Scraper ────────────────────────────────────── */
-async function fetchSilpoAllPromotions(branchId) {
-  const activeBranch = branchId || '1edb6b5a-55fb-6864-9a0f-d54e0a9fe643';
-  const baseUrl = `https://sf-ecom-api.silpo.ua/v1/uk/branches/${activeBranch}/products`;
-
-  const urls = [
-    `${baseUrl}?limit=50&offset=0&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=50&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=100&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=150&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=200&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=250&deliveryType=DeliveryHome&mustHavePromotion=true`,
-    `${baseUrl}?limit=50&offset=300&deliveryType=DeliveryHome&mustHavePromotion=true`
-  ];
+async function fetchSilpoAllPromotions(branchInput) {
+  const defaultBranch = '1edb6b5a-55fb-6864-9a0f-d54e0a9fe643';
+  const branchIds = (Array.isArray(branchInput) ? branchInput : [branchInput || defaultBranch]).filter(Boolean);
+  const uniqueBranches = [...new Set(branchIds.length > 0 ? branchIds : [defaultBranch])].slice(0, 3);
+  const urls = [];
 
   const stapleQueries = ['кава', 'шоколад', 'сир', 'масло', 'молоко', 'сметана', 'олія', 'чай', 'філе', 'ковбаса', 'макарони', 'гель', 'шампунь', 'корм'];
-  stapleQueries.forEach(q => {
-    urls.push(`${baseUrl}?search=${encodeURIComponent(q)}&limit=30&deliveryType=DeliveryHome`);
+
+  uniqueBranches.forEach((activeBranch, idx) => {
+    const baseUrl = `https://sf-ecom-api.silpo.ua/v1/uk/branches/${activeBranch}/products`;
+    [0, 100, 200, 300].forEach(offset => {
+      urls.push(`${baseUrl}?limit=100&offset=${offset}&deliveryType=DeliveryHome&mustHavePromotion=true`);
+    });
+    if (idx === 0) {
+      stapleQueries.forEach(q => {
+        urls.push(`${baseUrl}?search=${encodeURIComponent(q)}&limit=50&deliveryType=DeliveryHome`);
+      });
+    }
   });
 
   const promises = urls.map(async url => {
@@ -770,7 +835,68 @@ async function fetchSilpoAllPromotions(branchId) {
   };
 }
 
-/* ─── 2. ZAKAZ.UA Public Promotion Scraper (NOVUS, METRO, AUCHAN, EPICENTR FOOD) */
+/* ─── 2. ZAKAZ.UA Public Promotion Scraper (NOVUS, METRO, AUCHAN, EPICENTR FOOD, TORBA, EKO, ULTRAMARKET, MEGAMARKET) */
+async function resolveDynamicZakazStores(fallbackZakazStores = {}, cityId = 'all') {
+  const merged = {};
+  Object.entries(fallbackZakazStores || {}).forEach(([k, v]) => {
+    merged[k] = Array.isArray(v) ? [...v] : (v ? [v] : []);
+  });
+
+  const chainMap = {
+    novus: 'novus',
+    metro: 'metro',
+    auchan: 'auchan',
+    epicentr: 'epicentrk_food',
+    torba: 'torba',
+    ekomarket: 'eko',
+    ultramarket: 'ultramarket',
+    megamarket: 'megamarket'
+  };
+
+  try {
+    const res = await fetchWithTimeout('https://stores-api.zakaz.ua/stores/', {}, 6500);
+    if (!res.ok) return merged;
+    const raw = await res.json();
+    const stores = Array.isArray(raw) ? raw : (raw.results || []);
+    const cityNorm = String(cityId || '').toLowerCase().trim();
+    const cityAliases = {
+      'kyiv': ['kiev', 'kyiv'],
+      'lviv': ['lviv'],
+      'ivano-frankivsk': ['ivano-frankivsk', 'ivano_frankivsk'],
+      'odesa': ['odessa', 'odesa'],
+      'dnipro': ['dnipro'],
+      'kharkiv': ['kharkov', 'kharkiv']
+    };
+    const preferredCityTokens = cityAliases[cityNorm] || [];
+
+    const collected = {};
+    for (const st of stores) {
+      if (st.is_active === false || !st.id || !st.retail_chain) continue;
+      const key = chainMap[String(st.retail_chain).toLowerCase()];
+      if (!key) continue;
+      if (!collected[key]) collected[key] = { matched: [], other: [] };
+      const stCity = `${st.city || ''} ${st.region_id || ''}`.toLowerCase();
+      const matchesCity = cityNorm === 'all' || preferredCityTokens.some(tok => stCity.includes(tok));
+      if (matchesCity) {
+        collected[key].matched.push(String(st.id));
+      } else {
+        collected[key].other.push(String(st.id));
+      }
+    }
+
+    Object.entries(collected).forEach(([key, buckets]) => {
+      const existing = merged[key] || [];
+      const dynamicIds = buckets.matched.length > 0 ? buckets.matched : buckets.other;
+      const combined = [...new Set([...existing, ...dynamicIds])];
+      merged[key] = combined.slice(0, cityNorm === 'all' ? 1 : 2);
+    });
+  } catch (err) {
+    console.warn(`[LIVE SYNC] [Zakaz.ua] Dynamic /stores/ fallback (${err.message})`);
+  }
+
+  return merged;
+}
+
 async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
   const ids = (Array.isArray(storeIds) ? storeIds : [storeIds]).filter(Boolean);
   if (ids.length === 0) {
@@ -788,7 +914,7 @@ async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
     const storeId = ids[idx];
     const baseUrl = `https://stores-api.zakaz.ua/stores/${storeId}/products`;
 
-    const maxPages = idx === 0 ? 6 : 4;
+    const maxPages = idx === 0 ? 5 : 3;
     for (let p = 1; p <= maxPages; p++) {
       urls.push(`${baseUrl}/promotion/?page=${p}`);
     }
@@ -801,24 +927,28 @@ async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
     }
   }
 
-  const promises = urls.map(async url => {
-    try {
-      const res = await fetchWithTimeout(url);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.results || data.items || [];
-    } catch (_) {
-      return [];
-    }
-  });
-
-  const settled = await Promise.allSettled(promises);
   const rawItems = [];
-  settled.forEach(r => {
-    if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-      rawItems.push(...r.value);
-    }
-  });
+  const BATCH_SIZE = 6;
+  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+    const batch = urls.slice(i, i + BATCH_SIZE);
+    const settled = await Promise.allSettled(
+      batch.map(async url => {
+        try {
+          const res = await fetchWithTimeout(url);
+          if (!res.ok) return [];
+          const data = await res.json();
+          return data.results || data.items || [];
+        } catch (_) {
+          return [];
+        }
+      })
+    );
+    settled.forEach(r => {
+      if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+        rawItems.push(...r.value);
+      }
+    });
+  }
 
   const seenKeys = new Set();
   const validItems = [];
@@ -1115,6 +1245,320 @@ async function fetchRukavychkaPromotions() {
           }
         });
       } catch (_) {}
+    }
+  } catch (err) {
+    console.log(`[LIVE SYNC] [${storeName}] Помилка парсингу (${err.message})`);
+  }
+
+  console.log(`[LIVE SYNC] [${storeName}] Отримано ${validItems.length} акційних позицій із реальними знижками.`);
+  return {
+    store: storeKey,
+    storeName,
+    status: validItems.length > 0 ? 200 : 0,
+    items: validItems,
+    error: validItems.length > 0 ? null : 'Немає позицій'
+  };
+}
+
+/* ─── 5b. FORA Official EcomCatalogGlobal API Parser ──────────────────────── */
+async function fetchForaPromotions() {
+  const storeKey = 'fora';
+  const storeName = 'Фора';
+  const validItems = [];
+  const seenKeys = new Set();
+
+  try {
+    const endpoint = 'https://api.catalog.ecom.fora.ua/api/2.0/exec/EcomCatalogGlobal';
+    const baseData = { merchantId: 2, filialId: 310, deliveryType: 1 };
+    const payloads = [
+      { ...baseData, From: 1, To: 150 },
+      { ...baseData, From: 151, To: 300 },
+      { ...baseData, From: 301, To: 450 },
+      { ...baseData, From: 451, To: 600 },
+      { ...baseData, From: 601, To: 750 },
+      { ...baseData, From: 1, To: 60, customFilter: 'promo' }
+    ];
+    ['кава', 'шоколад', 'сир', 'масло', 'молоко', 'олія'].forEach(q => {
+      payloads.push({ ...baseData, From: 1, To: 60, FindText: q });
+    });
+
+    const settled = await Promise.allSettled(
+      payloads.map(data =>
+        fetchWithTimeout(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: 'GetSimpleCatalogItems', data })
+        }, 5500).then(res => (res.ok ? res.json() : null))
+      )
+    );
+
+    const rawItems = [];
+    settled.forEach(r => {
+      if (r.status === 'fulfilled' && Array.isArray(r.value?.items)) {
+        rawItems.push(...r.value.items);
+      }
+    });
+
+    for (const item of rawItems) {
+      const slug = item.slug ? String(item.slug).trim() : '';
+      const key = slug || item.id;
+      if (key && seenKeys.has(key)) continue;
+      if (key) seenKeys.add(key);
+
+      const title = (item.name || item.title || '').replace(/\s+/g, ' ').trim();
+      if (!title) continue;
+
+      const price = parsePriceValue(item.price);
+      const oldPrice = parsePriceValue(item.oldPrice);
+      if (!oldPrice || !isValidProductPrice(title, price, oldPrice)) continue;
+
+      const sourceUrl = slug ? `https://fora.ua/product/${slug}` : 'https://fora.ua/actions';
+      if (!isStoreUrlConsistent(storeKey, sourceUrl)) continue;
+
+      const apiCategory = Array.isArray(item.categories) && item.categories[0]?.name ? item.categories[0].name : '';
+      const catInfo = categorizeProduct(title, storeKey, apiCategory);
+      const brand = extractBrandFromTitle(title, item.brand || null);
+
+      validItems.push({
+        sourceStore: storeKey,
+        sourceStoreName: storeName,
+        title,
+        brand,
+        producerBrand: brand,
+        ean: null,
+        mainCategory: catInfo.mainCategory,
+        subCategory: catInfo.subCategory,
+        category: catInfo.category,
+        unit: item.unit ? String(item.unit).trim() : 'шт',
+        price: Number(price.toFixed(2)),
+        oldPrice: Number(oldPrice.toFixed(2)),
+        promoTag: item.promoTitle ? String(item.promoTitle).trim() : 'Акція Фора',
+        sourceUrl
+      });
+    }
+  } catch (err) {
+    console.log(`[LIVE SYNC] [${storeName}] Помилка API (${err.message})`);
+  }
+
+  console.log(`[LIVE SYNC] [${storeName}] Отримано ${validItems.length} акційних позицій із реальними знижками.`);
+  return {
+    store: storeKey,
+    storeName,
+    status: validItems.length > 0 ? 200 : 0,
+    items: validItems,
+    error: validItems.length > 0 ? null : 'Немає позицій'
+  };
+}
+
+/* ─── 5c. PROSTOR Magento 2 Promotion Scraper ────────────────────────────── */
+async function fetchProstorPromotions() {
+  const storeKey = 'prostor';
+  const storeName = 'Prostor';
+  const validItems = [];
+  const seenUrls = new Set();
+
+  try {
+    const pageUrls = [
+      'https://prostor.ua/ua/aktsii/supertseny/',
+      'https://prostor.ua/ua/aktsii/supertseny/?p=2',
+      'https://prostor.ua/ua/aktsii/supertseny/?p=3'
+    ];
+    const settled = await Promise.allSettled(
+      pageUrls.map(u =>
+        fetchWithTimeout(u, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'uk-UA,uk;q=0.9'
+          }
+        }, 5500).then(res => (res.ok ? res.text() : null))
+      )
+    );
+
+    for (const res of settled) {
+      if (res.status !== 'fulfilled' || !res.value) continue;
+      try {
+        const $ = cheerio.load(res.value);
+        $('.product-item').each((_, el) => {
+          const linkEl = $(el).find('.product-item-link').first();
+          const title = linkEl.text().replace(/\s+/g, ' ').trim();
+          let href = (linkEl.attr('href') || '').trim();
+          if (href && !href.startsWith('http')) href = 'https://prostor.ua' + href;
+
+          const pNewText = $(el).find('.special-price .price, [data-price-type="finalPrice"] .price, [data-price-type="finalPrice"]').first().text().trim();
+          const pOldText = $(el).find('.old-price .price, [data-price-type="oldPrice"] .price, [data-price-type="oldPrice"]').first().text().trim();
+          const price = parsePriceValue(pNewText);
+          const oldPrice = parsePriceValue(pOldText);
+
+          if (title && href && !seenUrls.has(href) && isStoreUrlConsistent(storeKey, href) && isValidProductPrice(title, price, oldPrice)) {
+            seenUrls.add(href);
+            const catInfo = categorizeProduct(title, storeKey);
+            const brand = extractBrandFromTitle(title, null);
+            validItems.push({
+              sourceStore: storeKey,
+              sourceStoreName: storeName,
+              title,
+              brand,
+              producerBrand: brand,
+              ean: null,
+              mainCategory: catInfo.mainCategory,
+              subCategory: catInfo.subCategory,
+              category: catInfo.category,
+              unit: extractNormalizedUnit(title) || 'шт',
+              price: Number(price.toFixed(2)),
+              oldPrice: Number(oldPrice.toFixed(2)),
+              promoTag: 'Суперціна Prostor',
+              sourceUrl: href
+            });
+          }
+        });
+      } catch (_) {}
+    }
+  } catch (err) {
+    console.log(`[LIVE SYNC] [${storeName}] Помилка парсингу (${err.message})`);
+  }
+
+  console.log(`[LIVE SYNC] [${storeName}] Отримано ${validItems.length} акційних позицій із реальними знижками.`);
+  return {
+    store: storeKey,
+    storeName,
+    status: validItems.length > 0 ? 200 : 0,
+    items: validItems,
+    error: validItems.length > 0 ? null : 'Немає позицій'
+  };
+}
+
+/* ─── 5d. VARUS Official Promo & JSON-LD / SSR Scraper ────────────────────── */
+async function fetchVarusPromotions() {
+  const storeKey = 'varus';
+  const storeName = 'VARUS';
+  const validItems = [];
+  const seenUrls = new Set();
+
+  try {
+    const urls = ['https://varus.ua/price-of-the-week', 'https://varus.ua/promotions'];
+    const settled = await Promise.allSettled(
+      urls.map(u =>
+        fetchWithTimeout(u, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'uk-UA,uk;q=0.9'
+          }
+        }, 6000).then(res => (res.ok ? res.text() : null))
+      )
+    );
+
+    const decodeJsonStr = s => {
+      try {
+        return JSON.parse('"' + String(s || '').replace(/"/g, '\\"') + '"');
+      } catch (_) {
+        return String(s || '');
+      }
+    };
+
+    for (const res of settled) {
+      if (res.status !== 'fulfilled' || !res.value) continue;
+      const html = res.value;
+      const priceMapBySlug = new Map();
+
+      // Capture SSR product prices {"slug": ..., "regular_price": ..., "final_price": ...}
+      const ssrPriceRegex = /"slug":"([a-z0-9-]+)"[^}]{0,600}"regular_price":([\d.]+),"final_price":([\d.]+)/gi;
+      let m;
+      while ((m = ssrPriceRegex.exec(html)) !== null) {
+        const slug = m[1];
+        const reg = parseFloat(m[2]);
+        const fin = parseFloat(m[3]);
+        if (slug && fin > 0 && reg > fin) {
+          priceMapBySlug.set(slug, { price: fin, oldPrice: reg });
+        }
+      }
+
+      // Parse JSON-LD ItemList products
+      try {
+        const $ = cheerio.load(html);
+        $('script[type="application/ld+json"]').each((_, el) => {
+          try {
+            const parsed = JSON.parse($(el).html() || '{}');
+            const list = parsed?.itemListElement;
+            if (!Array.isArray(list)) return;
+            list.forEach(entry => {
+              const prod = entry?.item || entry;
+              const title = (prod?.name || '').replace(/\s+/g, ' ').trim();
+              const href = (prod?.url || '').trim();
+              if (!title || !href || seenUrls.has(href) || !isStoreUrlConsistent(storeKey, href)) return;
+
+              const slug = href.replace(/^https?:\/\/varus\.ua\//i, '').replace(/\/$/, '');
+              const ssrPrices = priceMapBySlug.get(slug);
+              const price = ssrPrices ? ssrPrices.price : parsePriceValue(prod?.offers?.price);
+              const oldPrice = ssrPrices ? ssrPrices.oldPrice : null;
+
+              if (!isValidProductPrice(title, price, oldPrice)) return;
+              seenUrls.add(href);
+
+              const catInfo = categorizeProduct(title, storeKey);
+              const brand = extractBrandFromTitle(title, prod?.brand?.name || null);
+              validItems.push({
+                sourceStore: storeKey,
+                sourceStoreName: storeName,
+                title,
+                brand,
+                producerBrand: brand,
+                ean: null,
+                mainCategory: catInfo.mainCategory,
+                subCategory: catInfo.subCategory,
+                category: catInfo.category,
+                unit: extractNormalizedUnit(title) || 'шт',
+                price: Number(price.toFixed(2)),
+                oldPrice: oldPrice ? Number(oldPrice.toFixed(2)) : null,
+                promoTag: 'Ціна тижня VARUS',
+                sourceUrl: href
+              });
+            });
+          } catch (_) {}
+        });
+      } catch (_) {}
+
+      // Also capture additional SSR promo products that have name + slug + regular_price > final_price
+      const slugAnchorRegex = /"slug":"([a-z0-9-]+)"/gi;
+      while ((m = slugAnchorRegex.exec(html)) !== null) {
+        const slug = m[1];
+        const href = `https://varus.ua/${slug}`;
+        if (!slug || seenUrls.has(href)) continue;
+        const ahead = html.slice(m.index, m.index + 800);
+        const priceMatch = ahead.match(/"regular_price":([\d.]+),"final_price":([\d.]+)/);
+        if (!priceMatch) continue;
+        const reg = parseFloat(priceMatch[1]);
+        const fin = parseFloat(priceMatch[2]);
+        if (reg <= fin) continue;
+
+        const behind = html.slice(Math.max(0, m.index - 3000), m.index);
+        const nameMatches = [...behind.matchAll(/"name":"((?:\\.|[^"\\]){4,180})"/g)];
+        if (nameMatches.length === 0) continue;
+        const rawTitle = nameMatches[nameMatches.length - 1][1];
+        const title = decodeJsonStr(rawTitle).replace(/\s+/g, ' ').trim();
+        if (!title || !isValidProductPrice(title, fin, reg)) continue;
+
+        seenUrls.add(href);
+        const catInfo = categorizeProduct(title, storeKey);
+        const brand = extractBrandFromTitle(title, null);
+        validItems.push({
+          sourceStore: storeKey,
+          sourceStoreName: storeName,
+          title,
+          brand,
+          producerBrand: brand,
+          ean: null,
+          mainCategory: catInfo.mainCategory,
+          subCategory: catInfo.subCategory,
+          category: catInfo.category,
+          unit: extractNormalizedUnit(title) || 'шт',
+          price: Number(fin.toFixed(2)),
+          oldPrice: Number(reg.toFixed(2)),
+          promoTag: 'Ціна тижня VARUS',
+          sourceUrl: href
+        });
+      }
     }
   } catch (err) {
     console.log(`[LIVE SYNC] [${storeName}] Помилка парсингу (${err.message})`);
@@ -1680,73 +2124,105 @@ async function syncLivePromotions(cityId = 'ivano-frankivsk') {
   console.log(`>>> [LIVE SYNC] Початок синхронізації цін для міста: ${cityConfig.name} (${cityConfig.region})...`);
   latestSyncStats = [];
 
+  const resolvedZakazStores = await resolveDynamicZakazStores(cityConfig.zakazStores, cityId);
   const storeTasks = [];
 
-  // 1. СІЛЬПО (Local Branch)
+  // 1. СІЛЬПО (Local Branch or multi-city branches for 'all')
   if (cityConfig.activeStores.includes('silpo')) {
-    storeTasks.push(fetchSilpoAllPromotions(cityConfig.silpoBranchId));
+    const silpoBranchInput = cityId === 'all'
+      ? (cityConfig.silpoBranches || [cityConfig.silpoBranchId, '1edb7f8c-b411-6470-9b48-35b9d501aa1b'])
+      : cityConfig.silpoBranchId;
+    storeTasks.push(fetchSilpoAllPromotions(silpoBranchInput));
   } else {
     latestSyncStats.push({ store: 'silpo', storeName: 'Сільпо', status: 0, items: [], error: 'Немає в цьому місті' });
   }
 
-  // 2. NOVUS
-  if (cityConfig.activeStores.includes('novus') && cityConfig.zakazStores.novus && cityConfig.zakazStores.novus.length > 0) {
-    storeTasks.push(fetchZakazStoreMulti('novus', 'NOVUS', cityConfig.zakazStores.novus));
-  } else {
-    latestSyncStats.push({ store: 'novus', storeName: 'NOVUS', status: 0, items: [], error: 'Немає в цьому місті' });
-  }
+  // 2–9. Zakaz.ua Chains (NOVUS, METRO, AUCHAN, EPICENTR FOOD, TORBA, EKO, ULTRAMARKET, MEGAMARKET)
+  const zakazChains = [
+    { key: 'novus', name: 'NOVUS' },
+    { key: 'metro', name: 'METRO' },
+    { key: 'auchan', name: 'АШАН' },
+    { key: 'epicentrk_food', name: 'Епіцентр Food' },
+    { key: 'torba', name: 'Торба' },
+    { key: 'eko', name: 'ЕКО-Маркет' },
+    { key: 'ultramarket', name: 'Ультрамаркет' },
+    { key: 'megamarket', name: 'МегаМаркет' }
+  ];
 
-  // 3. METRO
-  if (cityConfig.activeStores.includes('metro') && cityConfig.zakazStores.metro && cityConfig.zakazStores.metro.length > 0) {
-    storeTasks.push(fetchZakazStoreMulti('metro', 'METRO', cityConfig.zakazStores.metro));
-  } else {
-    latestSyncStats.push({ store: 'metro', storeName: 'METRO', status: 0, items: [], error: 'Немає в цьому місті' });
-  }
-
-  // 4. АШАН
-  if (cityConfig.activeStores.includes('auchan') && cityConfig.zakazStores.auchan && cityConfig.zakazStores.auchan.length > 0) {
-    storeTasks.push(fetchZakazStoreMulti('auchan', 'АШАН', cityConfig.zakazStores.auchan));
-  } else {
-    latestSyncStats.push({ store: 'auchan', storeName: 'АШАН', status: 0, items: [], error: 'Немає в цьому місті' });
-  }
-
-  // 5. ЕПІЦЕНТР FOOD
-  if (cityConfig.activeStores.includes('epicentrk_food')) {
-    if (cityConfig.zakazStores.epicentrk_food && cityConfig.zakazStores.epicentrk_food.length > 0) {
-      storeTasks.push(fetchZakazStoreMulti('epicentrk_food', 'Епіцентр Food', cityConfig.zakazStores.epicentrk_food));
+  const activeZakazQueue = [];
+  zakazChains.forEach(chain => {
+    const rawIds = resolvedZakazStores[chain.key] || [];
+    const storeIds = cityId === 'all' ? rawIds.slice(0, 1) : rawIds.slice(0, 2);
+    if (cityConfig.activeStores.includes(chain.key) && storeIds.length > 0) {
+      activeZakazQueue.push({ key: chain.key, name: chain.name, storeIds });
+    } else if (!cityConfig.activeStores.includes(chain.key)) {
+      latestSyncStats.push({ store: chain.key, storeName: chain.name, status: 0, items: [], error: 'Немає в цьому місті' });
+    } else {
+      latestSyncStats.push({ store: chain.key, storeName: chain.name, status: 0, items: [], error: 'Філію Zakaz не знайдено' });
     }
+  });
+
+  // Pace Zakaz.ua chains in pairs to prevent anti-burst 429/connection drops when syncing all cities
+  activeZakazQueue.forEach((chain, idx) => {
+    const pairDelayMs = Math.floor(idx / 2) * 350;
+    storeTasks.push((async () => {
+      if (pairDelayMs > 0) await new Promise(r => setTimeout(r, pairDelayMs));
+      return fetchZakazStoreMulti(chain.key, chain.name, chain.storeIds);
+    })());
+  });
+
+  // 10. ФОРА (EcomCatalogGlobal JSON API)
+  if (cityConfig.activeStores.includes('fora')) {
+    storeTasks.push(fetchForaPromotions());
+  } else {
+    latestSyncStats.push({ store: 'fora', storeName: 'Фора', status: 0, items: [], error: 'Немає в цьому місті' });
   }
 
-  // 6. ТРАШ! (Thrash! GraphQL)
+  // 11. ТРАШ! (Thrash! GraphQL)
   if (cityConfig.activeStores.includes('thrash')) {
     storeTasks.push(fetchThrashPromotions());
   } else {
     latestSyncStats.push({ store: 'thrash', storeName: 'Траш!', status: 0, items: [], error: 'Немає в цьому місті' });
   }
 
-  // 7. АВРОРА (CS-Cart storefront)
+  // 12. АВРОРА (CS-Cart storefront)
   if (cityConfig.activeStores.includes('avrora')) {
     storeTasks.push(fetchAvroraPromotions());
   } else {
     latestSyncStats.push({ store: 'avrora', storeName: 'Аврора', status: 0, items: [], error: 'Немає в цьому місті' });
   }
 
-  // 8. РУКАВИЧКА (OpenCart specials)
+  // 13. РУКАВИЧКА (OpenCart specials)
   if (cityConfig.activeStores.includes('rukavychka')) {
     storeTasks.push(fetchRukavychkaPromotions());
   } else {
     latestSyncStats.push({ store: 'rukavychka', storeName: 'Рукавичка', status: 0, items: [], error: 'Немає в цьому місті' });
   }
 
-  // 9. Regional / Protected chains (graceful check)
+  // 14. PROSTOR (Magento 2 HTML)
+  if (cityConfig.activeStores.includes('prostor')) {
+    storeTasks.push(fetchProstorPromotions());
+  } else {
+    latestSyncStats.push({ store: 'prostor', storeName: 'Prostor', status: 0, items: [], error: 'Немає в цьому місті' });
+  }
+
+  // 15. VARUS (JSON-LD & SSR Promo State)
+  if (cityConfig.activeStores.includes('varus')) {
+    storeTasks.push(fetchVarusPromotions());
+  } else {
+    latestSyncStats.push({ store: 'varus', storeName: 'VARUS', status: 0, items: [], error: 'Немає в цьому місті' });
+  }
+
+  // 16. Regional / Protected chains (graceful check)
   const remainingRegional = [
-    { store: 'varus', name: 'VARUS', url: 'https://varus.ua/api/promotions' },
     { store: 'velmart', name: 'Велмарт', url: 'https://velmart.ua/aktsijni-propozytsiyi/' },
     { store: 'simi', name: 'Сімі', url: 'https://simi.ua/' },
     { store: 'blyzenko', name: 'Близенько', url: 'https://blyzenko.ua/wp-json/' },
     { store: 'taistra', name: 'Тайстра', url: 'https://taistra.com.ua/' },
     { store: 'arsen', name: 'Арсен', url: 'https://arsen.ua/' },
-    { store: 'prostor', name: 'Prostor', url: 'https://prostor.ua/ua/aktsii/' },
+    { store: 'sviy_market', name: 'Свій Маркет', url: 'https://sviymarket.com/' },
+    { store: 'nash_kray', name: 'Наш Край', url: 'https://nashkraj.ua/' },
+    { store: 'spar', name: 'SPAR', url: 'https://spar.ua/' },
     { store: 'epicentr', name: 'Епіцентр', url: 'https://epicentrk.ua/' }
   ];
 
@@ -1840,7 +2316,7 @@ function getLatestSyncStats() {
 }
 
 /**
- * Returns live status and product counts for all 18 supported retail chains in the given city.
+ * Returns live status and product counts for all 26 supported retail chains in the given city.
  */
 let localStoreStatusCache = { mtimeMs: -1, products: [] };
 
@@ -1911,5 +2387,6 @@ module.exports = {
   resolveStoreIdentity,
   isValidProductPrice,
   parsePriceValue,
-  ALL_18_STORES
+  ALL_18_STORES,
+  ALL_26_STORES: ALL_18_STORES
 };

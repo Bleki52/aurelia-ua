@@ -30,6 +30,8 @@ const STAFF_ACCOUNTS = [
     reset_code: null,
     reset_expires: null,
     last_seen_at: null,
+    selected_city: 'ivano-frankivsk',
+    selected_stores: [],
     basket_data: [],
     basket_cleared_at: null,
     created_at: new Date().toISOString()
@@ -46,6 +48,8 @@ const STAFF_ACCOUNTS = [
     reset_code: null,
     reset_expires: null,
     last_seen_at: null,
+    selected_city: 'ivano-frankivsk',
+    selected_stores: [],
     basket_data: [],
     basket_cleared_at: null,
     created_at: new Date().toISOString()
@@ -62,6 +66,8 @@ const STAFF_ACCOUNTS = [
     reset_code: null,
     reset_expires: null,
     last_seen_at: null,
+    selected_city: 'ivano-frankivsk',
+    selected_stores: [],
     basket_data: [],
     basket_cleared_at: null,
     created_at: new Date().toISOString()
@@ -190,6 +196,8 @@ function reconcileLocalUsers(rawUsers) {
         verification_code: null,
         verification_expires: null,
         last_seen_at: u.last_seen_at !== undefined ? u.last_seen_at : null,
+        selected_city: u.selected_city || 'ivano-frankivsk',
+        selected_stores: Array.isArray(u.selected_stores) ? u.selected_stores : [],
         basket_data: Array.isArray(u.basket_data) ? u.basket_data : [],
         basket_cleared_at: u.basket_cleared_at !== undefined ? u.basket_cleared_at : null
       };
@@ -205,6 +213,8 @@ function reconcileLocalUsers(rawUsers) {
       u.reset_code === undefined ||
       u.reset_expires === undefined ||
       u.last_seen_at === undefined ||
+      u.selected_city === undefined ||
+      u.selected_stores === undefined ||
       u.basket_data === undefined ||
       u.basket_cleared_at === undefined
     ) {
@@ -221,6 +231,8 @@ function reconcileLocalUsers(rawUsers) {
       reset_code: u.reset_code !== undefined ? u.reset_code : null,
       reset_expires: u.reset_expires !== undefined ? u.reset_expires : null,
       last_seen_at: u.last_seen_at !== undefined ? u.last_seen_at : null,
+      selected_city: u.selected_city || 'ivano-frankivsk',
+      selected_stores: Array.isArray(u.selected_stores) ? u.selected_stores : [],
       basket_data: Array.isArray(u.basket_data) ? u.basket_data : [],
       basket_cleared_at: u.basket_cleared_at !== undefined ? u.basket_cleared_at : null
     };
@@ -447,6 +459,8 @@ async function initDatabase() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(12);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT NULL;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_city VARCHAR(60) DEFAULT 'ivano-frankivsk';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS selected_stores JSONB DEFAULT '[]'::jsonb;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_data JSONB DEFAULT '[]'::jsonb;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_cleared_at TIMESTAMP DEFAULT NULL;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS client_code VARCHAR(6);
@@ -599,7 +613,7 @@ async function findUserByIdentifier(identifier) {
 async function findUserById(id) {
   if (isPostgres) {
     const res = await pgPool.query(
-      'SELECT id, name, email, role, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, is_verified, selected_city, selected_stores, last_seen_at, basket_data, basket_cleared_at, created_at FROM users WHERE id = $1',
       [id]
     );
     return res.rows[0] || null;
@@ -620,6 +634,28 @@ async function findUserById(id) {
 }
 
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+function sanitizeSelectedCity(cityId) {
+  const { getCityConfig, DEFAULT_CITY } = require('../config/cities');
+  const clean = String(cityId || '').toLowerCase().trim();
+  if (!clean || clean === 'all') return DEFAULT_CITY;
+  const cfg = getCityConfig(clean);
+  return cfg && cfg.id ? cfg.id : DEFAULT_CITY;
+}
+
+function sanitizeSelectedStores(stores) {
+  if (!Array.isArray(stores)) return [];
+  const { ALL_STORE_IDS } = require('../config/cities');
+  const validSet = new Set(Array.isArray(ALL_STORE_IDS) ? ALL_STORE_IDS : []);
+  const out = [];
+  for (const s of stores) {
+    const clean = String(s || '').toLowerCase().trim();
+    if (clean && (validSet.size === 0 || validSet.has(clean)) && !out.includes(clean)) {
+      out.push(clean);
+    }
+  }
+  return out;
+}
 
 function computeIsUserOnline(lastSeenAt) {
   if (!lastSeenAt) return false;
@@ -706,13 +742,17 @@ async function saveUserBasket(userId, basketItems) {
 
 async function touchUserActivity(userId, options = {}) {
   if (!userId) return null;
-  const { basket, lastClearedAckAt } = options || {};
+  const { basket, lastClearedAckAt, selectedCity, selectedStores } = options || {};
   const hasBasketUpdate = Array.isArray(basket);
+  const hasCityUpdate = selectedCity !== undefined && selectedCity !== null && String(selectedCity).trim() !== '';
+  const hasStoresUpdate = Array.isArray(selectedStores);
+  const cleanCity = hasCityUpdate ? sanitizeSelectedCity(selectedCity) : null;
+  const cleanStores = hasStoresUpdate ? sanitizeSelectedStores(selectedStores) : null;
   const nowIso = new Date().toISOString();
 
   if (isPostgres) {
     const existingRes = await pgPool.query(
-      'SELECT id, basket_data, basket_cleared_at FROM users WHERE id = $1 LIMIT 1',
+      'SELECT id, selected_city, selected_stores, basket_data, basket_cleared_at FROM users WHERE id = $1 LIMIT 1',
       [userId]
     );
     if (existingRes.rowCount === 0) return null;
@@ -721,24 +761,29 @@ async function touchUserActivity(userId, options = {}) {
     const ackMs = lastClearedAckAt ? new Date(lastClearedAckAt).getTime() : 0;
     const clientOutdatedAfterClear = Boolean(clearedMs > 0 && (!ackMs || isNaN(ackMs) || clearedMs > ackMs));
 
+    const setClauses = ['last_seen_at = NOW()'];
+    const params = [userId];
+    let paramIdx = 2;
+
     if (hasBasketUpdate && !clientOutdatedAfterClear) {
-      const normalizedBasket = sanitizeBasketArray(basket);
-      const upd = await pgPool.query(
-        `UPDATE users
-         SET last_seen_at = NOW(), basket_data = $2::jsonb
-         WHERE id = $1
-         RETURNING last_seen_at, basket_data, basket_cleared_at`,
-        [userId, JSON.stringify(normalizedBasket)]
-      );
-      return upd.rows[0];
+      setClauses.push(`basket_data = $${paramIdx++}::jsonb`);
+      params.push(JSON.stringify(sanitizeBasketArray(basket)));
+    }
+    if (hasCityUpdate) {
+      setClauses.push(`selected_city = $${paramIdx++}`);
+      params.push(cleanCity);
+    }
+    if (hasStoresUpdate) {
+      setClauses.push(`selected_stores = $${paramIdx++}::jsonb`);
+      params.push(JSON.stringify(cleanStores));
     }
 
     const upd = await pgPool.query(
       `UPDATE users
-       SET last_seen_at = NOW()
+       SET ${setClauses.join(', ')}
        WHERE id = $1
-       RETURNING last_seen_at, basket_data, basket_cleared_at`,
-      [userId]
+       RETURNING last_seen_at, selected_city, selected_stores, basket_data, basket_cleared_at`,
+      params
     );
     return upd.rows[0];
   }
@@ -758,18 +803,36 @@ async function touchUserActivity(userId, options = {}) {
     store.users[idx].basket_data = [];
   }
 
+  if (hasCityUpdate) {
+    store.users[idx].selected_city = cleanCity;
+  } else if (!store.users[idx].selected_city) {
+    store.users[idx].selected_city = 'ivano-frankivsk';
+  }
+
+  if (hasStoresUpdate) {
+    store.users[idx].selected_stores = cleanStores;
+  } else if (!Array.isArray(store.users[idx].selected_stores)) {
+    store.users[idx].selected_stores = [];
+  }
+
   saveLocalStore(store);
   return {
     last_seen_at: store.users[idx].last_seen_at,
+    selected_city: store.users[idx].selected_city,
+    selected_stores: store.users[idx].selected_stores,
     basket_data: store.users[idx].basket_data,
     basket_cleared_at: store.users[idx].basket_cleared_at || null
   };
 }
 
+async function updateUserPreferences(userId, preferences = {}) {
+  return touchUserActivity(userId, preferences);
+}
+
 async function getAllUsersForAdmin() {
   if (isPostgres) {
     const usersRes = await pgPool.query(
-      `SELECT id, name, email, role, client_code, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at
+      `SELECT id, name, email, role, client_code, is_verified, selected_city, selected_stores, last_seen_at, basket_data, basket_cleared_at, created_at
        FROM users
        ORDER BY id ASC`
     );
@@ -802,6 +865,8 @@ async function getAllUsersForAdmin() {
         role: getEffectiveUserRole(u),
         client_code: u.client_code || null,
         is_verified: Boolean(u.is_verified),
+        selected_city: u.selected_city || 'ivano-frankivsk',
+        selected_stores: Array.isArray(u.selected_stores) ? u.selected_stores : [],
         created_at: u.created_at,
         last_seen_at: u.last_seen_at || null,
         is_online: computeIsUserOnline(u.last_seen_at),
@@ -838,6 +903,8 @@ async function getAllUsersForAdmin() {
         role: getEffectiveUserRole(u),
         client_code: u.client_code || null,
         is_verified: Boolean(u.is_verified),
+        selected_city: u.selected_city || 'ivano-frankivsk',
+        selected_stores: Array.isArray(u.selected_stores) ? u.selected_stores : [],
         created_at: u.created_at || null,
         last_seen_at: u.last_seen_at || null,
         is_online: computeIsUserOnline(u.last_seen_at),
@@ -1009,6 +1076,8 @@ async function createUser({
     reset_code: null,
     reset_expires: null,
     last_seen_at: null,
+    selected_city: 'ivano-frankivsk',
+    selected_stores: [],
     basket_data: [],
     basket_cleared_at: null,
     created_at: new Date().toISOString()
@@ -1123,12 +1192,20 @@ const STORE_NAMES = {
   auchan: 'АШАН',
   epicentrk_food: 'Епіцентр Food',
   velmart: 'Велмарт',
+  fora: 'Фора',
+  eko: 'ЕКО-Маркет',
+  ultramarket: 'Ультрамаркет',
+  megamarket: 'МегаМаркет',
   thrash: 'ТРАШ!',
   simi: 'Сімі',
   blyzenko: 'Близенько',
   taistra: 'Тайстра',
   arsen: 'Арсен',
   rukavychka: 'Рукавичка',
+  torba: 'Торба',
+  sviy_market: 'Свій Маркет',
+  nash_kray: 'Наш Край',
+  spar: 'SPAR',
   eva: 'EVA',
   prostor: 'Prostor',
   avrora: 'Аврора',
@@ -1191,6 +1268,14 @@ function isStoreUrlConsistent(store, url) {
   if (s === 'eva') return u.includes('eva.ua');
   if (s === 'taistra') return u.includes('taistra.com.ua');
   if (s === 'arsen') return u.includes('arsen.ua');
+  if (s === 'fora') return u.includes('fora.ua');
+  if (s === 'eko') return u.includes('eko.zakaz.ua') || u.includes('eko.com.ua');
+  if (s === 'ultramarket') return u.includes('ultramarket.zakaz.ua') || u.includes('ultramarket.com.ua');
+  if (s === 'megamarket') return u.includes('megamarket.zakaz.ua') || u.includes('megamarket.ua');
+  if (s === 'torba') return u.includes('torba.zakaz.ua') || u.includes('torba.ua');
+  if (s === 'sviy_market') return u.includes('sviymarket.com') || u.includes('sviy-market') || u.includes('sviymarket.ua');
+  if (s === 'nash_kray') return u.includes('nashkraj.ua');
+  if (s === 'spar') return u.includes('spar.ua');
 
   return true;
 }
@@ -1510,15 +1595,7 @@ async function getProducts({ category, search, sort, city } = {}) {
   let products = [];
 
   if (isPostgres) {
-    let query = 'SELECT * FROM products';
-    const params = [];
-    if (city && city !== 'all') {
-      params.push(city);
-      query += ' WHERE (city = $1 OR city = \'all\' OR city IS NULL)';
-    }
-    query += ' ORDER BY id DESC';
-
-    const prodRes = await pgPool.query(query, params);
+    const prodRes = await pgPool.query('SELECT * FROM products ORDER BY id DESC');
     const priceRes = await pgPool.query('SELECT * FROM product_prices');
 
     const pricesByProd = {};
@@ -1817,7 +1894,41 @@ async function deleteProduct(id) {
   return store.products.length < initLen;
 }
 
-async function syncProducts(scrapedProducts, city) {
+async function loadExistingRawCatalog() {
+  if (isPostgres) {
+    const prodRes = await pgPool.query('SELECT * FROM products ORDER BY id DESC');
+    const priceRes = await pgPool.query('SELECT * FROM product_prices');
+    const pricesByProd = {};
+    for (const pr of priceRes.rows) {
+      const pId = String(pr.product_id);
+      if (!pricesByProd[pId]) pricesByProd[pId] = [];
+      const numPrice = parseFloat(pr.price);
+      if (isNaN(numPrice) || numPrice <= 0) continue;
+      pricesByProd[pId].push({
+        store: String(pr.store || '').toLowerCase().trim(),
+        price: numPrice,
+        old_price: pr.old_price ? parseFloat(pr.old_price) : null,
+        oldPrice: pr.old_price ? parseFloat(pr.old_price) : null,
+        sourceUrl: pr.source_url || null,
+        source_url: pr.source_url || null
+      });
+    }
+    return prodRes.rows.map(p => ({
+      ...p,
+      name: p.name,
+      title: p.name,
+      mainCategory: p.main_category || 'Продукти',
+      subCategory: p.sub_category || p.category || 'Бакалія',
+      promoTag: p.promo_tag || 'Акція',
+      syncedAt: p.synced_at || new Date().toISOString(),
+      prices: pricesByProd[String(p.id)] || []
+    }));
+  }
+  const store = loadLocalStore();
+  return Array.isArray(store.products) ? store.products : [];
+}
+
+async function syncProducts(scrapedProducts, city = 'all') {
   if (!scrapedProducts || !Array.isArray(scrapedProducts) || scrapedProducts.length === 0) {
     return getProducts({ city });
   }
@@ -1858,6 +1969,7 @@ async function syncProducts(scrapedProducts, city) {
         ...item,
         name: title,
         title,
+        city: 'all',
         mainCategory: mainCat,
         main_category: mainCat,
         subCategory: subCat,
@@ -1873,11 +1985,60 @@ async function syncProducts(scrapedProducts, city) {
     })
     .filter(item => item.title && Array.isArray(item.prices) && item.prices.length > 0);
 
+  // Count freshly scraped offers per store so 0-item cloud/single-city stores preserve existing data
+  const scrapedCountByStore = {};
+  for (const item of validProducts) {
+    for (const pr of item.prices) {
+      scrapedCountByStore[pr.store] = (scrapedCountByStore[pr.store] || 0) + 1;
+    }
+  }
+
+  let preservedProducts = [];
+  try {
+    const existingCatalog = await loadExistingRawCatalog();
+    preservedProducts = existingCatalog
+      .map(existing => {
+        const title = (existing.name || existing.title || '').trim();
+        if (!title) return null;
+        const keptPrices = (existing.prices || [])
+          .filter(pr => {
+            if (!pr || !pr.store) return false;
+            const st = String(pr.store).toLowerCase().trim();
+            if (scrapedCountByStore[st] && scrapedCountByStore[st] > 0) return false;
+            const price = Number(pr.price);
+            const url = pr.sourceUrl || pr.source_url || '';
+            return Number.isFinite(price) && price > 0 && url && isStoreUrlConsistent(st, url);
+          })
+          .map(pr => ({
+            store: String(pr.store).toLowerCase().trim(),
+            price: Number(Number(pr.price).toFixed(2)),
+            oldPrice: (pr.oldPrice ?? pr.old_price) ? Number(Number(pr.oldPrice ?? pr.old_price).toFixed(2)) : null,
+            old_price: (pr.oldPrice ?? pr.old_price) ? Number(Number(pr.oldPrice ?? pr.old_price).toFixed(2)) : null,
+            sourceUrl: pr.sourceUrl || pr.source_url
+          }));
+        if (keptPrices.length === 0) return null;
+        return {
+          ...existing,
+          name: title,
+          title,
+          city: 'all',
+          prices: keptPrices
+        };
+      })
+      .filter(Boolean);
+  } catch (preserveErr) {
+    console.warn('⚠️ Помилка підготовки резервного збереження мереж:', preserveErr.message);
+  }
+
+  const combinedInput = [...validProducts, ...preservedProducts];
   const { mergeCatalogProducts } = require('../services/storeScraper');
   const mergedProducts = typeof mergeCatalogProducts === 'function'
-    ? mergeCatalogProducts(validProducts)
-    : validProducts;
-  const productsToPersist = mergedProducts.length > 0 ? mergedProducts : validProducts;
+    ? mergeCatalogProducts(combinedInput, null)
+    : combinedInput;
+  const productsToPersist = (mergedProducts.length > 0 ? mergedProducts : combinedInput).map(item => ({
+    ...item,
+    city: 'all'
+  }));
 
   if (isPostgres) {
     const client = await pgPool.connect();
@@ -2074,6 +2235,7 @@ module.exports = {
   setPasswordResetCode,
   resetUserPassword,
   touchUserActivity,
+  updateUserPreferences,
   generateUniqueClientCode,
   getUserBasket,
   saveUserBasket,

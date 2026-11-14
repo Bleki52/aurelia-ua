@@ -7,7 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { requireAdmin } = require('../middleware/auth');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
 const { syncLivePromotions, getStoresStatus } = require('../services/storeScraper');
 
 /**
@@ -111,15 +111,15 @@ router.get('/:id', async (req, res) => {
  * Triggers live price synchronisation with public Ukrainian supermarket endpoints.
  * Protected: Requires ADMIN role (@aurelia.ua). QA role gets 403 read-only error.
  */
-router.post('/sync', requireAdmin, async (req, res) => {
+router.post('/sync', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const city = req.query.city || (req.body && req.body.city) || 'ivano-frankivsk';
+    const city = String(req.query.city || (req.body && req.body.city) || 'all').trim() || 'all';
     const liveItems = await syncLivePromotions(city);
     const updatedCatalog = await db.syncProducts(liveItems, city);
     const syncedAt = new Date().toISOString();
 
     return res.status(200).json({
-      message: `Синхронізацію актуальних цін для міста ${city} успішно завершено. Каталог оновлено на свіжі промо-акції.`,
+      message: `Синхронізацію актуальних цін (${city === 'all' ? 'Усі міста' : city}) успішно завершено. Каталог оновлено без втрати даних.`,
       city,
       syncedCount: liveItems.length,
       totalCount: updatedCatalog.length,

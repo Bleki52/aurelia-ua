@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     reset_code VARCHAR(12),
     reset_expires TIMESTAMP,
     last_seen_at TIMESTAMP DEFAULT NULL,
+    selected_city VARCHAR(60) DEFAULT 'ivano-frankivsk',
+    selected_stores JSONB DEFAULT '[]'::jsonb,
     basket_data JSONB DEFAULT '[]'::jsonb,
     basket_cleared_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW()

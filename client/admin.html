@@ -182,7 +182,7 @@
         <span class="stat-label">Активних акційних позицій</span>
       </div>
       <div class="stat-card">
-        <span class="stat-num">5</span>
+        <span class="stat-num">26</span>
         <span class="stat-label">Підключених мереж магазинів</span>
       </div>
       <div class="stat-card">
@@ -209,8 +209,8 @@
           <span class="city-label-text">Місто:</span>
         </label>
         <select id="admin-city-select" class="form-select admin-city-select">
-          <option value="all">Усі міста України</option>
-          <option value="ivano-frankivsk" selected>Івано-Франківськ</option>
+          <option value="all" selected>Усі міста (Повний каталог)</option>
+          <option value="ivano-frankivsk">Івано-Франківськ</option>
           <option value="lviv">Львів</option>
           <option value="ternopil">Тернопіль</option>
           <option value="lutsk">Луцьк</option>
@@ -383,7 +383,7 @@
           </div>
         </div>
 
-        <h3 class="admin-section-subtitle">Порівняльні ціни за 18 мережами (грн)</h3>
+        <h3 class="admin-section-subtitle">Порівняльні ціни за 26 мережами (грн)</h3>
         <p class="admin-section-hint">Вкажіть актуальну ціну, звичайну ціну (до знижки) та посилання на офіційний сайт для кожної доступної мережі.</p>
 
         <!-- Кластер 1: Національні супермаркети -->
@@ -581,6 +581,102 @@
                 </div>
               </div>
             </fieldset>
+
+            <!-- Фора -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>Фора</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-fora" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-fora" name="price_fora" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-fora" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-fora" name="oldprice_fora" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-fora" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-fora" name="url_fora" class="form-input" placeholder="https://fora.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ЕКО-Маркет -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>ЕКО-Маркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-eko" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-eko" name="price_eko" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-eko" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-eko" name="oldprice_eko" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-eko" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-eko" name="url_eko" class="form-input" placeholder="https://eko.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Ультрамаркет -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>Ультрамаркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-ultramarket" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-ultramarket" name="price_ultramarket" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-ultramarket" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-ultramarket" name="oldprice_ultramarket" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-ultramarket" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-ultramarket" name="url_ultramarket" class="form-input" placeholder="https://ultramarket.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- МегаМаркет -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>МегаМаркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-megamarket" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-megamarket" name="price_megamarket" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-megamarket" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-megamarket" name="oldprice_megamarket" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-megamarket" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-megamarket" name="url_megamarket" class="form-input" placeholder="https://megamarket.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
           </div>
         </div>
 
@@ -728,6 +824,102 @@
                 <div class="form-group admin-url-group">
                   <label for="admin-url-rukavychka" class="form-label">Посилання на акцію</label>
                   <input type="url" id="admin-url-rukavychka" name="url_rukavychka" class="form-input" placeholder="https://rukavychka.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Торба -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>Торба</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-torba" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-torba" name="price_torba" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-torba" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-torba" name="oldprice_torba" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-torba" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-torba" name="url_torba" class="form-input" placeholder="https://torba.zakaz.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Свій Маркет -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>Свій Маркет</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-sviy_market" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-sviy_market" name="price_sviy_market" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-sviy_market" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-sviy_market" name="oldprice_sviy_market" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-sviy_market" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-sviy_market" name="url_sviy_market" class="form-input" placeholder="https://sviymarket.com/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Наш Край -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>Наш Край</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-nash_kray" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-nash_kray" name="price_nash_kray" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-nash_kray" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-nash_kray" name="oldprice_nash_kray" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-nash_kray" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-nash_kray" name="url_nash_kray" class="form-input" placeholder="https://nashkraj.ua/...">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- SPAR -->
+            <fieldset class="admin-store-price-card">
+              <legend class="admin-store-legend">
+                <svg class="icon icon-stroke icon-sm" aria-hidden="true">
+                  <use href="assets/sprite.svg#cat-groceries"></use>
+                </svg>
+                <span>SPAR</span>
+              </legend>
+              <div class="admin-store-inputs-row">
+                <div class="form-group">
+                  <label for="admin-price-spar" class="form-label">Ціна (грн)</label>
+                  <input type="number" step="0.01" min="0" id="admin-price-spar" name="price_spar" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label for="admin-oldprice-spar" class="form-label">До знижки</label>
+                  <input type="number" step="0.01" min="0" id="admin-oldprice-spar" name="oldprice_spar" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group admin-url-group">
+                  <label for="admin-url-spar" class="form-label">Посилання на акцію</label>
+                  <input type="url" id="admin-url-spar" name="url_spar" class="form-input" placeholder="https://spar.ua/...">
                 </div>
               </div>
             </fieldset>
