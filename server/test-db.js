@@ -31,41 +31,37 @@ async function testDatabase() {
       await db.initDatabase();
 
       if (db.isPostgresConnected()) {
-        const { Pool } = require('pg');
-        const isLocalHost = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
-        const pool = new Pool({
-          connectionString: dbUrl,
-          ssl: isLocalHost ? false : { rejectUnauthorized: false }
-        });
+        try {
+          const timeRes = await db.query('SELECT NOW() AS current_time');
+          console.log(`✅ З'єднання з PostgreSQL активне. Час сервера: ${timeRes.rows[0].current_time}`);
 
-        const timeRes = await pool.query('SELECT NOW() AS current_time');
-        console.log(`✅ З'єднання з PostgreSQL активне. Час сервера: ${timeRes.rows[0].current_time}`);
+          // Count table rows
+          const usersRes = await db.query('SELECT count(*) AS count FROM users');
+          const cardsRes = await db.query('SELECT count(*) AS count FROM loyalty_cards');
+          const prodsRes = await db.query('SELECT count(*) AS count FROM products');
+          const pricesRes = await db.query('SELECT count(*) AS count FROM product_prices');
 
-        // Count table rows
-        const usersRes = await pool.query('SELECT count(*) AS count FROM users');
-        const cardsRes = await pool.query('SELECT count(*) AS count FROM loyalty_cards');
-        const prodsRes = await pool.query('SELECT count(*) AS count FROM products');
-        const pricesRes = await pool.query('SELECT count(*) AS count FROM product_prices');
+          console.log('\n📊 СТАТИСТИКА РЕЛЯЦІЙНИХ ТАБЛИЦЬ (POSTGRESQL):');
+          console.log('----------------------------------------------------------------');
+          console.log(`  • users          : ${usersRes.rows[0].count} записів`);
+          console.log(`  • loyalty_cards  : ${cardsRes.rows[0].count} записів`);
+          console.log(`  • products       : ${prodsRes.rows[0].count} позицій`);
+          console.log(`  • product_prices : ${pricesRes.rows[0].count} актуальних цін`);
 
-        console.log('\n📊 СТАТИСТИКА РЕЛЯЦІЙНИХ ТАБЛИЦЬ (POSTGRESQL):');
-        console.log('----------------------------------------------------------------');
-        console.log(`  • users          : ${usersRes.rows[0].count} записів`);
-        console.log(`  • loyalty_cards  : ${cardsRes.rows[0].count} записів`);
-        console.log(`  • products       : ${prodsRes.rows[0].count} позицій`);
-        console.log(`  • product_prices : ${pricesRes.rows[0].count} актуальних цін`);
+          // City breakdown
+          const cityRes = await db.query('SELECT city, count(*) AS count FROM products GROUP BY city ORDER BY count DESC');
+          if (cityRes.rowCount > 0) {
+            console.log('\n🏙️ РОЗПОДІЛ ТОВАРІВ ЗА МІСТАМИ (POSTGRESQL):');
+            cityRes.rows.forEach(r => {
+              console.log(`   • ${String(r.city || 'ivano-frankivsk').padEnd(20, ' ')} : ${r.count} товарів`);
+            });
+          }
 
-        // City breakdown
-        const cityRes = await pool.query('SELECT city, count(*) AS count FROM products GROUP BY city ORDER BY count DESC');
-        if (cityRes.rowCount > 0) {
-          console.log('\n🏙️ РОЗПОДІЛ ТОВАРІВ ЗА МІСТАМИ (POSTGRESQL):');
-          cityRes.rows.forEach(r => {
-            console.log(`   • ${String(r.city || 'ivano-frankivsk').padEnd(20, ' ')} : ${r.count} товарів`);
-          });
+          console.log('\n✅ Перевірку бази даних PostgreSQL успішно завершено!');
+          return;
+        } finally {
+          await db.closeDatabase();
         }
-
-        await pool.end();
-        console.log('\n✅ Перевірку бази даних PostgreSQL успішно завершено!');
-        return;
       }
     } catch (err) {
       console.error('❌ Помилка з\'єднання з PostgreSQL:', err.message);

@@ -86,6 +86,7 @@ router.post('/', verifyToken, async (req, res) => {
     };
 
     const created = await db.createCard(req.user.id, cardPayload);
+    try { await db.touchUserActivity(req.user.id); } catch (_) {}
     return res.status(201).json({
       message: 'Картку лояльності успішно додано.',
       card: created

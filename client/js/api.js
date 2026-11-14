@@ -22,6 +22,7 @@
     : PRODUCTION_API_URL;
 
   const REQUEST_TIMEOUT = 3000; // 3000ms before falling back to local offline storage
+  const AUTH_REQUEST_TIMEOUT = 10000; // 10s for email OTP / auth cold starts
 
   const STORAGE_KEYS = {
     CARDS: 'aurelia_cards_data',
@@ -29,6 +30,8 @@
     BASKET: 'aurelia_basket_data',
     AUTH: 'aurelia_auth_data'
   };
+  const BASKET_CLEARED_ACK_KEY = '@aurelia_basket_cleared_ack';
+  const ADMIN_RETURN_TOKEN_KEY = '@aurelia_admin_return_token';
 
   // Clear legacy unauthenticated global cards cache so demo cards never leak
   try {
@@ -49,89 +52,17 @@
   const DEFAULT_CITY = 'ivano-frankivsk';
   const SELECTED_CITY_KEY = '@aurelia_selected_city';
 
-  const CITIES = {
-    'ivano-frankivsk': {
-      id: 'ivano-frankivsk',
-      name: 'Івано-Франківськ',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'arsen',
-        'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'lviv': {
-      id: 'lviv',
-      name: 'Львів',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'arsen',
-        'rukavychka', 'blyzenko', 'simi', 'thrash', 'eva', 'prostor', 'avrora', 'novus'
-      ]
-    },
-    'ternopil': {
-      id: 'ternopil',
-      name: 'Тернопіль',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-        'blyzenko', 'thrash', 'taistra', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'lutsk': {
-      id: 'lutsk',
-      name: 'Луцьк',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-        'blyzenko', 'thrash', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'chernivtsi': {
-      id: 'chernivtsi',
-      name: 'Чернівці',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'metro', 'epicentrk_food', 'rukavychka',
-        'taistra', 'thrash', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'rivne': {
-      id: 'rivne',
-      name: 'Рівне',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'metro', 'novus', 'epicentrk_food', 'rukavychka',
-        'simi', 'thrash', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'uzhhorod': {
-      id: 'uzhhorod',
-      name: 'Ужгород',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi',
-        'thrash', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'khmelnytskyi': {
-      id: 'khmelnytskyi',
-      name: 'Хмельницький',
-      region: 'Західна Україна',
-      activeStores: [
-        'silpo', 'atb', 'epicentrk_food', 'rukavychka', 'taistra',
-        'thrash', 'eva', 'prostor', 'avrora'
-      ]
-    },
-    'kyiv': {
-      id: 'kyiv',
-      name: 'Київ',
-      region: 'Центральна Україна',
-      activeStores: [
-        'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan',
-        'epicentrk_food', 'velmart', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr'
-      ]
-    }
-  };
+  const CITIES = Object.fromEntries([
+    ['ivano-frankivsk', 'Івано-Франківськ', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'arsen', 'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'eva', 'prostor', 'avrora']],
+    ['lviv', 'Львів', 'Західна Україна', ['silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'arsen', 'rukavychka', 'blyzenko', 'simi', 'thrash', 'eva', 'prostor', 'avrora', 'novus']],
+    ['ternopil', 'Тернопіль', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'taistra', 'eva', 'prostor', 'avrora']],
+    ['lutsk', 'Луцьк', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'eva', 'prostor', 'avrora']],
+    ['chernivtsi', 'Чернівці', 'Західна Україна', ['silpo', 'atb', 'metro', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'eva', 'prostor', 'avrora']],
+    ['rivne', 'Рівне', 'Західна Україна', ['silpo', 'atb', 'metro', 'novus', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'eva', 'prostor', 'avrora']],
+    ['uzhhorod', 'Ужгород', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'eva', 'prostor', 'avrora']],
+    ['khmelnytskyi', 'Хмельницький', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'eva', 'prostor', 'avrora']],
+    ['kyiv', 'Київ', 'Центральна Україна', ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr']]
+  ].map(([id, name, region, activeStores]) => [id, { id, name, region, activeStores }]));
 
   function getSelectedCity() {
     try {
@@ -277,472 +208,49 @@
     try { localStorage.removeItem(STORAGE_KEYS.PRODUCTS); } catch (_) {}
   }
 
-  /* ─── Rich Seed Data: 5 Ukrainian Supermarket Loyalty Cards ──────────────── */
+  /* ─── Rich Seed Data: Ukrainian Supermarket Loyalty Cards ──────────────── */
   const SEED_CARDS = [
-    {
-      id: 'card-silpo',
-      store: 'silpo',
-      storeName: 'Сільпо',
-      program: 'Власний Рахунок',
-      number: '990001248831',
-      qrPayload: '990001248831',
-      note: '142.50 балів',
-      privilegeBadge: 'Преміум гість',
-      format: 'qr',
-      categoryKey: 'groceries',
-      logo: 'cat-groceries',
-      createdAt: '2026-10-19T10:00:00.000Z'
-    },
-    {
-      id: 'card-atb',
-      store: 'atb',
-      storeName: 'АТБ-Маркет',
-      program: 'Картка АТБ',
-      number: '414949910023',
-      qrPayload: '414949910023',
-      note: 'Знижка до 5%',
-      privilegeBadge: 'Екстра Знижка',
-      format: 'barcode',
-      categoryKey: 'groceries',
-      logo: 'cat-groceries',
-      createdAt: '2026-10-19T10:05:00.000Z'
-    },
-    {
-      id: 'card-novus',
-      store: 'novus',
-      storeName: 'NOVUS',
-      program: 'Програма Ваша Картка',
-      number: '290000418552',
-      qrPayload: '290000418552',
-      note: '85.00 грн бонусів',
-      privilegeBadge: 'VIP Покупець',
-      format: 'qr',
-      categoryKey: 'groceries',
-      logo: 'cat-groceries',
-      createdAt: '2026-10-19T10:10:00.000Z'
-    },
-    {
-      id: 'card-varus',
-      store: 'varus',
-      storeName: 'VARUS',
-      program: 'VARUS Poshuk',
-      number: '770089231104',
-      qrPayload: '770089231104',
-      note: '230 бонусів',
-      privilegeBadge: 'VARUS Family',
-      format: 'barcode',
-      categoryKey: 'groceries',
-      logo: 'cat-groceries',
-      createdAt: '2026-10-19T10:15:00.000Z'
-    },
-    {
-      id: 'card-metro',
-      store: 'metro',
-      storeName: 'METRO',
-      program: 'METRO Club',
-      number: '500291103381',
-      qrPayload: '500291103381',
-      note: 'Партнерська ціна',
-      privilegeBadge: 'Бізнес Клієнт',
-      format: 'qr',
-      categoryKey: 'groceries',
-      logo: 'cat-groceries',
-      createdAt: '2026-10-19T10:20:00.000Z'
-    },
-    {
-      id: 'card-eva',
-      store: 'eva',
-      storeName: 'EVA',
-      program: 'EVA Мозаїка',
-      number: '260019481230',
-      qrPayload: '260019481230',
-      note: '315 бонусів',
-      privilegeBadge: 'Преміум Клуб',
-      format: 'qr',
-      categoryKey: 'beauty',
-      logo: 'cat-beauty',
-      createdAt: '2026-10-19T10:25:00.000Z'
-    },
-    {
-      id: 'card-epicentr',
-      store: 'epicentr',
-      storeName: 'Епіцентр',
-      program: 'Картка Вигода',
-      number: '280011492001',
-      qrPayload: '280011492001',
-      note: '180 балів',
-      privilegeBadge: 'Майстер',
-      format: 'barcode',
-      categoryKey: 'home',
-      logo: 'cat-home',
-      createdAt: '2026-10-19T10:30:00.000Z'
-    }
-  ];
+    ['card-silpo', 'silpo', 'Сільпо', 'Власний Рахунок', '990001248831', '142.50 балів', 'Преміум гість', 'qr', 'groceries', '2026-10-19T10:00:00.000Z'],
+    ['card-atb', 'atb', 'АТБ-Маркет', 'Картка АТБ', '414949910023', 'Знижка до 5%', 'Екстра Знижка', 'barcode', 'groceries', '2026-10-19T10:05:00.000Z'],
+    ['card-novus', 'novus', 'NOVUS', 'Програма Ваша Картка', '290000418552', '85.00 грн бонусів', 'VIP Покупець', 'qr', 'groceries', '2026-10-19T10:10:00.000Z'],
+    ['card-varus', 'varus', 'VARUS', 'VARUS Poshuk', '770089231104', '230 бонусів', 'VARUS Family', 'barcode', 'groceries', '2026-10-19T10:15:00.000Z'],
+    ['card-metro', 'metro', 'METRO', 'METRO Club', '500291103381', 'Партнерська ціна', 'Бізнес Клієнт', 'qr', 'groceries', '2026-10-19T10:20:00.000Z'],
+    ['card-eva', 'eva', 'EVA', 'EVA Мозаїка', '260019481230', '315 бонусів', 'Преміум Клуб', 'qr', 'beauty', '2026-10-19T10:25:00.000Z'],
+    ['card-epicentr', 'epicentr', 'Епіцентр', 'Картка Вигода', '280011492001', '180 балів', 'Майстер', 'barcode', 'home', '2026-10-19T10:30:00.000Z']
+  ].map(([id, store, storeName, program, num, note, privilegeBadge, format, categoryKey, createdAt]) => ({
+    id, store, storeName, program, number: num, qrPayload: num, note, privilegeBadge, format, categoryKey, logo: `cat-${categoryKey}`, createdAt
+  }));
 
   /* ─── Rich Seed Data: 23 Ukrainian Supermarket Promotional Products ──────── */
+  const mkSeedProd = (id, title, mainCategory, subCategory, category, categorySlug, unit, pricesList) => ({
+    id, title, mainCategory, subCategory, category, categorySlug, unit,
+    storePrices: Object.fromEntries(pricesList.map(([s, price, oldPrice, discount]) => [s, { price, oldPrice, discount }]))
+  });
+
   const SEED_PRODUCTS = [
-    // ── ПРОДУКТИ: Кава та Чай
-    {
-      id: 'prod-1',
-      title: 'Кава Lavazza Crema e Gusto мелена 250 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Кава та Чай',
-      category: 'Кава та Чай',
-      categorySlug: 'coffee',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 149.90, oldPrice: 199.00, discount: 25 },
-        atb:   { price: 139.50, oldPrice: 189.00, discount: 26 },
-        novus: { price: 154.00, oldPrice: 205.00, discount: 25 },
-        varus: { price: 145.00, oldPrice: 195.00, discount: 26 },
-        metro: { price: 142.00, oldPrice: 185.00, discount: 23 }
-      }
-    },
-    {
-      id: 'prod-2',
-      title: 'Чай Greenfield Golden Ceylon чорний 100 пакетиків',
-      mainCategory: 'Продукти',
-      subCategory: 'Кава та Чай',
-      category: 'Кава та Чай',
-      categorySlug: 'coffee',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 129.00, oldPrice: 175.00, discount: 26 },
-        atb:   { price: 135.00, oldPrice: 180.00, discount: 25 },
-        novus: { price: 124.90, oldPrice: 169.00, discount: 26 },
-        varus: { price: 128.00, oldPrice: 172.00, discount: 25 },
-        metro: { price: 126.00, oldPrice: 170.00, discount: 26 }
-      }
-    },
-    // ── ПРОДУКТИ: Молочні та Сири
-    {
-      id: 'prod-3',
-      title: 'Молоко Яготинське 2.6% пастеризоване 900 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Молочні та Сири',
-      category: 'Молочні',
-      categorySlug: 'dairy',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 38.99, oldPrice: 47.90, discount: 19 },
-        atb:   { price: 36.40, oldPrice: 44.50, discount: 18 },
-        novus: { price: 39.50, oldPrice: 48.00, discount: 18 },
-        varus: { price: 37.90, oldPrice: 46.00, discount: 18 },
-        metro: { price: 37.00, oldPrice: 45.00, discount: 18 }
-      }
-    },
-    {
-      id: 'prod-4',
-      title: 'Сир твердий КОМО Тенеро 50% брус 180 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Молочні та Сири',
-      category: 'Молочні',
-      categorySlug: 'dairy',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 64.99, oldPrice: 89.90, discount: 28 },
-        atb:   { price: 67.50, oldPrice: 91.00, discount: 26 },
-        novus: { price: 69.90, oldPrice: 94.00, discount: 26 },
-        varus: { price: 66.00, oldPrice: 89.00, discount: 26 },
-        metro: { price: 65.50, oldPrice: 88.00, discount: 25 }
-      }
-    },
-    // ── ПРОДУКТИ: М'ясо та Риба
-    {
-      id: 'prod-5',
-      title: 'Філе індички охолоджене фермерське 1 кг',
-      mainCategory: 'Продукти',
-      subCategory: "М'ясо та Риба",
-      category: "М'ясо та Риба",
-      categorySlug: 'meat',
-      unit: 'кг',
-      storePrices: {
-        silpo: { price: 219.00, oldPrice: 289.00, discount: 24 },
-        atb:   { price: 215.00, oldPrice: 279.00, discount: 23 },
-        novus: { price: 225.00, oldPrice: 295.00, discount: 24 },
-        varus: { price: 209.90, oldPrice: 275.00, discount: 24 },
-        metro: { price: 212.00, oldPrice: 280.00, discount: 24 }
-      }
-    },
-    {
-      id: 'prod-6',
-      title: 'Лосось слабосолений філе Norven 180 г',
-      mainCategory: 'Продукти',
-      subCategory: "М'ясо та Риба",
-      category: "М'ясо та Риба",
-      categorySlug: 'meat',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 179.00, oldPrice: 239.00, discount: 25 },
-        atb:   { price: 169.90, oldPrice: 229.00, discount: 26 },
-        novus: { price: 185.00, oldPrice: 245.00, discount: 24 },
-        varus: { price: 174.00, oldPrice: 230.00, discount: 24 },
-        metro: { price: 172.00, oldPrice: 228.00, discount: 25 }
-      }
-    },
-    // ── ПРОДУКТИ: Солодощі
-    {
-      id: 'prod-7',
-      title: 'Шоколад Roshen екстрачорний з цілим ліщиною 85 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Солодощі',
-      category: 'Солодощі',
-      categorySlug: 'sweets',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 34.50, oldPrice: 48.00, discount: 28 },
-        atb:   { price: 31.90, oldPrice: 45.00, discount: 29 },
-        novus: { price: 36.00, oldPrice: 49.00, discount: 27 },
-        varus: { price: 33.50, oldPrice: 47.00, discount: 29 },
-        metro: { price: 32.50, oldPrice: 46.00, discount: 29 }
-      }
-    },
-    {
-      id: 'prod-8',
-      title: 'Цукерки Ferrero Rocher хрусткі з горіхом 200 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Солодощі',
-      category: 'Солодощі',
-      categorySlug: 'sweets',
-      unit: 'шт',
-      storePrices: {
-        silpo: { price: 199.00, oldPrice: 265.00, discount: 25 },
-        atb:   { price: 195.00, oldPrice: 259.00, discount: 25 },
-        novus: { price: 189.90, oldPrice: 255.00, discount: 25 },
-        varus: { price: 196.00, oldPrice: 260.00, discount: 25 },
-        metro: { price: 192.00, oldPrice: 258.00, discount: 26 }
-      }
-    },
-    // ── ПРОДУКТИ: Бакалія
-    {
-      id: 'prod-9',
-      title: 'Олія соняшникова Чумак рафінована 850 мл',
-      mainCategory: 'Продукти',
-      subCategory: 'Бакалія',
-      category: 'Бакалія',
-      categorySlug: 'grocery',
-      unit: 'пляшка',
-      storePrices: {
-        silpo: { price: 54.90, oldPrice: 68.00, discount: 19 },
-        atb:   { price: 49.90, oldPrice: 64.00, discount: 22 },
-        novus: { price: 56.00, oldPrice: 69.00, discount: 19 },
-        varus: { price: 52.50, oldPrice: 66.00, discount: 20 },
-        metro: { price: 51.00, oldPrice: 65.00, discount: 22 }
-      }
-    },
-    {
-      id: 'prod-10',
-      title: 'Макарони Barilla Spaghetti n.5 спагеті 500 г',
-      mainCategory: 'Продукти',
-      subCategory: 'Бакалія',
-      category: 'Бакалія',
-      categorySlug: 'grocery',
-      unit: 'упак',
-      storePrices: {
-        silpo: { price: 59.90, oldPrice: 85.00, discount: 30 },
-        atb:   { price: 58.50, oldPrice: 82.00, discount: 29 },
-        novus: { price: 54.90, oldPrice: 79.00, discount: 30 },
-        varus: { price: 61.00, oldPrice: 86.00, discount: 29 },
-        metro: { price: 56.00, oldPrice: 80.00, discount: 30 }
-      }
-    },
-    // ── ПРОДУКТИ: Напої
-    {
-      id: 'prod-11',
-      title: 'Вода мінеральна Borjomi природна лікувальна 0.5 л скло',
-      mainCategory: 'Продукти',
-      subCategory: 'Напої',
-      category: 'Напої',
-      categorySlug: 'drinks',
-      unit: 'пляшка',
-      storePrices: {
-        silpo: { price: 39.90, oldPrice: 52.00, discount: 23 },
-        atb:   { price: 37.50, oldPrice: 49.00, discount: 23 },
-        novus: { price: 41.00, oldPrice: 54.00, discount: 24 },
-        varus: { price: 38.90, oldPrice: 50.00, discount: 22 },
-        metro: { price: 38.00, oldPrice: 49.50, discount: 23 }
-      }
-    },
-    {
-      id: 'prod-12',
-      title: 'Сік Sandora Гранатовий 100% преміум 0.95 л',
-      mainCategory: 'Продукти',
-      subCategory: 'Напої',
-      category: 'Напої',
-      categorySlug: 'drinks',
-      unit: 'упак',
-      storePrices: {
-        silpo: { price: 68.00, oldPrice: 89.00, discount: 24 },
-        atb:   { price: 69.50, oldPrice: 91.00, discount: 24 },
-        novus: { price: 66.90, oldPrice: 88.00, discount: 24 },
-        varus: { price: 67.50, oldPrice: 89.00, discount: 24 },
-        metro: { price: 65.00, oldPrice: 85.00, discount: 24 }
-      }
-    },
-    // ── ПРОДУКТИ: Овочі та Фрукти
-    {
-      id: 'prod-13',
-      title: 'Банани свіжі добірні преміум 1 кг',
-      mainCategory: 'Продукти',
-      subCategory: 'Овочі та Фрукти',
-      category: 'Овочі та Фрукти',
-      categorySlug: 'produce',
-      unit: 'кг',
-      storePrices: {
-        silpo: { price: 64.99, oldPrice: 79.99, discount: 19 },
-        atb:   { price: 59.90, oldPrice: 74.50, discount: 20 },
-        novus: { price: 63.50, oldPrice: 78.00, discount: 19 },
-        varus: { price: 61.90, oldPrice: 76.00, discount: 19 }
-      }
-    },
-    {
-      id: 'prod-14',
-      title: 'Яблука сорт Симиренка соковиті 1 кг',
-      mainCategory: 'Продукти',
-      subCategory: 'Овочі та Фрукти',
-      category: 'Овочі та Фрукти',
-      categorySlug: 'produce',
-      unit: 'кг',
-      storePrices: {
-        silpo: { price: 29.90, oldPrice: 39.90, discount: 25 },
-        atb:   { price: 27.50, oldPrice: 36.00, discount: 24 },
-        novus: { price: 31.00, oldPrice: 42.00, discount: 26 },
-        metro: { price: 28.90, oldPrice: 38.00, discount: 24 }
-      }
-    },
-    // ── КРАСА ТА ГІГІЄНА
-    {
-      id: 'prod-15',
-      title: 'Гель для душу Palmolive Натурэль Олива 500 мл',
-      mainCategory: 'Краса та Гігієна',
-      subCategory: 'Гігієна',
-      category: 'Гігієна',
-      categorySlug: 'beauty',
-      unit: 'шт',
-      storePrices: {
-        eva:     { price: 119.00, oldPrice: 169.00, discount: 30 },
-        prostor: { price: 124.00, oldPrice: 175.00, discount: 29 },
-        silpo:   { price: 132.00, oldPrice: 185.00, discount: 29 },
-        novus:   { price: 129.90, oldPrice: 179.00, discount: 27 }
-      }
-    },
-    {
-      id: 'prod-16',
-      title: 'Шампунь Head & Shoulders Основний догляд 400 мл',
-      mainCategory: 'Краса та Гігієна',
-      subCategory: 'Волосся',
-      category: 'Волосся',
-      categorySlug: 'beauty',
-      unit: 'шт',
-      storePrices: {
-        eva:     { price: 169.00, oldPrice: 239.00, discount: 29 },
-        prostor: { price: 165.00, oldPrice: 235.00, discount: 30 },
-        atb:     { price: 172.00, oldPrice: 245.00, discount: 30 },
-        metro:   { price: 164.50, oldPrice: 230.00, discount: 28 }
-      }
-    },
-    {
-      id: 'prod-17',
-      title: 'Крем для обличчя Nivea Care зволожувальний 100 мл',
-      mainCategory: 'Краса та Гігієна',
-      subCategory: 'Догляд за шкірою',
-      category: 'Догляд за шкірою',
-      categorySlug: 'beauty',
-      unit: 'шт',
-      storePrices: {
-        eva:     { price: 145.00, oldPrice: 199.00, discount: 27 },
-        prostor: { price: 149.00, oldPrice: 205.00, discount: 27 },
-        silpo:   { price: 154.00, oldPrice: 210.00, discount: 27 }
-      }
-    },
-    {
-      id: 'prod-18',
-      title: 'Бальзам для губ Carmex Classic вишня 10 г',
-      mainCategory: 'Краса та Гігієна',
-      subCategory: 'Косметика',
-      category: 'Косметика',
-      categorySlug: 'beauty',
-      unit: 'шт',
-      storePrices: {
-        eva:     { price: 129.00, oldPrice: 169.00, discount: 24 },
-        prostor: { price: 132.00, oldPrice: 175.00, discount: 25 },
-        avrora:  { price: 125.00, oldPrice: 160.00, discount: 22 }
-      }
-    },
-    // ── ДІМ ТА ПОБУТ
-    {
-      id: 'prod-19',
-      title: 'Капсули для прання Ariel All-in-1 Pods Color 24 шт',
-      mainCategory: 'Дім та Побут',
-      subCategory: 'Побутова хімія',
-      category: 'Побутова хімія',
-      categorySlug: 'home',
-      unit: 'упак',
-      storePrices: {
-        epicentr: { price: 349.00, oldPrice: 489.00, discount: 29 },
-        eva:      { price: 355.00, oldPrice: 495.00, discount: 28 },
-        metro:    { price: 339.00, oldPrice: 479.00, discount: 29 },
-        silpo:    { price: 369.00, oldPrice: 519.00, discount: 29 }
-      }
-    },
-    {
-      id: 'prod-20',
-      title: 'Засіб для миття посуду Fairy Соковитий лимон 500 мл',
-      mainCategory: 'Дім та Побут',
-      subCategory: 'Кухня та Посуд',
-      category: 'Кухня та Посуд',
-      categorySlug: 'home',
-      unit: 'шт',
-      storePrices: {
-        avrora:   { price: 69.00, oldPrice: 95.00, discount: 27 },
-        atb:      { price: 72.50, oldPrice: 98.00, discount: 26 },
-        eva:      { price: 71.00, oldPrice: 96.00, discount: 26 },
-        epicentr: { price: 68.00, oldPrice: 92.00, discount: 26 }
-      }
-    },
-    {
-      id: 'prod-21',
-      title: 'Свічка ароматична WoodWick Ваніль та морська сіль 275 г',
-      mainCategory: 'Дім та Побут',
-      subCategory: 'Дім та Декор',
-      category: 'Дім та Декор',
-      categorySlug: 'home',
-      unit: 'шт',
-      storePrices: {
-        epicentr: { price: 489.00, oldPrice: 650.00, discount: 25 },
-        prostor:  { price: 499.00, oldPrice: 670.00, discount: 26 }
-      }
-    },
-    // ── ЗООТОВАРИ
-    {
-      id: 'prod-22',
-      title: 'Корм сухий для котів Purina Pro Plan Sterilised з лососем 1.5 кг',
-      mainCategory: 'Зоотовари',
-      subCategory: 'Для котів',
-      category: 'Для котів',
-      categorySlug: 'pets',
-      unit: 'упак',
-      storePrices: {
-        silpo:    { price: 489.00, oldPrice: 649.00, discount: 25 },
-        metro:    { price: 479.00, oldPrice: 635.00, discount: 25 },
-        epicentr: { price: 485.00, oldPrice: 640.00, discount: 24 }
-      }
-    },
-    {
-      id: 'prod-23',
-      title: 'Ласощі для собак Pedigree DentaStix для середніх порід 7 шт',
-      mainCategory: 'Зоотовари',
-      subCategory: 'Для собак',
-      category: 'Для собак',
-      categorySlug: 'pets',
-      unit: 'упак',
-      storePrices: {
-        atb:     { price: 74.90, oldPrice: 99.00, discount: 24 },
-        silpo:   { price: 79.00, oldPrice: 105.00, discount: 25 },
-        novus:   { price: 76.50, oldPrice: 102.00, discount: 25 },
-        avrora:  { price: 72.00, oldPrice: 95.00, discount: 24 }
-      }
-    }
+    mkSeedProd('prod-1', 'Кава Lavazza Crema e Gusto мелена 250 г', 'Продукти', 'Кава та Чай', 'Кава та Чай', 'coffee', 'шт', [['silpo', 149.90, 199, 25], ['atb', 139.50, 189, 26], ['novus', 154, 205, 25], ['varus', 145, 195, 26], ['metro', 142, 185, 23]]),
+    mkSeedProd('prod-2', 'Чай Greenfield Golden Ceylon чорний 100 пакетиків', 'Продукти', 'Кава та Чай', 'Кава та Чай', 'coffee', 'шт', [['silpo', 129, 175, 26], ['atb', 135, 180, 25], ['novus', 124.90, 169, 26], ['varus', 128, 172, 25], ['metro', 126, 170, 26]]),
+    mkSeedProd('prod-3', 'Молоко Яготинське 2.6% пастеризоване 900 г', 'Продукти', 'Молочні та Сири', 'Молочні', 'dairy', 'шт', [['silpo', 38.99, 47.90, 19], ['atb', 36.40, 44.50, 18], ['novus', 39.50, 48, 18], ['varus', 37.90, 46, 18], ['metro', 37, 45, 18]]),
+    mkSeedProd('prod-4', 'Сир твердий КОМО Тенеро 50% брус 180 г', 'Продукти', 'Молочні та Сири', 'Молочні', 'dairy', 'шт', [['silpo', 64.99, 89.90, 28], ['atb', 67.50, 91, 26], ['novus', 69.90, 94, 26], ['varus', 66, 89, 26], ['metro', 65.50, 88, 25]]),
+    mkSeedProd('prod-5', 'Філе індички охолоджене фермерське 1 кг', 'Продукти', "М'ясо та Риба", "М'ясо та Риба", 'meat', 'кг', [['silpo', 219, 289, 24], ['atb', 215, 279, 23], ['novus', 225, 295, 24], ['varus', 209.90, 275, 24], ['metro', 212, 280, 24]]),
+    mkSeedProd('prod-6', 'Лосось слабосолений філе Norven 180 г', 'Продукти', "М'ясо та Риба", "М'ясо та Риба", 'meat', 'шт', [['silpo', 179, 239, 25], ['atb', 169.90, 229, 26], ['novus', 185, 245, 24], ['varus', 174, 230, 24], ['metro', 172, 228, 25]]),
+    mkSeedProd('prod-7', 'Шоколад Roshen екстрачорний з цілим ліщиною 85 г', 'Продукти', 'Солодощі', 'Солодощі', 'sweets', 'шт', [['silpo', 34.50, 48, 28], ['atb', 31.90, 45, 29], ['novus', 36, 49, 27], ['varus', 33.50, 47, 29], ['metro', 32.50, 46, 29]]),
+    mkSeedProd('prod-8', 'Цукерки Ferrero Rocher хрусткі з горіхом 200 г', 'Продукти', 'Солодощі', 'Солодощі', 'sweets', 'шт', [['silpo', 199, 265, 25], ['atb', 195, 259, 25], ['novus', 189.90, 255, 25], ['varus', 196, 260, 25], ['metro', 192, 258, 26]]),
+    mkSeedProd('prod-9', 'Олія соняшникова Чумак рафінована 850 мл', 'Продукти', 'Бакалія', 'Бакалія', 'grocery', 'пляшка', [['silpo', 54.90, 68, 19], ['atb', 49.90, 64, 22], ['novus', 56, 69, 19], ['varus', 52.50, 66, 20], ['metro', 51, 65, 22]]),
+    mkSeedProd('prod-10', 'Макарони Barilla Spaghetti n.5 спагеті 500 г', 'Продукти', 'Бакалія', 'Бакалія', 'grocery', 'упак', [['silpo', 59.90, 85, 30], ['atb', 58.50, 82, 29], ['novus', 54.90, 79, 30], ['varus', 61, 86, 29], ['metro', 56, 80, 30]]),
+    mkSeedProd('prod-11', 'Вода мінеральна Borjomi природна лікувальна 0.5 л скло', 'Продукти', 'Напої', 'Напої', 'drinks', 'пляшка', [['silpo', 39.90, 52, 23], ['atb', 37.50, 49, 23], ['novus', 41, 54, 24], ['varus', 38.90, 50, 22], ['metro', 38, 49.50, 23]]),
+    mkSeedProd('prod-12', 'Сік Sandora Гранатовий 100% преміум 0.95 л', 'Продукти', 'Напої', 'Напої', 'drinks', 'упак', [['silpo', 68, 89, 24], ['atb', 69.50, 91, 24], ['novus', 66.90, 88, 24], ['varus', 67.50, 89, 24], ['metro', 65, 85, 24]]),
+    mkSeedProd('prod-13', 'Банани свіжі добірні преміум 1 кг', 'Продукти', 'Овочі та Фрукти', 'Овочі та Фрукти', 'produce', 'кг', [['silpo', 64.99, 79.99, 19], ['atb', 59.90, 74.50, 20], ['novus', 63.50, 78, 19], ['varus', 61.90, 76, 19]]),
+    mkSeedProd('prod-14', 'Яблука сорт Симиренка соковиті 1 кг', 'Продукти', 'Овочі та Фрукти', 'Овочі та Фрукти', 'produce', 'кг', [['silpo', 29.90, 39.90, 25], ['atb', 27.50, 36, 24], ['novus', 31, 42, 26], ['metro', 28.90, 38, 24]]),
+    mkSeedProd('prod-15', 'Гель для душу Palmolive Натурэль Олива 500 мл', 'Краса та Гігієна', 'Гігієна', 'Гігієна', 'beauty', 'шт', [['eva', 119, 169, 30], ['prostor', 124, 175, 29], ['silpo', 132, 185, 29], ['novus', 129.90, 179, 27]]),
+    mkSeedProd('prod-16', 'Шампунь Head & Shoulders Основний догляд 400 мл', 'Краса та Гігієна', 'Волосся', 'Волосся', 'beauty', 'шт', [['eva', 169, 239, 29], ['prostor', 165, 235, 30], ['atb', 172, 245, 30], ['metro', 164.50, 230, 28]]),
+    mkSeedProd('prod-17', 'Крем для обличчя Nivea Care зволожувальний 100 мл', 'Краса та Гігієна', 'Догляд за шкірою', 'Догляд за шкірою', 'beauty', 'шт', [['eva', 145, 199, 27], ['prostor', 149, 205, 27], ['silpo', 154, 210, 27]]),
+    mkSeedProd('prod-18', 'Бальзам для губ Carmex Classic вишня 10 г', 'Краса та Гігієна', 'Косметика', 'Косметика', 'beauty', 'шт', [['eva', 129, 169, 24], ['prostor', 132, 175, 25], ['avrora', 125, 160, 22]]),
+    mkSeedProd('prod-19', 'Капсули для прання Ariel All-in-1 Pods Color 24 шт', 'Дім та Побут', 'Побутова хімія', 'Побутова хімія', 'home', 'упак', [['epicentr', 349, 489, 29], ['eva', 355, 495, 28], ['metro', 339, 479, 29], ['silpo', 369, 519, 29]]),
+    mkSeedProd('prod-20', 'Засіб для миття посуду Fairy Соковитий лимон 500 мл', 'Дім та Побут', 'Кухня та Посуд', 'Кухня та Посуд', 'home', 'шт', [['avrora', 69, 95, 27], ['atb', 72.50, 98, 26], ['eva', 71, 96, 26], ['epicentr', 68, 92, 26]]),
+    mkSeedProd('prod-21', 'Свічка ароматична WoodWick Ваніль та морська сіль 275 г', 'Дім та Побут', 'Дім та Декор', 'Дім та Декор', 'home', 'шт', [['epicentr', 489, 650, 25], ['prostor', 499, 670, 26]]),
+    mkSeedProd('prod-22', 'Корм сухий для котів Purina Pro Plan Sterilised з лососем 1.5 кг', 'Зоотовари', 'Для котів', 'Для котів', 'pets', 'упак', [['silpo', 489, 649, 25], ['metro', 479, 635, 25], ['epicentr', 485, 640, 24]]),
+    mkSeedProd('prod-23', 'Ласощі для собак Pedigree DentaStix для середніх порід 7 шт', 'Зоотовари', 'Для собак', 'Для собак', 'pets', 'упак', [['atb', 74.90, 99, 24], ['silpo', 79, 105, 25], ['novus', 76.50, 102, 25], ['avrora', 72, 95, 24]])
   ];
 
   // Ensure SEED_PRODUCTS has both storePrices and prices array for full schema compatibility
@@ -940,20 +448,27 @@
     return res && res.id ? res : { success: true, id };
   }
 
-  /* ─── Word-Boundary Stem Matching Helper ───────────────────────────────── */
+  /* ─── Word-Boundary Stem Matching Helper (Memoized RegExp) ───────────────── */
+  const WORD_REGEX_CACHE = new Map();
+
   function hasWord(text = '', ...stemArgs) {
     if (!text) return false;
     const t = String(text).toLowerCase();
     const stems = stemArgs.flat(Infinity);
-    for (let s of stems) {
+    for (const s of stems) {
       if (!s) continue;
       const requireExact = s.endsWith(' ');
       const trimmed = s.trim().toLowerCase();
       if (!trimmed) continue;
-      const escaped = trimmed.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]+');
-      const regex = requireExact
-        ? new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped + '(?:[аеєиіїоуюя]|ом|ем|ям|ів|ей|ами|ями|ах|ях)?(?:$|[^а-яіїєґa-z0-9])', 'i')
-        : new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped, 'i');
+      const cacheKey = `${requireExact ? 'E:' : 'S:'}${trimmed}`;
+      let regex = WORD_REGEX_CACHE.get(cacheKey);
+      if (!regex) {
+        const escaped = trimmed.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]+');
+        regex = requireExact
+          ? new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped + '(?:[аеєиіїоуюя]|ом|ем|ям|ів|ей|ами|ями|ах|ях)?(?:$|[^а-яіїєґa-z0-9])', 'i')
+          : new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped, 'i');
+        WORD_REGEX_CACHE.set(cacheKey, regex);
+      }
       if (regex.test(t)) return true;
     }
     return false;
@@ -992,293 +507,88 @@
   }
 
   /* ─── Category Normalization & Resolution Utility ────────────────────────── */
+  const CAT_RULES = {
+    humanBlockPet: ['морозиво', 'йогурт', 'сирок ', 'десерт', 'тістечко', 'круасан', 'пончик', 'донат', 'торт', 'рулет', 'вафлі', 'вафл', 'печиво', 'шоколад', 'цукерк', 'згущене молоко', 'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо'],
+    petIndicators: ['для котів', 'для кішок', 'для кошенят', 'для собак', 'для цуценят', 'для гризунів', 'для папуг', 'корм сухий', 'корм вологий', 'стерилізованих', 'ласощі для котів', 'ласощі для собак', 'ласощі для тварин', 'для тварин'],
+    petLitter: ['для котів', 'для котячого туалету', 'туалету котів', 'для котячого', 'бентонітовий', 'силікагелевий', 'деревний', 'комкуючий', 'грудкуючий', 'тофу для котів', 'catsan', 'kotix', 'animall', 'supercat'],
+    petBrands: ['whiskas', 'віскас', 'felix', 'фелікс', 'purina', 'пуріна', 'gourmet', 'гурме', 'sheba', 'шеба', 'friskies', 'фріскіс', 'optimeal', 'оптіміл', 'клуб 4 лапи', 'club 4 paws', 'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit', 'savory', 'josera'],
+    household: ['для прання', 'пральний порошок', 'капсули для прання', 'гель для прання', 'ополіскувач для білизни', 'кондиціонер для білизни', 'відбілювач', 'плямовивідник', 'для миття посуду', 'миття дитячого посуду', 'миття посуду', 'засіб для посуду', 'гель для посуду', 'таблетки для посудомийних', 'сіль для посудомийних', 'для чищення', 'засіб чистячий', 'чистячий', 'для унітазу', 'для труб', 'забруднення труб', 'для підлоги', 'для скла', 'для прибирання', 'освіжувач повітря', 'дифузор', 'антижир', 'антинакип', 'persil', 'ariel', 'tide', 'perwoll', 'lenor', 'silan', 'fairy', 'somat', 'finish', 'domestos', 'breff', 'bref', 'cillit', 'mr. muscle', 'містер мускул', 'утьонок', 'sano', 'frosch', 'гала', 'gala', 'сарма', 'wash&free', 'savex', 'dr.beckmann'],
+    paper: ['туалетний папір', 'паперові рушники', 'рушники паперові', 'рушник кухонний', 'серветки косметичні', 'серветки столові', 'серветки паперові', 'носові хустинки', 'zewa', 'рута', 'ruta', 'сніжна панда', 'обухів', 'selpak', 'kleenex'],
+    kitchen: ['сковород', 'пательн', 'каструл', 'тарілк', 'чашк', 'склянк', 'келих', 'термос', 'контейнер для їжі', 'фольга', 'фольги', 'плівка харчова', 'харчова плівка', 'пергамент', 'рукав для запікання', 'губк', 'губка кухонна', 'губки для посуду', 'серветка для прибирання', 'серветки для прибирання', 'пакети для сміття', 'мішки для сміття', 'бокс універсальний', 'фрекен бок', 'мельниця', 'luminarc', 'tefal', 'ardesto', 'взуття', 'капці', 'тапочки', 'шкарпетк', 'клей', 'клей-гель', 'батарей', 'пакети майка', 'грілки термохімічні', 'рукавички господарські', 'рукавичкі господарські'],
+    hair: ['шампунь', 'бальзам для волосся', 'бальзам-ополіскувач', 'кондиціонер для волосся', 'маска для волосся', 'фарба для волосся', 'лак для волосся', 'спрей для волосся', 'олія для волосся', 'head & shoulders', 'head&shoulders', 'pantene', 'elseve', 'syoss', 'gliss kur', 'schauma', 'tresemme', 'palette', 'fructis'],
+    makeup: ['туш для вій', 'помада', 'блиск для губ', 'тіні для повік', 'пудра', 'консилер', 'олівець для брів', 'олівець для очей', 'лак для нігтів', 'парфум', 'туалетна вода', 'парфумована вода', 'хайлайтер', "рум'яна", 'тінт для губ', 'кушон', 'палетка тіней', 'тональний', 'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'nyx', 'paese', 'it cosmetics', 'charlotte tilbury', 'juliette has a gun', 'kayali', 'nishane', 'rare beauty', 'billie eilish', 'gritti', 'lamel', 'milk touch', 'kylie cosmetics', "a'pieu", 'make up academy', 'xerjoff'],
+    hygiene: ['гель для душу', 'крем-гель для душу', 'гель для купання', 'засіб для купання', 'мило рідке', 'мило туалетне', 'крем-мило', 'дезодорант', 'антиперспірант', 'зубна паста', 'зубна щітка', 'ополіскувач для ротової', 'прокладки', 'тампони', 'ватні диски', 'ватні палички', 'вологі серветки', 'серветки вологі', 'пелюшки гігієнічні', 'бритва', 'станок для гоління', 'станки для гоління', 'станків для гоління', 'піна для гоління', 'гель для гоління', 'презерватив', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики', 'old spice', 'rexona', 'dove', 'palmolive', 'fa ', 'colgate', 'sensodyne', 'lacalut', 'oral-b', 'parodontax', 'always', 'kotex', 'libresse', 'discreet', 'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', "tesori d'oriente", 'deepfresh', 'bubchen'],
+    creamQualifiers: ['для обличчя', 'для рук', 'для тіла', 'для ніг', 'для шкіри', 'для повік', 'навколо очей', 'від зморшок', 'зволожуючий', 'зволожуюча', 'зволожуюче', 'живильний', 'живильна', 'живильне', 'сонцезахисний', 'сонцезахисна', 'spf', 'тональний', 'bb-крем', 'bb крем', 'cc-крем', 'cc крем', 'після гоління', 'для гоління', 'для депіляції', 'дитячий крем'],
+    skincare: ['сироватка для обличчя', 'сироватка', 'тонік для обличчя', 'тонік', 'міцелярна', 'пінка для вмивання', 'гель для вмивання', 'скраб для тіла', 'скраб для обличчя', 'скраб', 'маска для обличчя', 'маска-гель', 'патчі', 'лосьйон для тіла', 'лосьйон', 'молочко для тіла', 'бальзам для губ', 'гігієнічна помада', 'пілінг', 'nivea', 'garnier', "l'oreal", 'loreal', 'cerave', 'la roche', 'vichy', 'bioderma', 'eveline', 'ziaja', 'zaja', 'біокон', 'heimish', 'christina', 'babor', 'elemis'],
+    foodLock: ['донат', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'штрудель', 'рулет', 'кекс', 'мафін', 'булочка', 'пиріг', 'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'цукерк', 'шоколад', 'батончик', 'халва', 'морозиво', 'десерт', 'крем-мед', 'пастила', 'козинак', 'драже', 'льодяник', 'жувальна гумка', 'джем', 'варення', 'крем-сир', 'крем сир', 'крем-суп', 'вершковий сир', 'сир вершковий', 'плавлений', 'моцарела', 'гауда', 'чеддер', 'пармезан', 'бринза', 'фета', 'сулугуні', 'кисломолочн', 'сирок ', 'сметана', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска', 'масло солодковершкове', 'масло селянське', 'масло вершкове', 'масло екстра', 'солодковершкове масло', 'селянське масло', 'вершкове масло', '73%', '72.5%', '82%', '82.5%', 'маргарин', 'спред', 'молоко питне', 'молоко ультрапастеризоване', 'молоко пастеризоване', 'згущене', 'вершки питні', 'вершки кулінарні', 'ковбас', 'сосиск', 'сардельк', 'шинк', 'бекон', 'грудинк', 'балик', 'салямі', 'паштет печінковий', 'паштет м', 'паштет мясний', 'паштет печінк', 'паштет курячий', 'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'крильця', 'гомілк', 'стегно', 'лосос', 'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'креветк', 'мідії', 'ікра', 'крабові', 'буженин', 'реберц', 'хліб ', 'багет', 'лаваш', 'батон', 'тост', 'чіабата', 'макарон', 'спагет', 'локшин', 'пенне', 'фузіллі', 'вермішель', 'крупа', 'гречк', 'рис басматі', 'рис круглозернистий', 'рис довгозернистий', 'рис пропарений', 'рис жасмин', 'вівсян', 'пластівці', 'борошно', 'цукор', 'олія соняшникова', 'соняшникова олія', 'олія оливкова', 'оливкова олія', 'олія кукурудзяна', 'олія рафінована', 'оцет', 'бальзамічний', 'кетчуп', 'майонез', 'гірчиц', 'соус', 'томатна паста', 'паста томатна', 'арахісова паста', 'паста шоколадна', 'nutella', 'нутелла', 'кава', 'еспресо', 'американо', 'капучино', 'лате', 'чай ', 'цикорій', 'матча', 'какао', 'сік ', 'нектар', 'лимонад', 'смузі', 'вода мінеральна', 'вода питна', 'газован', 'енергетик', 'квас', 'пиво', 'вино ', 'вин ', 'сидр', 'чіпси', 'чипси', 'сухарики', 'сухарик', 'горішки', 'фісташки', 'мигдаль', 'фундук', 'яблук', 'банан', 'апельсин', 'лимон', 'мандарин', 'виноград', 'ківі', 'авокадо', 'хурма', 'батат', 'гарбуз', 'помело', 'пітахайя', 'кокос', 'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат '],
+    savoryGrocery: ['приправа', 'перець чорний', 'перець духмяний', 'перець горошок', 'лист лавровий', 'часник сушений', 'паприка', 'чипси', 'чіпси', 'попкорн', 'сухарики', 'грінки', 'брускети', 'крекери', 'вареники', 'пельмені', 'равіолі', 'ньокі', 'хінкалі', 'млинці', 'пампушка', 'хумус', 'оливки', 'маслини', 'ікра кабачкова', 'ікра баклажанна', 'готові сніданки', 'сніданок готовий', 'каша ', 'пюре ', 'піца', 'тісто ', 'борошно', 'макарон', 'спагет', 'крупа', 'булгур', 'кукурудза цукрова', 'кукурудза ', 'горошок ', 'олія ', 'майонез', 'кетчуп'],
+    sweets: ['донат', 'донатс', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'кекс', 'мафін', 'рулет', 'штрудель', 'сирник', 'пампухи зі згущ', 'булочка з корицею', 'вафельний лист', 'з фундуком та какао', 'горіхово-шоколадна', 'бат рис', 'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'пастила', 'цукерк', 'шоколад', 'батончик', 'халва', 'козинак', 'драже', 'льодяник', 'жувальна гумка', 'морозиво', 'десерт', 'мед ', 'крем-мед', 'джем', 'варення', 'згущене молоко', 'згущене', 'паста шоколадна', 'nutella', 'нутелла', 'barni', 'барні', 'рошен', 'roshen', 'milka', 'мілка', 'ferrero', 'kinder', 'кіндер', 'raffaello', 'рафаелло', 'конті', 'konti', 'авк', 'avk', 'ярич'],
+    dairy: ['молоко', 'масло солодковершкове', 'масло вершкове', 'масло селянське', 'масло екстра', 'солодковершкове масло', 'вершкове масло', 'селянське масло', 'маргарин', 'спред', 'сир ', 'крем-сир', 'крем сир', 'сирок ', 'моцарела', 'гауда', 'пармезан', 'чеддер', 'сулугуні', 'бринза', 'фета', 'сметана', 'вершки', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска', 'плавлений', 'творог', 'кисломолочн', 'комо', 'яготинськ', 'ферма', 'активіа', 'актимель', 'данон', 'danone', 'президент', 'president', 'mlekovita', 'spomlek', 'простонаше', 'камамбер', 'брі '],
+    meatFish: ["м'яс", 'мяс', 'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'качк', 'гуск', 'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'філе', 'крильця', 'гомілк', 'стегно', 'ковбас', 'сосиск', 'сардельк', 'шинк', 'бекон', 'балик', 'салямі', 'паштет', 'буженин', 'реберц', 'риба', 'лосос', 'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'судак', 'сібас', 'сибас', 'короп', 'креветк', 'мідії', 'кальмар', 'ікра', 'крабові', 'наша ряба', 'ранчо', 'бащинський', 'глобино', "м'ясна гільдія", 'алан', 'водний світ', 'санта бремор'],
+    coffeeTea: ['кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'цикорій', 'матча', 'какао', 'гарячий шоколад', 'дріп', 'jacobs', 'lavazza', 'greenfield', 'tess', 'curtis', 'lovare', 'ліптон', 'lipton', 'paulig', 'чорна карта', 'жокей', 'idealist'],
+    drinks: ['вода', 'сік ', 'сок', 'нектар', 'морс', 'лимонад', 'смузі', 'напій', 'кола', 'pepsi', 'coca-cola', 'fanta', 'sprite', 'schweppes', 'комбуча', 'квас', 'енергетик', 'red bull', 'monster', 'пиво', 'вино ', 'вин ', 'lambrusc', 'sauvign', 'chardonnay', 'шампанське', 'ігристе', 'сидр', 'моршинськ', 'боржомі', 'borjomi', 'поляна квасова', 'садочок', 'sandora', 'rich', 'наш сік', 'віскі', 'горілка', 'коньяк', 'ром ', 'лікер', 'вермут', 'джин ', 'бренді', 'текіл', 'настоянк', 'аперитив', 'бітер', 'ромов'],
+    notFreshProduce: ['томатна паста', 'паста томатна', 'кетчуп', 'соус', 'чипс', 'чіпс', 'сухарик', 'сушен', 'приправ', 'спеці', 'маринован', 'консерв', 'пюре', 'квашен'],
+    produce: ['яблук', 'банан', 'апельсин', 'лимон', 'мандарин', 'виноград', 'ківі', 'авокадо', 'хурма', 'батат', 'гарбуз', 'помело', 'пітахайя', 'кокос', 'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат ', 'айсберг', 'рукола', 'шпинат', 'кабачок', 'баклажан', 'буряк', 'редис', 'печериц', 'гриб', 'ягоди', 'полуниц', 'малин', 'лохина', 'чорниц', 'кавун', 'диня', 'гранат', 'груш', 'слив', 'персик', 'нектарин', 'броколі', 'чері']
+  };
+
+  const HOMOGLYPH_MAP = { a: 'а', e: 'е', i: 'і', o: 'о', p: 'р', c: 'с', x: 'х', y: 'у', k: 'к', m: 'м', t: 'т', h: 'н', b: 'в', A: 'А', B: 'В', C: 'С', E: 'Е', H: 'Н', I: 'І', K: 'К', M: 'М', O: 'О', P: 'Р', T: 'Т', X: 'Х' };
+  function normalizeHomoglyphs(str = '') {
+    return String(str || '').replace(/\S+/g, w => (/[а-яіїєґА-ЯІЇЄҐ]/.test(w) && /[a-zA-Z]/.test(w) ? w.replace(/[aeiopcykmthbABCEHIKMOPTX]/g, ch => HOMOGLYPH_MAP[ch] || ch) : w));
+  }
+
   function resolveCategories(p) {
     const rawMain = (p.mainCategory || p.main_category || '').trim();
     const rawSub = (p.subCategory || p.sub_category || '').trim();
-    const rawCat = (p.category || '').trim();
-    const title = (p.title || p.name || '').trim();
+    const rawCat = normalizeHomoglyphs(p.category || '').trim();
+    const title = normalizeHomoglyphs(p.title || p.name || '').trim();
     const store = (p.store || (p.prices && p.prices[0] ? p.prices[0].store : '') || '').toLowerCase().trim();
     const isBeautyStore = ['eva', 'prostor'].includes(store);
     const text = (title + ' ' + rawCat).toLowerCase();
-
-    const HUMAN_FOOD_BLOCK_PET_STEMS = [
-      'морозиво', 'йогурт', 'сирок', 'десерт', 'тістечко', 'круасан', 'пончик', 'донат',
-      'торт', 'рулет', 'вафлі', 'вафл', 'печиво', 'шоколад', 'цукерк', 'згущене молоко',
-      'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо'
-    ];
-    const isHumanFoodBlockingPet = hasWord(text, HUMAN_FOOD_BLOCK_PET_STEMS);
+    const isHumanFoodBlockingPet = hasWord(text, CAT_RULES.humanBlockPet);
 
     if (rawMain && rawSub && !(rawMain === 'Зоотовари' && isHumanFoodBlockingPet)) {
       return { mainCategory: rawMain, subCategory: rawSub, category: rawSub };
     }
 
-    // STAGE 1: Pet Products (mainCategory: 'Зоотовари') — Strictly Qualified
-    const petIndicators = [
-      'для котів', 'для кішок', 'для кошенят', 'для собак', 'для цуценят', 'для гризунів', 'для папуг',
-      'корм сухий', 'корм вологий', 'стерилізованих',
-      'ласощі для котів', 'ласощі для собак', 'ласощі для тварин', 'для тварин'
-    ];
-    const petLitterQualifiers = [
-      'для котів', 'для котячого туалету', 'туалету котів', 'для котячого',
-      'бентонітовий', 'силікагелевий', 'деревний', 'комкуючий', 'грудкуючий',
-      'тофу для котів', 'catsan', 'kotix', 'animall', 'supercat'
-    ];
-    const isPetLitter = hasWord(text, ['наповнювач']) && hasWord(text, petLitterQualifiers);
-    const petBrands = [
-      'whiskas', 'віскас', 'felix', 'фелікс', 'purina', 'пуріна', 'gourmet', 'гурме',
-      'sheba', 'шеба', 'friskies', 'фріскіс', 'optimeal', 'оптіміл', 'клуб 4 лапи', 'club 4 paws',
-      'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit', 'savory', 'josera'
-    ];
-    if (!isHumanFoodBlockingPet && (rawCat === 'Зоотовари' || rawCat === 'Для котів' || rawCat === 'Для собак' || hasWord(text, petIndicators, petBrands) || isPetLitter || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий'])))) {
-      let sub = 'Усі зоотовари';
-      if (rawCat === 'Для котів' || isPetLitter || hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба'])) {
-        sub = 'Для котів';
-      } else if (rawCat === 'Для собак' || hasWord(text, ['собак', 'пес', 'пса', 'цуцен', 'педігрі', 'pedigree', 'chappi', 'чаппі'])) {
-        sub = 'Для собак';
-      }
-      return { mainCategory: 'Зоотовари', subCategory: sub, category: sub };
+    const catObj = (main, sub) => ({ mainCategory: main, subCategory: sub, category: sub });
+    const isPetLitter = hasWord(text, ['наповнювач']) && hasWord(text, CAT_RULES.petLitter);
+    if (!isHumanFoodBlockingPet && (rawCat === 'Зоотовари' || rawCat === 'Для котів' || rawCat === 'Для собак' || hasWord(text, CAT_RULES.petIndicators, CAT_RULES.petBrands) || isPetLitter || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий'])))) {
+      if (rawCat === 'Для котів' || isPetLitter || hasWord(text, ['кіш', 'кіт', 'кот', 'кошен', 'котяч', 'whiskas', 'віскас', 'felix', 'фелікс', 'gourmet', 'гурме', 'sheba', 'шеба'])) return catObj('Зоотовари', 'Для котів');
+      if (rawCat === 'Для собак' || hasWord(text, ['собак', 'пес', 'пса', 'цуцен', 'педігрі', 'pedigree', 'chappi', 'чаппі'])) return catObj('Зоотовари', 'Для собак');
+      return catObj('Зоотовари', 'Усі зоотовари');
     }
 
-    // Pre-checks for Explicit Household & Hygiene
-    const householdLaundryTriggers = [
-      'для прання', 'пральний порошок', 'капсули для прання', 'гель для прання',
-      'ополіскувач для білизни', 'кондиціонер для білизни', 'відбілювач', 'плямовивідник',
-      'для миття посуду', 'таблетки для посудомийних', 'сіль для посудомийних',
-      'для чищення', 'для унітазу', 'для труб', 'для підлоги', 'для скла',
-      'освіжувач повітря', 'дифузор', 'антижир', 'антинакип'
-    ];
-    const householdLaundryBrands = [
-      'persil', 'ariel', 'tide', 'perwoll', 'lenor', 'silan', 'fairy',
-      'somat', 'finish', 'domestos', 'breff', 'bref', 'cillit', 'mr. muscle',
-      'містер мускул', 'утьонок', 'sano', 'frosch', 'гала', 'gala', 'сарма', 'wash&free', 'savex'
-    ];
-    const paperTriggers = [
-      'туалетний папір', 'паперові рушники', 'серветки столові', 'серветки паперові', 'носові хустинки'
-    ];
-    const paperBrands = [
-      'zewa', 'рута', 'ruta', 'сніжна панда', 'обухів', 'selpak', 'kleenex'
-    ];
-    const kitchenTriggers = [
-      'сковород', 'пательн', 'каструл', 'тарілк', 'чашк', 'склянк', 'келих',
-      'термос', 'контейнер для їжі', 'фольга алюмінієва', 'плівка харчова',
-      'пергамент для випічки', 'рукав для запікання', 'губка кухонна', 'губки для посуду',
-      'серветка для прибирання', 'пакети для сміття', 'мішки для сміття', 'бокс універсальний'
-    ];
-    const kitchenBrands = [
-      'фрекен бок', 'мельниця', 'luminarc', 'tefal', 'ardesto'
-    ];
+    const isExplicitNonFood = hasWord(text, CAT_RULES.household, CAT_RULES.paper, CAT_RULES.kitchen, CAT_RULES.hair, CAT_RULES.hygiene, ['маска-гель', 'маска для обличчя', 'патчі', 'тональний', 'paese']);
+    const isExplicitFood = !isExplicitNonFood && hasWord(text, CAT_RULES.foodLock) && !isBeautyStore;
+    const isLaundryOrHome = hasWord(text, ['для прання', 'для білизни', 'кондиціонер для прання', 'посудомийних', 'для унітазу', 'для миття посуду']);
+    const isCosmeticBrandGuard = !isLaundryOrHome && hasWord(text, ['тональний', 'макіяж', 'пудра', "рум'яна", 'консилер', 'хайлайтер', 'блиск для губ', 'помада', 'paese', 'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'lamel', 'it cosmetics', 'kylie cosmetics', 'парфуми', 'туалетна вода', 'парфумована вода']);
 
-    const explicitHygieneTriggers = [
-      'шампунь', 'гель для душу', 'крем-гель для душу', 'бальзам для волосся', 'бальзам-ополіскувач',
-      'кондиціонер для волосся', 'фарба для волосся', 'маска для волосся', 'лак для волосся',
-      'зубна паста', 'зубна щітка', 'дезодорант', 'антиперспірант', 'піна для гоління',
-      'гель для гоління', 'станок для гоління', 'прокладки', 'тампони', 'підгузки', 'підгузники',
-      'підгузки-трусики', 'підгузники-трусики', 'вологі серветки', 'пелюшки гігієнічні'
-    ];
-    const explicitHygieneBrands = [
-      'head & shoulders', 'head&shoulders', 'pantene', 'fructis', 'syoss', 'gliss kur',
-      'colgate', 'splat', 'biomed', 'oral-b', 'old spice', 'rexona', 'dove', 'palmolive',
-      'always', 'kotex', 'libresse', 'discreet', 'huggies', 'pampers', 'tesori d\'oriente', 'deepfresh'
-    ];
-
-    const isExplicitNonFood = hasWord(text, householdLaundryTriggers, householdLaundryBrands, paperTriggers, paperBrands, kitchenTriggers, kitchenBrands, explicitHygieneTriggers, explicitHygieneBrands);
-
-    // STAGE 2: Hard Food Lock (isExplicitFood)
-    const EXPLICIT_FOOD_STEMS = [
-      'донат', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'штрудель',
-      'рулет', 'кекс', 'мафін', 'булочка', 'пиріг', 'печиво', 'вафлі', 'вафл', 'пряник',
-      'зефір', 'мармелад', 'цукерк', 'шоколад', 'батончик', 'халва', 'морозиво', 'десерт',
-      'крем-мед', 'пастила', 'козинак', 'драже', 'льодяник', 'жувальна гумка', 'джем', 'варення',
-      'крем-сир', 'крем сир', 'крем-суп', 'вершковий сир', 'сир вершковий', 'плавлений',
-      'моцарела', 'гауда', 'чеддер', 'пармезан', 'бринза', 'фета', 'сулугуні', 'кисломолочн',
-      'сирок', 'сметана', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска',
-      'масло солодковершкове', 'масло селянське', 'масло вершкове', 'масло екстра',
-      'солодковершкове масло', 'селянське масло', 'вершкове масло',
-      '73%', '72.5%', '82%', '82.5%', 'маргарин', 'спред',
-      'молоко питне', 'молоко ультрапастеризоване', 'молоко пастеризоване', 'згущене',
-      'вершки питні', 'вершки кулінарні',
-      'ковбас', 'сосиск', 'сардельк', 'шинк', 'бекон', 'грудинк', 'балик', 'салямі',
-      'паштет печінковий', 'паштет м', 'паштет мясний', 'паштет печінк', 'паштет курячий',
-      'курк', 'куряч', 'індич', 'свинин', 'яловичин', 'телятин', 'фарш', 'стейк', 'крильця',
-      'гомілк', 'стегно', 'лосос', 'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець',
-      'скумбрі', 'хек', 'мінтай', 'креветк', 'мідії', 'ікра', 'крабові', 'буженин', 'реберц',
-      'хліб ', 'багет', 'лаваш', 'батон', 'тост', 'чіабата', 'макарон', 'спагет', 'локшин',
-      'пенне', 'фузіллі', 'вермішель', 'крупа', 'гречк', 'рис басматі', 'рис круглозернистий',
-      'рис довгозернистий', 'рис пропарений', 'рис жасмин', 'вівсян', 'пластівці', 'борошно',
-      'цукор', 'олія соняшникова', 'соняшникова олія', 'олія оливкова', 'оливкова олія',
-      'олія кукурудзяна', 'олія рафінована', 'оцет', 'бальзамічний', 'кетчуп', 'майонез',
-      'гірчиц', 'соус', 'томатна паста', 'паста томатна', 'арахісова паста', 'паста шоколадна',
-      'nutella', 'нутелла', 'кава', 'еспресо', 'американо', 'капучино', 'лате', 'чай ',
-      'матча', 'какао', 'сік ', 'нектар', 'лимонад', 'вода мінеральна', 'вода питна',
-      'газован', 'енергетик', 'квас', 'пиво', 'вино', 'сидр', 'чіпси', 'сухарики',
-      'горішки', 'фісташки', 'мигдаль', 'фундук', 'яблук', 'банан', 'апельсин', 'лимон',
-      'мандарин', 'виноград', 'ківі', 'авокадо', 'помідор', 'томат', 'огірок', 'картопл',
-      'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат '
-    ];
-    const isExplicitFood = !isExplicitNonFood && hasWord(text, EXPLICIT_FOOD_STEMS) && !isBeautyStore;
-
-    // STAGE 3: Household & Cleaning (mainCategory: 'Дім та Побут')
     if (!isExplicitFood) {
-      if (rawCat === 'Побутова хімія' || hasWord(text, householdLaundryTriggers, householdLaundryBrands)) {
-        return { mainCategory: 'Дім та Побут', subCategory: 'Побутова хімія', category: 'Побутова хімія' };
-      }
-      if (rawCat === 'Паперова продукція' || hasWord(text, paperTriggers, paperBrands)) {
-        return { mainCategory: 'Дім та Побут', subCategory: 'Паперова продукція', category: 'Паперова продукція' };
-      }
-      if (rawCat === 'Кухня та Посуд' || hasWord(text, kitchenTriggers, kitchenBrands)) {
-        return { mainCategory: 'Дім та Побут', subCategory: 'Кухня та Посуд', category: 'Кухня та Посуд' };
-      }
+      if (!isCosmeticBrandGuard && (rawCat === 'Побутова хімія' || hasWord(text, CAT_RULES.household))) return catObj('Дім та Побут', 'Побутова хімія');
+      if (rawCat === 'Паперова продукція' || hasWord(text, CAT_RULES.paper)) return catObj('Дім та Побут', 'Паперова продукція');
+      if (rawCat === 'Кухня та Посуд' || hasWord(text, CAT_RULES.kitchen)) return catObj('Дім та Побут', 'Кухня та Посуд');
+
+      const isCosmeticCream = hasWord(text, ['крем']) && !hasWord(text, ['гель для душу', 'мило']) && (hasWord(text, CAT_RULES.creamQualifiers) || isBeautyStore);
+      if (rawCat === 'Волосся' || rawCat === 'Догляд за волоссям' || hasWord(text, CAT_RULES.hair)) return catObj('Краса та Гігієна', 'Волосся');
+      if (rawCat === 'Косметика' || hasWord(text, CAT_RULES.makeup)) return catObj('Краса та Гігієна', 'Косметика');
+      if (rawCat === 'Гігієна' || rawCat === 'Особиста гігієна' || hasWord(text, CAT_RULES.hygiene)) return catObj('Краса та Гігієна', 'Гігієна');
+      if (rawCat === 'Догляд за шкірою' || isCosmeticCream || hasWord(text, CAT_RULES.skincare)) return catObj('Краса та Гігієна', 'Догляд за шкірою');
+      if (isBeautyStore || rawCat === 'Краса та Гігієна') return catObj('Краса та Гігієна', 'Гігієна');
     }
 
-    // STAGE 4: Beauty, Skincare & Personal Care (mainCategory: 'Краса та Гігієна')
-    if (!isExplicitFood) {
-      const hairTriggers = [
-        'шампунь', 'бальзам для волосся', 'бальзам-ополіскувач', 'кондиціонер для волосся',
-        'маска для волосся', 'фарба для волосся', 'лак для волосся', 'спрей для волосся', 'олія для волосся'
-      ];
-      const hairBrands = [
-        'head & shoulders', 'head&shoulders', 'pantene', 'elseve', 'syoss',
-        'gliss kur', 'schauma', 'tresemme', 'palette', 'fructis'
-      ];
-
-      const makeupTriggers = [
-        'туш для вій', 'помада', 'блиск для губ', 'тіні для повік', 'пудра',
-        'консилер', 'олівець для брів', 'олівець для очей', 'лак для нігтів', 'парфум', 'туалетна вода',
-        'хайлайтер', 'рум\'яна', 'тінт для губ', 'кушон', 'палетка тіней'
-      ];
-      const makeupBrands = [
-        'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'nyx', 'paese', 'it cosmetics',
-        'charlotte tilbury', 'juliette has a gun', 'kayali', 'nishane', 'rare beauty', 'billie eilish',
-        'gritti', 'lamel', 'milk touch', 'kylie cosmetics', 'a\'pieu', 'make up academy', 'xerjoff'
-      ];
-
-      const hygieneTriggers = [
-        'гель для душу', 'крем-гель для душу', 'мило рідке', 'мило туалетне', 'крем-мило', 'дезодорант',
-        'антиперспірант', 'зубна паста', 'зубна щітка', 'ополіскувач для ротової',
-        'прокладки', 'тампони', 'ватні диски', 'ватні палички', 'вологі серветки',
-        'пелюшки гігієнічні', 'бритва', 'станок для гоління', 'піна для гоління',
-        'гель для гоління', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики'
-      ];
-      const hygieneBrands = [
-        'old spice', 'rexona', 'dove', 'palmolive', 'fa ', 'colgate', 'sensodyne',
-        'lacalut', 'oral-b', 'parodontax', 'always', 'kotex', 'libresse', 'discreet',
-        'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', 'tesori d\'oriente', 'deepfresh'
-      ];
-
-      const cosmeticCreamQualifiers = [
-        'для обличчя', 'для рук', 'для тіла', 'для ніг', 'для шкіри', 'для повік',
-        'навколо очей', 'від зморшок', 'зволожуючий', 'зволожуюча', 'зволожуюче',
-        'живильний', 'живильна', 'живильне', 'сонцезахисний', 'сонцезахисна', 'spf',
-        'тональний', 'bb-крем', 'bb крем', 'cc-крем', 'cc крем',
-        'після гоління', 'для гоління', 'для депіляції', 'дитячий крем'
-      ];
-      const isCosmeticCream = hasWord(text, ['крем']) && !hasWord(text, ['гель для душу', 'мило']) && (hasWord(text, cosmeticCreamQualifiers) || isBeautyStore);
-
-      const skincareTriggers = [
-        'сироватка для обличчя', 'сироватка', 'тонік для обличчя', 'тонік', 'міцелярна',
-        'пінка для вмивання', 'гель для вмивання', 'скраб для тіла', 'скраб для обличчя',
-        'скраб', 'маска для обличчя', 'патчі', 'лосьйон для тіла', 'лосьйон', 'молочко для тіла',
-        'бальзам для губ', 'гігієнічна помада', 'пілінг'
-      ];
-      const skincareBrands = [
-        'nivea', 'garnier', 'l\'oreal', 'loreal', 'cerave', 'la roche', 'vichy',
-        'bioderma', 'eveline', 'ziaja', 'zaja', 'біокон', 'heimish', 'christina', 'babor', 'elemis'
-      ];
-
-      if (rawCat === 'Волосся' || rawCat === 'Догляд за волоссям' || hasWord(text, hairTriggers, hairBrands)) {
-        return { mainCategory: 'Краса та Гігієна', subCategory: 'Волосся', category: 'Волосся' };
-      }
-      if (rawCat === 'Косметика' || hasWord(text, makeupTriggers, makeupBrands)) {
-        return { mainCategory: 'Краса та Гігієна', subCategory: 'Косметика', category: 'Косметика' };
-      }
-      if (rawCat === 'Гігієна' || rawCat === 'Особиста гігієна' || hasWord(text, hygieneTriggers, hygieneBrands)) {
-        return { mainCategory: 'Краса та Гігієна', subCategory: 'Гігієна', category: 'Гігієна' };
-      }
-      if (rawCat === 'Догляд за шкірою' || isCosmeticCream || hasWord(text, skincareTriggers, skincareBrands)) {
-        return { mainCategory: 'Краса та Гігієна', subCategory: 'Догляд за шкірою', category: 'Догляд за шкірою' };
-      }
-      if (isBeautyStore || rawCat === 'Краса та Гігієна') {
-        return { mainCategory: 'Краса та Гігієна', subCategory: 'Гігієна', category: 'Гігієна' };
-      }
-    }
-
-    // STAGE 5: Groceries Subcategories (mainCategory: 'Продукти')
-    // 1. Солодощі
-    const sweetsTriggers = [
-      'донат', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'кекс', 'мафін',
-      'рулет', 'штрудель', 'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'пастила',
-      'цукерк', 'шоколад', 'батончик', 'халва', 'козинак', 'драже', 'льодяник', 'жувальна гумка',
-      'морозиво', 'десерт', 'мед', 'крем-мед', 'джем', 'варення', 'згущене молоко', 'згущене',
-      'паста шоколадна', 'nutella', 'нутелла', 'barni', 'барні', 'рошен', 'roshen', 'milka', 'мілка',
-      'ferrero', 'kinder', 'кіндер', 'raffaello', 'рафаелло', 'конті', 'konti', 'авк', 'avk', 'ярич'
-    ];
-    if (rawCat === 'Солодощі' || hasWord(text, sweetsTriggers)) {
-      return { mainCategory: 'Продукти', subCategory: 'Солодощі', category: 'Солодощі' };
-    }
-
-    // 2. Молочні та Сири
-    const dairyTriggers = [
-      'молоко', 'масло солодковершкове', 'масло вершкове', 'масло селянське', 'масло екстра',
-      'солодковершкове масло', 'вершкове масло', 'селянське масло', 'маргарин', 'спред',
-      'сир ', 'крем-сир', 'крем сир', 'сирок', 'моцарела', 'гауда', 'пармезан', 'чеддер',
-      'сулугуні', 'бринза', 'фета', 'сметана', 'вершки', 'йогурт', 'кефір', 'ряжанка',
-      'айран', 'закваска', 'плавлений', 'творог', 'кисломолочн', 'комо', 'яготинськ',
-      'ферма', 'активіа', 'актимель', 'данон', 'danone', 'президент', 'president',
-      'mlekovita', 'spomlek', 'простонаше', 'камамбер', 'брі '
-    ];
-    if (rawCat === 'Молочні та Сири' || hasWord(text, dairyTriggers)) {
-      return { mainCategory: 'Продукти', subCategory: 'Молочні та Сири', category: 'Молочні та Сири' };
-    }
-
-    // 3. М'ясо та Риба
-    const meatFishTriggers = [
-      'м\'яс', 'мяс', 'курк', 'куряч', 'індич', 'свинин', 'яловичин', 'телятин', 'качк', 'гуск',
-      'фарш', 'стейк', 'філе', 'крильця', 'гомілк', 'стегно', 'ковбас', 'сосиск', 'сардельк',
-      'шинк', 'бекон', 'балик', 'салямі', 'паштет', 'буженин', 'реберц', 'риба', 'лосос',
-      'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай',
-      'креветк', 'мідії', 'кальмар', 'ікра', 'крабові', 'наша ряба', 'ранчо', 'бащинський',
-      'глобино', 'м\'ясна гільдія', 'алан', 'водний світ', 'санта бремор'
-    ];
-    if (rawCat === "М'ясо та Риба" || hasWord(text, meatFishTriggers)) {
-      return { mainCategory: 'Продукти', subCategory: "М'ясо та Риба", category: "М'ясо та Риба" };
-    }
-
-    // 4. Кава та Чай
-    const coffeeTeaTriggers = [
-      'кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'матча', 'какао',
-      'гарячий шоколад', 'дріп', 'jacobs', 'lavazza', 'greenfield', 'tess', 'curtis', 'lovare',
-      'ліптон', 'lipton', 'paulig', 'чорна карта', 'жокей', 'idealist'
-    ];
-    if (rawCat === 'Кава та Чай' || hasWord(text, coffeeTeaTriggers)) {
-      return { mainCategory: 'Продукти', subCategory: 'Кава та Чай', category: 'Кава та Чай' };
-    }
-
-    // 5. Напої
-    const drinksTriggers = [
-      'вода', 'сік ', 'сок', 'нектар', 'морс', 'лимонад', 'напій', 'кола', 'pepsi', 'coca-cola',
-      'fanta', 'sprite', 'schweppes', 'комбуча', 'квас', 'енергетик', 'red bull', 'monster',
-      'пиво', 'вино', 'шампанське', 'ігристе', 'сидр', 'моршинськ', 'боржомі', 'borjomi',
-      'поляна квасова', 'садочок', 'sandora', 'rich', 'наш сік', 'віскі', 'горілка', 'коньяк', 'ром '
-    ];
-    if (rawCat === 'Напої' || hasWord(text, drinksTriggers)) {
-      return { mainCategory: 'Продукти', subCategory: 'Напої', category: 'Напої' };
-    }
-
-    // 6. Овочі та Фрукти
-    const isTomatoPasteOrSauce = (hasWord(text, 'томат') && hasWord(text, 'паста')) || hasWord(text, ['томатна паста', 'паста томатна', 'кетчуп', 'соус томатний']);
-    const produceTriggers = [
-      'яблук', 'банан', 'апельсин', 'лимон', 'мандарин', 'виноград', 'ківі', 'авокадо',
-      'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник',
-      'зелень', 'салат ', 'айсберг', 'рукола', 'шпинат', 'кабачок', 'баклажан', 'буряк',
-      'редис', 'печериц', 'гриб', 'ягоди', 'полуниц', 'малин', 'лохина', 'чорниц', 'кавун',
-      'диня', 'гранат', 'груш', 'слив', 'персик', 'нектарин', 'броколі', 'чері'
-    ];
-    if (!isTomatoPasteOrSauce && (rawCat === 'Овочі та Фрукти' || hasWord(text, produceTriggers))) {
-      return { mainCategory: 'Продукти', subCategory: 'Овочі та Фрукти', category: 'Овочі та Фрукти' };
-    }
-
-    // 7. Бакалія
-    return { mainCategory: 'Продукти', subCategory: 'Бакалія', category: 'Бакалія' };
+    if (rawCat === 'Бакалія' || hasWord(text, CAT_RULES.savoryGrocery)) return catObj('Продукти', 'Бакалія');
+    const startsAsCheese = /^\s*(?:крем[- ])?сир\b/i.test(title);
+    if (!startsAsCheese && (rawCat === "М'ясо та Риба" || hasWord(text, CAT_RULES.meatFish))) return catObj('Продукти', "М'ясо та Риба");
+    const isCandyOrConfection = hasWord(text, ['цукерк', 'шоколад', 'батончик', 'торт', 'тістечко', 'праліне']);
+    const isAlcoholDrink = !isCandyOrConfection && hasWord(text, ['настоянк', 'вермут', 'віскі', 'горілка', 'лікер', 'вино ', 'вин ', 'ігристе', 'шампанське', 'пиво', 'ром ', 'бренді', 'джин ', 'текіл']);
+    if (!isAlcoholDrink && (rawCat === 'Солодощі' || hasWord(text, CAT_RULES.sweets))) return catObj('Продукти', 'Солодощі');
+    const isDairyButter = hasWord(text, ['масло']) && hasWord(text, ['солодковершков', 'вершков', 'селянськ', 'екстра', 'кисловершков']);
+    if (rawCat === 'Молочні та Сири' || isDairyButter || hasWord(text, CAT_RULES.dairy)) return catObj('Продукти', 'Молочні та Сири');
+    if (rawCat === 'Кава та Чай' || hasWord(text, CAT_RULES.coffeeTea)) return catObj('Продукти', 'Кава та Чай');
+    if (rawCat === 'Напої' || hasWord(text, CAT_RULES.drinks)) return catObj('Продукти', 'Напої');
+    const isNotProduce = hasWord(text, CAT_RULES.notFreshProduce) || (hasWord(text, 'томат') && hasWord(text, 'паста'));
+    if (!isNotProduce && (rawCat === 'Овочі та Фрукти' || hasWord(text, CAT_RULES.produce))) return catObj('Продукти', 'Овочі та Фрукти');
+    return catObj('Продукти', 'Бакалія');
   }
 
   function normalizeItemPrices(p, cityParam) {
@@ -1551,36 +861,119 @@
     });
   }
 
-  /* ─── 3. BASKET API ──────────────────────────────────────────────────────── */
+  /* ─── 3. BASKET & HEARTBEAT API ────────────────────────────────────────── */
+  const LEGACY_SEED_BASKET_IDS = new Set(['prod-1', 'prod-3', 'prod-4']);
+
   async function getBasket() {
-    return getStorage(STORAGE_KEYS.BASKET, [
-      { productId: 'prod-1', qty: 1 },
-      { productId: 'prod-3', qty: 2 },
-      { productId: 'prod-4', qty: 1 }
-    ]);
+    const raw = getStorage(STORAGE_KEYS.BASKET, []);
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    const catalog = getStorage(STORAGE_KEYS.PRODUCTS, []);
+    if (Array.isArray(catalog) && catalog.length > 0) {
+      const cleaned = raw.filter(item => {
+        if (!item || item.productId === undefined || item.productId === null) return false;
+        const pid = String(item.productId);
+        if (LEGACY_SEED_BASKET_IDS.has(pid) && !item.title && !catalog.some(p => String(p.id) === pid)) {
+          return false;
+        }
+        return Number(item.qty) > 0;
+      });
+      if (cleaned.length !== raw.length) {
+        setStorage(STORAGE_KEYS.BASKET, cleaned);
+      }
+      return cleaned;
+    }
+    return raw.filter(item => item && Number(item.qty) > 0);
   }
 
-  async function toggleBasketItem(productId, qty) {
+  async function toggleBasketItem(productId, qty, meta) {
     const basket = await getBasket();
-    const idx = basket.findIndex(item => String(item.productId) === String(productId));
+    const pid = String(productId);
+    let itemTitle = (meta && meta.title) || '';
+    let itemUnit = (meta && meta.unit) || '';
+
+    if (!itemTitle && qty > 0) {
+      const catalog = getStorage(STORAGE_KEYS.PRODUCTS, []);
+      const matchedProd = Array.isArray(catalog)
+        ? catalog.find(p => String(p.id) === pid)
+        : null;
+      itemTitle = (matchedProd && (matchedProd.title || matchedProd.name)) || '';
+      if (!itemUnit) itemUnit = (matchedProd && matchedProd.unit) || '';
+    }
+
+    const idx = basket.findIndex(item =>
+      String(item.productId) === pid ||
+      (itemTitle && item.title && String(item.title).trim().toLowerCase() === String(itemTitle).trim().toLowerCase())
+    );
 
     if (idx > -1) {
       if (qty <= 0) {
         basket.splice(idx, 1);
       } else {
+        basket[idx].productId = productId;
         basket[idx].qty = qty;
+        if (itemTitle) basket[idx].title = itemTitle;
+        if (itemUnit) basket[idx].unit = itemUnit;
       }
     } else if (qty > 0) {
-      basket.push({ productId, qty });
+      basket.push({
+        productId,
+        qty,
+        ...(itemTitle ? { title: itemTitle } : {}),
+        ...(itemUnit ? { unit: itemUnit } : {})
+      });
     }
 
     setStorage(STORAGE_KEYS.BASKET, basket);
+    try {
+      localStorage.setItem('@aurelia_basket', JSON.stringify(basket));
+    } catch (_) {}
+    sendHeartbeat().catch(() => {});
     return basket;
   }
 
   async function clearBasket() {
     setStorage(STORAGE_KEYS.BASKET, []);
+    try {
+      localStorage.removeItem('@aurelia_basket');
+    } catch (_) {}
+    sendHeartbeat().catch(() => {});
     return [];
+  }
+
+  async function sendHeartbeat() {
+    const current = getCurrentUser();
+    if (!current || !current.token) return null;
+
+    const basket = await getBasket();
+    const lastClearedAckAt = localStorage.getItem(BASKET_CLEARED_ACK_KEY) || null;
+
+    try {
+      const res = await fetchWithFallback('/auth/heartbeat', {
+        method: 'POST',
+        body: JSON.stringify({ basket, lastClearedAckAt }),
+        throwOnHttpError: true
+      });
+
+      if (res && res.basketClearedAt) {
+        const serverClearedMs = new Date(res.basketClearedAt).getTime();
+        const clientAckMs = lastClearedAckAt ? new Date(lastClearedAckAt).getTime() : 0;
+        if (serverClearedMs > 0 && (!clientAckMs || isNaN(clientAckMs) || serverClearedMs > clientAckMs)) {
+          setStorage(STORAGE_KEYS.BASKET, []);
+          try {
+            localStorage.removeItem('@aurelia_basket');
+            localStorage.setItem(BASKET_CLEARED_ACK_KEY, res.basketClearedAt);
+          } catch (_) {}
+          if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('aurelia:basket-cleared', {
+              detail: { basketClearedAt: res.basketClearedAt }
+            }));
+          }
+        }
+      }
+      return res;
+    } catch (_) {
+      return null;
+    }
   }
 
   /* ─── 4. AUTH API ────────────────────────────────────────────────────────── */
@@ -1606,14 +999,33 @@
     };
   }
 
+  function postAuthEndpoint(endpoint, payload, fallbackFn) {
+    return fetchWithFallback(endpoint, {
+      method: 'POST',
+      timeout: AUTH_REQUEST_TIMEOUT,
+      body: JSON.stringify(payload),
+      throwOnHttpError: true
+    }, fallbackFn);
+  }
+
+  function persistAuthResponse(res) {
+    if (res && res.requiresVerification) {
+      return res;
+    }
+    const userObj = res && res.user
+      ? Object.assign({}, res.user, { token: res.token })
+      : res;
+
+    if (userObj && (userObj.token || userObj.email)) {
+      setStorage(STORAGE_KEYS.AUTH, userObj);
+    }
+    return userObj;
+  }
+
   async function login(identifier, password) {
     const cleanId = String(identifier || '').trim();
     const lowerId = cleanId.toLowerCase();
-    const res = await fetchWithFallback('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ identifier: cleanId, email: lowerId, password }),
-      throwOnHttpError: true
-    }, () => {
+    const res = await postAuthEndpoint('/auth/login', { identifier: cleanId, email: lowerId, password }, () => {
       if (!cleanId || !password) throw new Error('Вкажіть email або ім’я користувача та пароль.');
       const staffUser = resolveOfflineStaffAccount(cleanId, password, true);
       if (staffUser) {
@@ -1636,28 +1048,13 @@
       return { user, token: user.token };
     });
 
-    if (res && res.requiresVerification) {
-      return res;
-    }
-
-    const userObj = res && res.user
-      ? Object.assign({}, res.user, { token: res.token })
-      : res;
-
-    if (userObj && (userObj.token || userObj.email)) {
-      setStorage(STORAGE_KEYS.AUTH, userObj);
-    }
-    return userObj;
+    return persistAuthResponse(res);
   }
 
   async function register(name, email, password) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanName = String(name || '').trim() || cleanEmail.split('@')[0];
-    const res = await fetchWithFallback('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ name: cleanName, email: cleanEmail, password }),
-      throwOnHttpError: true
-    }, () => {
+    const res = await postAuthEndpoint('/auth/register', { name: cleanName, email: cleanEmail, password }, () => {
       if (!cleanEmail || !password) throw new Error('Заповніть усі обов’язкові поля.');
       if (password.length < 6) throw new Error('Пароль повинен містити щонайменше 6 символів.');
       if (isStaffDomainEmail(cleanEmail)) {
@@ -1676,28 +1073,13 @@
       };
     });
 
-    if (res && res.requiresVerification) {
-      return res;
-    }
-
-    const userObj = res && res.user
-      ? Object.assign({}, res.user, { token: res.token })
-      : res;
-
-    if (userObj && (userObj.token || userObj.email)) {
-      setStorage(STORAGE_KEYS.AUTH, userObj);
-    }
-    return userObj;
+    return persistAuthResponse(res);
   }
 
   async function verifyEmail(email, code) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanCode = String(code || '').trim();
-    const res = await fetchWithFallback('/auth/verify-email', {
-      method: 'POST',
-      body: JSON.stringify({ email: cleanEmail, code: cleanCode }),
-      throwOnHttpError: true
-    }, () => {
+    const res = await postAuthEndpoint('/auth/verify-email', { email: cleanEmail, code: cleanCode }, () => {
       if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
         throw new Error('Вкажіть коректний 6-значний код підтвердження.');
       }
@@ -1716,23 +1098,12 @@
       return { user, token: user.token };
     });
 
-    const userObj = res && res.user
-      ? Object.assign({}, res.user, { token: res.token })
-      : res;
-
-    if (userObj && (userObj.token || userObj.email)) {
-      setStorage(STORAGE_KEYS.AUTH, userObj);
-    }
-    return userObj;
+    return persistAuthResponse(res);
   }
 
   async function resendVerification(email) {
     const cleanEmail = String(email || '').trim().toLowerCase();
-    return fetchWithFallback('/auth/resend-verification', {
-      method: 'POST',
-      body: JSON.stringify({ email: cleanEmail }),
-      throwOnHttpError: true
-    }, () => ({
+    return postAuthEndpoint('/auth/resend-verification', { email: cleanEmail }, () => ({
       requiresVerification: true,
       email: cleanEmail,
       message: 'Новий 6-значний код підтвердження надіслано на ваш Email',
@@ -1742,11 +1113,7 @@
 
   async function forgotPassword(email) {
     const cleanEmail = String(email || '').trim().toLowerCase();
-    return fetchWithFallback('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email: cleanEmail }),
-      throwOnHttpError: true
-    }, () => ({
+    return postAuthEndpoint('/auth/forgot-password', { email: cleanEmail }, () => ({
       success: true,
       email: cleanEmail,
       message: 'Код для відновлення пароля надіслано на Email',
@@ -1757,11 +1124,7 @@
   async function resetPassword(email, code, newPassword) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanCode = String(code || '').trim();
-    const res = await fetchWithFallback('/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ email: cleanEmail, code: cleanCode, newPassword }),
-      throwOnHttpError: true
-    }, () => {
+    const res = await postAuthEndpoint('/auth/reset-password', { email: cleanEmail, code: cleanCode, newPassword }, () => {
       if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
         throw new Error('Вкажіть коректний 6-значний код.');
       }
@@ -1781,14 +1144,7 @@
       return { user, token: user.token };
     });
 
-    const userObj = res && res.user
-      ? Object.assign({}, res.user, { token: res.token })
-      : res;
-
-    if (userObj && (userObj.token || userObj.email)) {
-      setStorage(STORAGE_KEYS.AUTH, userObj);
-    }
-    return userObj;
+    return persistAuthResponse(res);
   }
 
   async function getMe() {
@@ -1818,12 +1174,93 @@
     try {
       localStorage.removeItem(STORAGE_KEYS.AUTH);
       localStorage.removeItem(STORAGE_KEYS.CARDS);
+      localStorage.removeItem(ADMIN_RETURN_TOKEN_KEY);
     } catch (_) {}
     return { success: true };
   }
 
   function getCurrentUser() {
     return getStorage(STORAGE_KEYS.AUTH, null);
+  }
+
+  /* ─── 5. ADMIN CUSTOMER MANAGEMENT & IMPERSONATION API ───────────────────── */
+  async function getAdminUsers() {
+    const res = await fetchWithFallback('/admin/users', {
+      method: 'GET',
+      throwOnHttpError: true
+    });
+    return Array.isArray(res) ? res : (Array.isArray(res?.users) ? res.users : []);
+  }
+
+  async function updateAdminUser(userId, payload) {
+    return fetchWithFallback(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      throwOnHttpError: true
+    });
+  }
+
+  async function deleteAdminUserCard(userId, cardId) {
+    return fetchWithFallback(`/admin/users/${encodeURIComponent(userId)}/cards/${encodeURIComponent(cardId)}`, {
+      method: 'DELETE',
+      throwOnHttpError: true
+    });
+  }
+
+  async function clearAdminUserBasket(userId) {
+    return fetchWithFallback(`/admin/users/${encodeURIComponent(userId)}/clear-basket`, {
+      method: 'POST',
+      throwOnHttpError: true
+    });
+  }
+
+  async function impersonateUser(userId) {
+    const currentAdmin = getCurrentUser();
+    const res = await fetchWithFallback(`/admin/users/${encodeURIComponent(userId)}/impersonate`, {
+      method: 'POST',
+      timeout: AUTH_REQUEST_TIMEOUT,
+      throwOnHttpError: true
+    });
+
+    if (!res || !res.token || !res.user) {
+      throw new Error('Сервер не повернув токен імперсонації.');
+    }
+
+    try {
+      if (!localStorage.getItem(ADMIN_RETURN_TOKEN_KEY) && currentAdmin && currentAdmin.token) {
+        localStorage.setItem(ADMIN_RETURN_TOKEN_KEY, JSON.stringify(currentAdmin));
+      }
+    } catch (_) {}
+
+    const impersonatedSession = Object.assign({}, res.user, {
+      token: res.token,
+      impersonatedBy: currentAdmin?.name || 'bleki'
+    });
+    setStorage(STORAGE_KEYS.AUTH, impersonatedSession);
+    return impersonatedSession;
+  }
+
+  function getAdminReturnSession() {
+    try {
+      const raw = localStorage.getItem(ADMIN_RETURN_TOKEN_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return (parsed && parsed.token) ? parsed : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function returnFromImpersonation() {
+    const adminSession = getAdminReturnSession();
+    try {
+      localStorage.removeItem(ADMIN_RETURN_TOKEN_KEY);
+    } catch (_) {}
+    if (adminSession) {
+      setStorage(STORAGE_KEYS.AUTH, adminSession);
+      return { restored: true, user: adminSession };
+    }
+    return { restored: false, user: null };
   }
 
   return {
@@ -1844,10 +1281,19 @@
     syncProducts,
     getLastSyncTime,
     getStoresStatus,
-    // Basket
+    // Basket & Activity Sync
     getBasket,
     toggleBasketItem,
     clearBasket,
+    sendHeartbeat,
+    // Admin Customer Management
+    getAdminUsers,
+    updateAdminUser,
+    deleteAdminUserCard,
+    clearAdminUserBasket,
+    impersonateUser,
+    getAdminReturnSession,
+    returnFromImpersonation,
     // Auth
     login,
     register,

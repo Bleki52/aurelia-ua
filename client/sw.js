@@ -5,8 +5,8 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'aurelia-ua-v21';
-const RUNTIME_API_CACHE = 'aurelia-ua-api-v21';
+const CACHE_NAME = 'aurelia-ua-v23';
+const RUNTIME_API_CACHE = 'aurelia-ua-api-v23';
 
 const PRECACHE_ASSETS = [
   './',
@@ -63,20 +63,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 1. API Requests -> Network-First with runtime cache fallback
+  // 1. API Requests -> Network-First; cache ONLY public unauthenticated catalog/health endpoints
   if (url.pathname.includes('/api/')) {
+    const isPublicCatalog = url.pathname.includes('/api/products') || url.pathname.includes('/api/health');
+    const hasAuth = request.headers && request.headers.has('Authorization');
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response && response.status === 200) {
+          if (isPublicCatalog && !hasAuth && response && response.status === 200) {
             const clone = response.clone();
             caches.open(RUNTIME_API_CACHE).then((cache) => cache.put(request, clone));
           }
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
+          if (isPublicCatalog && !hasAuth) {
+            const cached = await caches.match(request);
+            if (cached) return cached;
+          }
           return new Response(JSON.stringify({ error: 'Офлайн-режим. Дані недоступні без мережі.', offline: true }), {
             status: 503,
             headers: { 'Content-Type': 'application/json; charset=utf-8' }

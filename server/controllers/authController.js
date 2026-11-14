@@ -324,6 +324,9 @@ async function login(req, res) {
     }
 
     const token = signAuthToken(user);
+    try {
+      await db.touchUserActivity(user.id);
+    } catch (_) {}
 
     return res.status(200).json({
       message: 'Вхід успішний.',
@@ -458,11 +461,50 @@ async function me(req, res) {
       });
     }
 
+    const activity = await db.touchUserActivity(req.user.id);
+    if (activity) {
+      user.last_seen_at = activity.last_seen_at || user.last_seen_at || null;
+      user.basket_cleared_at = activity.basket_cleared_at || user.basket_cleared_at || null;
+    }
+
     return res.status(200).json({ user });
   } catch (err) {
     console.error('Помилка отримання профілю:', err);
     return res.status(500).json({
       error: 'Помилка отримання даних облікового запису.',
+      code: 'SERVER_ERROR'
+    });
+  }
+}
+
+/**
+ * POST /api/auth/heartbeat
+ * Tracks authenticated user's online activity and synchronizes shopping basket count / remote clear state.
+ */
+async function heartbeat(req, res) {
+  try {
+    const { basket, lastClearedAckAt } = req.body || {};
+    const activity = await db.touchUserActivity(req.user.id, {
+      basket: Array.isArray(basket) ? basket : undefined,
+      lastClearedAckAt: lastClearedAckAt || null
+    });
+
+    if (!activity) {
+      return res.status(404).json({
+        error: 'Користувача не знайдено.',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    return res.status(200).json({
+      status: 'ok',
+      lastSeenAt: activity.last_seen_at || new Date().toISOString(),
+      basketClearedAt: activity.basket_cleared_at || null
+    });
+  } catch (err) {
+    console.error('Помилка оновлення heartbeat:', err);
+    return res.status(500).json({
+      error: 'Помилка синхронізації активності користувача.',
       code: 'SERVER_ERROR'
     });
   }
@@ -475,6 +517,7 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
-  me
+  me,
+  heartbeat
 };
 

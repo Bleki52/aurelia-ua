@@ -52,5 +52,11 @@ router.post('/reset-password', authController.resetPassword);
  */
 router.get('/me', verifyToken, authController.me);
 
+/**
+ * POST /api/auth/heartbeat
+ * Updates last_seen_at and syncs basket state for admin tracking / remote basket clearing.
+ */
+router.post('/heartbeat', verifyToken, authController.heartbeat);
+
 module.exports = router;
 

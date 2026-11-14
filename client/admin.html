@@ -158,6 +158,23 @@
     </section>
 
     <div id="admin-dashboard-content">
+    <!-- Перемикач розділів адмін-панелі -->
+    <div class="admin-section-tabs reveal-item" role="tablist" aria-label="Розділи адміністрування">
+      <button type="button" id="admin-tab-products" class="admin-section-tab is-active" data-admin-tab="products" role="tab" aria-selected="true" aria-controls="admin-products-section">
+        <svg class="icon icon-sm" aria-hidden="true">
+          <use href="assets/sprite.svg#cat-all"></use>
+        </svg>
+        <span>Каталог товарів</span>
+      </button>
+      <button type="button" id="admin-tab-users" class="admin-section-tab" data-admin-tab="users" role="tab" aria-selected="false" aria-controls="admin-users-section">
+        <svg class="icon icon-sm" aria-hidden="true">
+          <use href="assets/sprite.svg#icon-user"></use>
+        </svg>
+        <span>Клієнти та Користувачі</span>
+      </button>
+    </div>
+
+    <div id="admin-products-section" role="tabpanel" aria-labelledby="admin-tab-products">
     <!-- Панель показників / статистики -->
     <section class="admin-stats-grid reveal-item" aria-label="Статистика каталогу">
       <div class="stat-card">
@@ -237,6 +254,50 @@
             </tr>
           </thead>
           <tbody id="admin-products-tbody">
+            <!-- Динамічно наповнюється з admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+    </div>
+
+    <!-- Розділ керування клієнтами та користувачами (#admin-users-section) -->
+    <section id="admin-users-section" class="admin-users-section is-hidden" role="tabpanel" aria-labelledby="admin-tab-users">
+      <div class="admin-users-header">
+        <div class="admin-users-title-group">
+          <h2 id="admin-users-heading" class="admin-users-heading">Клієнти та Користувачі</h2>
+          <span id="admin-users-count-badge" class="admin-users-count-badge">0 акаунтів</span>
+        </div>
+
+        <div class="admin-users-controls">
+          <div class="search-box-wrapper admin-user-search-wrap">
+            <label for="admin-user-search" class="visually-hidden">Пошук клієнта</label>
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-search"></use>
+            </svg>
+            <input type="search" id="admin-user-search" class="search-input" placeholder="Пошук клієнта за іменем, Email чи роллю...">
+          </div>
+
+          <button type="button" id="btn-admin-refresh-users" class="btn btn-secondary">
+            <svg class="icon icon-sm" aria-hidden="true">
+              <use href="assets/sprite.svg#icon-filter"></use>
+            </svg>
+            <span>Оновити</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-table-container table-responsive">
+        <table class="admin-table admin-users-table">
+          <thead>
+            <tr>
+              <th scope="col">Користувач</th>
+              <th scope="col">Статус в мережі</th>
+              <th scope="col">Картки клієнта</th>
+              <th scope="col">Швидкі дії</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
             <!-- Динамічно наповнюється з admin.js -->
           </tbody>
         </table>
@@ -780,6 +841,81 @@
           <button type="submit" class="btn btn-primary" id="admin-submit-btn">Зберегти товар</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Редагування профілю клієнта (#admin-user-edit-modal) -->
+  <div id="admin-user-edit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-user-edit-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="admin-user-edit-title" class="modal-title">Редагувати користувача</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно редагування користувача">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <form id="admin-user-edit-form" class="modal-body" novalidate>
+        <div class="form-group">
+          <label for="admin-edit-user-name" class="form-label">Ім’я користувача (логін)</label>
+          <input type="text" id="admin-edit-user-name" name="name" class="form-input" required placeholder="Введіть ім’я">
+        </div>
+
+        <div class="form-group">
+          <label for="admin-edit-user-email" class="form-label">Електронна пошта (Email)</label>
+          <input type="email" id="admin-edit-user-email" name="email" class="form-input" required placeholder="user@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="admin-edit-user-role" class="form-label">Роль у системі</label>
+          <select id="admin-edit-user-role" name="role" class="form-select">
+            <option value="USER">USER (Користувач)</option>
+            <option value="QA">QA (Тестувальник, тільки перегляд)</option>
+            <option value="ADMIN">ADMIN (Адміністратор @aurelia.ua)</option>
+          </select>
+        </div>
+
+        <div class="form-group admin-checkbox-group">
+          <input type="checkbox" id="admin-edit-user-verified" name="is_verified" class="admin-checkbox-input">
+          <label for="admin-edit-user-verified" class="form-label admin-checkbox-label">Email підтверджено (Верифікований акаунт)</label>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-edit-user-password" class="form-label">Новий пароль (необов’язково)</label>
+          <input type="password" id="admin-edit-user-password" name="newPassword" class="form-input" placeholder="Залиште порожнім, щоб не змінювати" autocomplete="new-password">
+        </div>
+
+        <p class="field-error" id="admin-edit-user-error" role="alert"></p>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Скасувати</button>
+          <button type="submit" id="admin-edit-user-submit-btn" class="btn btn-primary">Зберегти зміни</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНЕ ВІКНО: Мінімалістичне підтвердження дії (#admin-confirm-modal) -->
+  <div id="admin-confirm-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
+    <div class="modal-dialog admin-confirm-dialog">
+      <div class="modal-header">
+        <h2 id="admin-confirm-title" class="modal-title">Підтвердження дії</h2>
+        <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно підтвердження">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/sprite.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body admin-confirm-body">
+        <p id="admin-confirm-message" class="admin-confirm-message">Ви впевнені, що бажаєте виконати цю дію?</p>
+      </div>
+
+      <div class="modal-footer admin-confirm-footer">
+        <button type="button" id="admin-confirm-cancel-btn" class="btn btn-secondary">Скасувати</button>
+        <button type="button" id="admin-confirm-ok-btn" class="btn btn-primary">Підтвердити</button>
+      </div>
     </div>
   </div>
 

@@ -11,35 +11,24 @@
   const AdminState = {
     products: [],
     searchQuery: '',
-    editingProductId: null
+    editingProductId: null,
+    activeTab: 'products',
+    users: [],
+    userSearchQuery: '',
+    editingUserId: null,
+    confirmCallback: null,
+    usersRefreshTimer: null
   };
 
-  const STORES = [
-    'silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart',
-    'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka',
-    'eva', 'prostor', 'avrora', 'epicentr'
-  ];
+  const API_STORE_META = (window.AureliaAPI && window.AureliaAPI.STORE_META) || {};
 
-  const STORE_NAMES = {
-    silpo: 'Сільпо',
-    atb: 'АТБ-Маркет',
-    novus: 'NOVUS',
-    metro: 'METRO',
-    varus: 'VARUS',
-    auchan: 'АШАН',
-    epicentrk_food: 'Епіцентр Food',
-    velmart: 'Велмарт',
-    thrash: 'Траш! ТРАШ!',
-    simi: 'Сімі',
-    blyzenko: 'Близенько',
-    taistra: 'Тайстра',
-    arsen: 'Арсен',
-    rukavychka: 'Рукавичка',
-    eva: 'EVA',
-    prostor: 'Prostor',
-    avrora: 'Аврора Мультимаркет',
-    epicentr: 'Епіцентр К'
-  };
+  const STORES = (window.AureliaAPI && Array.isArray(window.AureliaAPI.ALL_STORE_IDS))
+    ? window.AureliaAPI.ALL_STORE_IDS
+    : ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'thrash', 'simi', 'blyzenko', 'taistra', 'arsen', 'rukavychka', 'eva', 'prostor', 'avrora', 'epicentr'];
+
+  const STORE_NAMES = Object.keys(API_STORE_META).length > 0
+    ? Object.fromEntries(Object.entries(API_STORE_META).map(([k, v]) => [k, v.name]))
+    : { silpo: 'Сільпо', atb: 'АТБ-Маркет', novus: 'NOVUS', metro: 'METRO', varus: 'VARUS', auchan: 'АШАН', epicentrk_food: 'Епіцентр Food', velmart: 'Велмарт', thrash: 'Траш! ТРАШ!', simi: 'Сімі', blyzenko: 'Близенько', taistra: 'Тайстра', arsen: 'Арсен', rukavychka: 'Рукавичка', eva: 'EVA', prostor: 'Prostor', avrora: 'Аврора Мультимаркет', epicentr: 'Епіцентр К' };
 
   const CATEGORY_HIERARCHY = {
     'Продукти': [
@@ -60,6 +49,7 @@
     'Дім та Побут': [
       'Побутова хімія',
       'Кухня та Посуд',
+      'Паперова продукція',
       'Дім та Затишок'
     ],
     'Зоотовари': [
@@ -68,18 +58,21 @@
     ]
   };
 
-  const CITY_NAMES = {
-    'all': 'Всі міста',
-    'ivano-frankivsk': 'Івано-Франківськ',
-    'lviv': 'Львів',
-    'ternopil': 'Тернопіль',
-    'lutsk': 'Луцьк',
-    'chernivtsi': 'Чернівці',
-    'rivne': 'Рівне',
-    'uzhhorod': 'Ужгород',
-    'khmelnytskyi': 'Хмельницький',
-    'kyiv': 'Київ'
+  const SUBCATEGORY_ALIASES = {
+    'волосся': 'Догляд за волоссям',
+    'косметика': 'Декоративна косметика',
+    'гігієна': 'Особиста гігієна',
+    'дім та декор': 'Дім та Затишок'
   };
+
+  function normalizeAdminSubCategory(sub) {
+    const clean = String(sub || '').trim();
+    return SUBCATEGORY_ALIASES[clean.toLowerCase()] || clean;
+  }
+
+  const CITY_NAMES = (window.AureliaAPI && window.AureliaAPI.CITIES)
+    ? Object.assign({ all: 'Всі міста' }, Object.fromEntries(Object.entries(window.AureliaAPI.CITIES).map(([id, c]) => [id, c.name])))
+    : { all: 'Всі міста', 'ivano-frankivsk': 'Івано-Франківськ', lviv: 'Львів', ternopil: 'Тернопіль', lutsk: 'Луцьк', chernivtsi: 'Чернівці', rivne: 'Рівне', uzhhorod: 'Ужгород', khmelnytskyi: 'Хмельницький', kyiv: 'Київ' };
 
   const DOM = {
     storeInputs: {}
@@ -89,6 +82,10 @@
     DOM.dashboardContent = document.getElementById('admin-dashboard-content');
     DOM.accessDenied = document.getElementById('admin-access-denied');
     DOM.qaBadge = document.getElementById('admin-qa-badge');
+    DOM.tabProducts = document.getElementById('admin-tab-products');
+    DOM.tabUsers = document.getElementById('admin-tab-users');
+    DOM.productsSection = document.getElementById('admin-products-section');
+    DOM.usersSection = document.getElementById('admin-users-section');
     DOM.tbody = document.getElementById('admin-products-tbody');
     DOM.searchInput = document.getElementById('admin-search-input');
     DOM.citySelect = document.getElementById('admin-city-select');
@@ -98,6 +95,28 @@
     DOM.modal = document.getElementById('admin-product-modal');
     DOM.modalTitle = document.getElementById('admin-product-modal-title');
     DOM.form = document.getElementById('admin-product-form');
+
+    // Customers Management Elements
+    DOM.userSearchInput = document.getElementById('admin-user-search');
+    DOM.btnRefreshUsers = document.getElementById('btn-admin-refresh-users');
+    DOM.usersCountBadge = document.getElementById('admin-users-count-badge');
+    DOM.usersTbody = document.getElementById('admin-users-tbody');
+    DOM.userEditModal = document.getElementById('admin-user-edit-modal');
+    DOM.userEditForm = document.getElementById('admin-user-edit-form');
+    DOM.editUserName = document.getElementById('admin-edit-user-name');
+    DOM.editUserEmail = document.getElementById('admin-edit-user-email');
+    DOM.editUserRole = document.getElementById('admin-edit-user-role');
+    DOM.editUserVerified = document.getElementById('admin-edit-user-verified');
+    DOM.editUserPassword = document.getElementById('admin-edit-user-password');
+    DOM.editUserError = document.getElementById('admin-edit-user-error');
+    DOM.editUserSubmitBtn = document.getElementById('admin-edit-user-submit-btn');
+
+    // Confirmation Pop-up Modal
+    DOM.confirmModal = document.getElementById('admin-confirm-modal');
+    DOM.confirmTitle = document.getElementById('admin-confirm-title');
+    DOM.confirmMessage = document.getElementById('admin-confirm-message');
+    DOM.confirmCancelBtn = document.getElementById('admin-confirm-cancel-btn');
+    DOM.confirmOkBtn = document.getElementById('admin-confirm-ok-btn');
 
     // Product Core Fields
     DOM.titleInput = document.getElementById('admin-prod-title');
@@ -162,8 +181,9 @@
   function populateSubCategories(mainCat, selectedSubCat = '') {
     if (!DOM.subCategorySelect) return;
     const subCats = CATEGORY_HIERARCHY[mainCat] || CATEGORY_HIERARCHY['Продукти'];
+    const normSelected = normalizeAdminSubCategory(selectedSubCat);
     DOM.subCategorySelect.innerHTML = subCats.map(sub => `
-      <option value="${sub}" ${sub === selectedSubCat ? 'selected' : ''}>${sub}</option>
+      <option value="${escapeHtml(sub)}" ${sub === normSelected ? 'selected' : ''}>${escapeHtml(sub)}</option>
     `).join('');
   }
 
@@ -181,7 +201,11 @@
       DOM.statTotal.textContent = AdminState.products.length;
     }
 
-    if (DOM.statDiscount && AdminState.products.length > 0) {
+    if (DOM.statDiscount) {
+      if (AdminState.products.length === 0) {
+        DOM.statDiscount.textContent = '0%';
+        return;
+      }
       let totalDiscount = 0;
       let count = 0;
 
@@ -199,7 +223,7 @@
         });
       });
 
-      const avg = count > 0 ? Math.round(totalDiscount / count) : 25;
+      const avg = count > 0 ? Math.round(totalDiscount / count) : 0;
       DOM.statDiscount.textContent = `${avg}%`;
     }
   }
@@ -265,18 +289,22 @@
     DOM.tbody.innerHTML = list.map(product => {
       const prices = getProductPricesList(product);
       const minPrice = prices.length > 0 ? Math.min(...prices.map(p => p.price)) : 0;
-      const mainCat = product.mainCategory || 'Продукти';
-      const subCat = product.subCategory || product.category || 'Загальне';
-      const cityName = CITY_NAMES[product.city] || product.city || 'Усі міста';
+      const mainCat = escapeHtml(product.mainCategory || 'Продукти');
+      const subCat = escapeHtml(product.subCategory || product.category || 'Загальне');
+      const cityName = escapeHtml(CITY_NAMES[product.city] || product.city || 'Усі міста');
+      const safeTitle = escapeHtml(product.title || product.name || '');
+      const safeUnit = escapeHtml(product.unit || 'шт');
+      const safePromoTag = product.promoTag ? escapeHtml(product.promoTag) : '';
+      const safeId = escapeHtml(product.id);
 
       return `
         <tr>
           <td>
             <div class="admin-prod-cell">
-              <strong class="admin-prod-title">${product.title || product.name}</strong>
+              <strong class="admin-prod-title">${safeTitle}</strong>
               <div class="admin-prod-meta">
-                <span>${product.unit || 'шт'}</span>
-                ${product.promoTag ? `<span class="promo-tag-badge">${product.promoTag}</span>` : ''}
+                <span>${safeUnit}</span>
+                ${safePromoTag ? `<span class="promo-tag-badge">${safePromoTag}</span>` : ''}
               </div>
             </div>
           </td>
@@ -293,8 +321,8 @@
             <div class="admin-prices-chips">
               ${prices.length === 0 ? '<span class="file-hint">Немає цін</span>' : prices.map(p => {
                 const isMin = Math.abs(p.price - minPrice) < 0.01;
-                const storeLabel = STORE_NAMES[p.store] || p.store;
-                const catIcon = (window.AureliaAPI?.STORE_META?.[p.store]?.logo) || 'cat-groceries';
+                const storeLabel = escapeHtml(STORE_NAMES[p.store] || p.store);
+                const catIcon = escapeHtml((window.AureliaAPI?.STORE_META?.[p.store]?.logo) || 'cat-groceries');
                 return `
                   <span class="admin-price-chip ${isMin ? 'is-best' : ''}" title="${storeLabel}: ${p.price.toFixed(2)} грн">
                     <svg class="icon icon-stroke icon-xs" aria-hidden="true">
@@ -311,12 +339,12 @@
             <div class="table-actions-cell">
               ${isReadOnlyQA()
                 ? '<span class="table-readonly-badge">Тільки перегляд</span>'
-                : `<button type="button" class="btn-icon" data-admin-edit="${product.id}" aria-label="Редагувати ${product.title || product.name}">
+                : `<button type="button" class="btn-icon" data-admin-edit="${safeId}" aria-label="Редагувати ${safeTitle}">
                     <svg class="icon icon-sm" aria-hidden="true">
                       <use href="assets/sprite.svg#icon-edit"></use>
                     </svg>
                   </button>
-                  <button type="button" class="btn-icon" data-admin-delete="${product.id}" aria-label="Видалити ${product.title || product.name}">
+                  <button type="button" class="btn-icon" data-admin-delete="${safeId}" aria-label="Видалити ${safeTitle}">
                     <svg class="icon icon-sm" aria-hidden="true">
                       <use href="assets/sprite.svg#icon-trash"></use>
                     </svg>
@@ -348,38 +376,45 @@
   }
 
   function bindTableActions() {
-    if (isReadOnlyQA()) return;
+    if (!DOM.tbody || DOM.tbody._delegatedTableActions) return;
+    DOM.tbody._delegatedTableActions = true;
 
-    DOM.tbody.querySelectorAll('[data-admin-edit]').forEach(btn => {
-      btn.addEventListener('click', () => {
+    DOM.tbody.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('[data-admin-edit]');
+      if (editBtn && DOM.tbody.contains(editBtn)) {
         if (isReadOnlyQA()) return;
-        const id = btn.dataset.adminEdit;
+        const id = editBtn.dataset.adminEdit;
         const prod = AdminState.products.find(p => String(p.id) === String(id));
         if (prod) openEditForm(prod);
-      });
-    });
+        return;
+      }
 
-    DOM.tbody.querySelectorAll('[data-admin-delete]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      const delBtn = e.target.closest('[data-admin-delete]');
+      if (delBtn && DOM.tbody.contains(delBtn)) {
         if (isReadOnlyQA()) {
           alert('Режим QA (тільки перегляд): редагування та видалення заборонено');
           return;
         }
-        const id = btn.dataset.adminDelete;
+        const id = delBtn.dataset.adminDelete;
         const prod = AdminState.products.find(p => String(p.id) === String(id));
-        if (confirm(`Видалити товар "${prod?.title || prod?.name || ''}" з каталогу?`)) {
-          try {
-            if (window.AureliaAPI) {
-              await window.AureliaAPI.deleteProduct(id);
+        openConfirmModal({
+          title: 'Видалення товару',
+          message: `Видалити товар «${prod?.title || prod?.name || ''}» з каталогу?`,
+          confirmLabel: 'Видалити',
+          onConfirm: async () => {
+            try {
+              if (window.AureliaAPI) {
+                await window.AureliaAPI.deleteProduct(id);
+              }
+              AdminState.products = AdminState.products.filter(p => String(p.id) !== String(id));
+              updateStats();
+              renderTable();
+            } catch (err) {
+              alert(err.message || 'Не вдалося видалити товар.');
             }
-            AdminState.products = AdminState.products.filter(p => String(p.id) !== String(id));
-            updateStats();
-            renderTable();
-          } catch (err) {
-            alert(err.message || 'Не вдалося видалити товар.');
           }
-        }
-      });
+        });
+      }
     });
   }
 
@@ -513,19 +548,28 @@
       });
     }
 
-    // Modal Close Buttons (using data-close-modal)
-    if (DOM.modal) {
-      DOM.modal.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => closeModal(DOM.modal));
+    // Modal Close Buttons & Escape handling across all admin modals
+    [DOM.modal, DOM.userEditModal, DOM.confirmModal].forEach((modalEl) => {
+      if (!modalEl) return;
+      modalEl.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(modalEl));
       });
-
-      DOM.modal.addEventListener('click', (e) => {
-        if (e.target === DOM.modal) closeModal(DOM.modal);
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal(modalEl);
       });
-    }
+    });
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && DOM.modal && DOM.modal.classList.contains('is-open')) {
+      if (e.key !== 'Escape') return;
+      if (DOM.confirmModal && DOM.confirmModal.classList.contains('is-open')) {
+        closeModal(DOM.confirmModal);
+        return;
+      }
+      if (DOM.userEditModal && DOM.userEditModal.classList.contains('is-open')) {
+        closeModal(DOM.userEditModal);
+        return;
+      }
+      if (DOM.modal && DOM.modal.classList.contains('is-open')) {
         closeModal(DOM.modal);
       }
     });
@@ -570,9 +614,10 @@
         STORES.forEach(s => {
           const pVal = parseFloat(DOM.storeInputs[s].price?.value);
           if (!isNaN(pVal) && pVal > 0) {
-            const oldPVal = parseFloat(DOM.storeInputs[s].oldPrice?.value) || Math.round(pVal * 1.25);
+            const parsedOld = parseFloat(DOM.storeInputs[s].oldPrice?.value);
+            const oldPVal = (!isNaN(parsedOld) && parsedOld > pVal) ? parsedOld : null;
             const urlVal = (DOM.storeInputs[s].url?.value || '').trim();
-            const discount = oldPVal > pVal ? Math.round(((oldPVal - pVal) / oldPVal) * 100) : 0;
+            const discount = oldPVal ? Math.round(((oldPVal - pVal) / oldPVal) * 100) : 0;
 
             const priceObj = {
               store: s,
@@ -640,6 +685,356 @@
     }
   }
 
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatOnlineStatusHtml(user) {
+    if (user && user.is_online) {
+      return '<span class="user-online-badge">● Онлайн</span>';
+    }
+    if (!user || !user.last_seen_at) {
+      return '<span class="user-last-seen is-never">Ще не входив</span>';
+    }
+    const seen = new Date(user.last_seen_at);
+    if (isNaN(seen.getTime())) {
+      return '<span class="user-last-seen is-never">Ще не входив</span>';
+    }
+    const now = new Date();
+    const diffMin = Math.max(0, Math.floor((now.getTime() - seen.getTime()) / 60000));
+    if (diffMin < 1) {
+      return '<span class="user-last-seen">Був(ла): щойно</span>';
+    }
+    if (diffMin < 60) {
+      return `<span class="user-last-seen">Був(ла): ${diffMin} хв тому</span>`;
+    }
+    if (seen.toDateString() === now.toDateString()) {
+      const hh = String(seen.getHours()).padStart(2, '0');
+      const mm = String(seen.getMinutes()).padStart(2, '0');
+      return `<span class="user-last-seen">Сьогодні о ${hh}:${mm}</span>`;
+    }
+    const dd = String(seen.getDate()).padStart(2, '0');
+    const mon = String(seen.getMonth() + 1).padStart(2, '0');
+    const yyyy = seen.getFullYear();
+    return `<span class="user-last-seen">${dd}.${mon}.${yyyy}</span>`;
+  }
+
+  function openConfirmModal({ title, message, confirmLabel = 'Підтвердити', onConfirm }) {
+    if (!DOM.confirmModal) return;
+    AdminState.confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    if (DOM.confirmTitle) DOM.confirmTitle.textContent = title || 'Підтвердження дії';
+    if (DOM.confirmMessage) DOM.confirmMessage.textContent = message || 'Ви впевнені?';
+    if (DOM.confirmOkBtn) {
+      DOM.confirmOkBtn.textContent = confirmLabel;
+      DOM.confirmOkBtn.disabled = false;
+    }
+    openModal(DOM.confirmModal);
+  }
+
+  async function loadUsers() {
+    if (!DOM.usersTbody || !window.AureliaAPI || typeof window.AureliaAPI.getAdminUsers !== 'function') return;
+    try {
+      const users = await window.AureliaAPI.getAdminUsers();
+      AdminState.users = Array.isArray(users) ? users : [];
+      renderUsersTable();
+    } catch (err) {
+      DOM.usersTbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="admin-table-empty">${escapeHtml(err.message || 'Не вдалося завантажити список користувачів.')}</td>
+        </tr>
+      `;
+    }
+  }
+
+  function openEditUserModal(user) {
+    if (isReadOnlyQA()) {
+      alert('Режим QA (тільки перегляд): редагування заборонено');
+      return;
+    }
+    if (!user || !DOM.userEditModal) return;
+    AdminState.editingUserId = user.id;
+    if (DOM.editUserError) DOM.editUserError.textContent = '';
+    if (DOM.editUserName) DOM.editUserName.value = user.name || '';
+    if (DOM.editUserEmail) DOM.editUserEmail.value = user.email || '';
+    if (DOM.editUserRole) DOM.editUserRole.value = String(user.role || 'USER').toUpperCase();
+    if (DOM.editUserVerified) DOM.editUserVerified.checked = Boolean(user.is_verified);
+    if (DOM.editUserPassword) DOM.editUserPassword.value = '';
+    openModal(DOM.userEditModal);
+  }
+
+  function renderUsersTable() {
+    if (!DOM.usersTbody) return;
+    const readOnly = isReadOnlyQA();
+    const q = AdminState.userSearchQuery.toLowerCase();
+
+    const filtered = AdminState.users.filter((u) => {
+      if (!q) return true;
+      return (
+        String(u.name || '').toLowerCase().includes(q) ||
+        String(u.email || '').toLowerCase().includes(q) ||
+        String(u.role || '').toLowerCase().includes(q)
+      );
+    });
+
+    if (DOM.usersCountBadge) {
+      DOM.usersCountBadge.textContent = `${filtered.length} з ${AdminState.users.length} акаунтів`;
+    }
+
+    if (filtered.length === 0) {
+      DOM.usersTbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="admin-table-empty">Клієнтів за вашим запитом не знайдено.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    DOM.usersTbody.innerHTML = filtered.map((u) => {
+      const displayName = u.name || (u.email ? u.email.split('@')[0] : 'Користувач');
+      const role = String(u.role || 'USER').toUpperCase();
+      const roleClass = role === 'ADMIN' ? 'is-admin' : (role === 'QA' ? 'is-qa' : 'is-user');
+      const verifiedBadge = u.is_verified
+        ? '<span class="user-verify-badge is-verified">Підтверджено</span>'
+        : '<span class="user-verify-badge is-pending">Очікує</span>';
+
+      const cards = Array.isArray(u.cards) ? u.cards : [];
+      const cardsHtml = cards.length === 0
+        ? '<span class="file-hint">Немає карток</span>'
+        : `<div class="admin-user-cards-list">${cards.map((c) => {
+            const storeLabel = (STORE_NAMES[c.store] || c.storeName || c.store || 'МЕРЕЖА').toUpperCase();
+            return `
+              <span class="admin-user-card-chip" title="${escapeHtml(c.number || '')}">
+                <span class="admin-user-card-store">${escapeHtml(storeLabel)}</span>
+                ${readOnly ? '' : `<button type="button" class="admin-user-card-del" data-delete-user-card="${escapeHtml(u.id)}:${escapeHtml(c.id)}" data-user-name="${escapeHtml(displayName)}" data-store-name="${escapeHtml(storeLabel)}" aria-label="Видалити картку ${escapeHtml(storeLabel)} у ${escapeHtml(displayName)}">✕</button>`}
+              </span>
+            `;
+          }).join('')}</div>`;
+
+      const basketCount = Number(u.basket_count) || 0;
+      const actionsHtml = readOnly
+        ? '<span class="table-readonly-badge">Тільки перегляд</span>'
+        : `
+          <div class="admin-user-actions">
+            <button type="button" class="btn btn-secondary btn-xs" data-edit-user="${escapeHtml(u.id)}">Редагувати</button>
+            <button type="button" class="btn btn-outline btn-xs" data-impersonate-user="${escapeHtml(u.id)}">Імперсонація</button>
+            <button type="button" class="btn btn-outline btn-xs" data-clear-basket="${escapeHtml(u.id)}" data-user-name="${escapeHtml(displayName)}">Очистити кошик (${basketCount})</button>
+          </div>
+        `;
+
+      return `
+        <tr>
+          <td>
+            <div class="admin-user-cell">
+              <strong class="admin-user-name">${escapeHtml(displayName)}</strong>
+              <span class="admin-user-email">${escapeHtml(u.email || '')}</span>
+              <div class="admin-user-badges">
+                <span class="user-role-badge ${roleClass}">${escapeHtml(role)}</span>
+                ${verifiedBadge}
+              </div>
+            </div>
+          </td>
+          <td>${formatOnlineStatusHtml(u)}</td>
+          <td>${cardsHtml}</td>
+          <td>${actionsHtml}</td>
+        </tr>
+      `;
+    }).join('');
+
+    bindUsersTableActions();
+  }
+
+  function bindUsersTableActions() {
+    if (!DOM.usersTbody || DOM.usersTbody._delegatedUsersActions) return;
+    DOM.usersTbody._delegatedUsersActions = true;
+
+    DOM.usersTbody.addEventListener('click', async (e) => {
+      if (isReadOnlyQA()) return;
+
+      const editBtn = e.target.closest('[data-edit-user]');
+      if (editBtn && DOM.usersTbody.contains(editBtn)) {
+        const uid = editBtn.dataset.editUser;
+        const target = AdminState.users.find(u => String(u.id) === String(uid));
+        if (target) openEditUserModal(target);
+        return;
+      }
+
+      const impBtn = e.target.closest('[data-impersonate-user]');
+      if (impBtn && DOM.usersTbody.contains(impBtn)) {
+        const uid = impBtn.dataset.impersonateUser;
+        if (!window.AureliaAPI || typeof window.AureliaAPI.impersonateUser !== 'function') return;
+        try {
+          impBtn.disabled = true;
+          await window.AureliaAPI.impersonateUser(uid);
+          window.location.href = 'index.html';
+        } catch (err) {
+          impBtn.disabled = false;
+          alert(err.message || 'Не вдалося виконати імперсонацію.');
+        }
+        return;
+      }
+
+      const delCardBtn = e.target.closest('[data-delete-user-card]');
+      if (delCardBtn && DOM.usersTbody.contains(delCardBtn)) {
+        const [uid, cardId] = String(delCardBtn.dataset.deleteUserCard || '').split(':');
+        const userName = delCardBtn.dataset.userName || 'користувача';
+        const storeName = delCardBtn.dataset.storeName || '';
+        openConfirmModal({
+          title: 'Видалити картку клієнта',
+          message: `Видалити картку ${storeName} у користувача ${userName}?`,
+          confirmLabel: 'Підтвердити',
+          onConfirm: async () => {
+            await window.AureliaAPI.deleteAdminUserCard(uid, cardId);
+            await loadUsers();
+          }
+        });
+        return;
+      }
+
+      const clearBtn = e.target.closest('[data-clear-basket]');
+      if (clearBtn && DOM.usersTbody.contains(clearBtn)) {
+        const uid = clearBtn.dataset.clearBasket;
+        const userName = clearBtn.dataset.userName || 'користувача';
+        openConfirmModal({
+          title: 'Очистити кошик клієнта',
+          message: `Очистити кошик користувача ${userName}?`,
+          confirmLabel: 'Підтвердити',
+          onConfirm: async () => {
+            await window.AureliaAPI.clearAdminUserBasket(uid);
+            await loadUsers();
+          }
+        });
+      }
+    });
+  }
+
+  function switchAdminSectionTab(tabName) {
+    AdminState.activeTab = tabName === 'users' ? 'users' : 'products';
+    const isUsers = AdminState.activeTab === 'users';
+
+    if (DOM.tabProducts) {
+      DOM.tabProducts.classList.toggle('is-active', !isUsers);
+      DOM.tabProducts.setAttribute('aria-selected', !isUsers ? 'true' : 'false');
+    }
+    if (DOM.tabUsers) {
+      DOM.tabUsers.classList.toggle('is-active', isUsers);
+      DOM.tabUsers.setAttribute('aria-selected', isUsers ? 'true' : 'false');
+    }
+    if (DOM.productsSection) {
+      DOM.productsSection.classList.toggle('is-hidden', isUsers);
+    }
+    if (DOM.usersSection) {
+      DOM.usersSection.classList.toggle('is-hidden', !isUsers);
+    }
+
+    if (isUsers) {
+      loadUsers();
+      if (!AdminState.usersRefreshTimer) {
+        AdminState.usersRefreshTimer = window.setInterval(() => {
+          if (AdminState.activeTab === 'users' && document.visibilityState === 'visible') {
+            loadUsers();
+          }
+        }, 30000);
+      }
+    }
+  }
+
+  function initUsersControls() {
+    if (DOM.tabProducts) {
+      DOM.tabProducts.addEventListener('click', () => switchAdminSectionTab('products'));
+    }
+    if (DOM.tabUsers) {
+      DOM.tabUsers.addEventListener('click', () => switchAdminSectionTab('users'));
+    }
+    if (DOM.userSearchInput) {
+      DOM.userSearchInput.addEventListener('input', (e) => {
+        AdminState.userSearchQuery = e.target.value.trim();
+        renderUsersTable();
+      });
+    }
+    if (DOM.btnRefreshUsers) {
+      DOM.btnRefreshUsers.addEventListener('click', () => loadUsers());
+    }
+
+    if (DOM.confirmCancelBtn) {
+      DOM.confirmCancelBtn.addEventListener('click', () => {
+        AdminState.confirmCallback = null;
+        closeModal(DOM.confirmModal);
+      });
+    }
+
+    if (DOM.confirmOkBtn) {
+      DOM.confirmOkBtn.addEventListener('click', async () => {
+        const cb = AdminState.confirmCallback;
+        AdminState.confirmCallback = null;
+        if (!cb) {
+          closeModal(DOM.confirmModal);
+          return;
+        }
+        try {
+          DOM.confirmOkBtn.disabled = true;
+          await cb();
+          closeModal(DOM.confirmModal);
+        } catch (err) {
+          alert(err.message || 'Помилка виконання дії.');
+        } finally {
+          DOM.confirmOkBtn.disabled = false;
+        }
+      });
+    }
+
+    if (DOM.userEditForm) {
+      DOM.userEditForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (DOM.editUserError) DOM.editUserError.textContent = '';
+
+        const name = (DOM.editUserName?.value || '').trim();
+        const email = (DOM.editUserEmail?.value || '').trim().toLowerCase();
+        const role = (DOM.editUserRole?.value || 'USER').trim().toUpperCase();
+        const is_verified = Boolean(DOM.editUserVerified?.checked);
+        const newPassword = DOM.editUserPassword?.value || '';
+
+        if (!name || name.length < 2) {
+          if (DOM.editUserError) DOM.editUserError.textContent = 'Ім’я користувача повинно містити щонайменше 2 символи.';
+          return;
+        }
+        if (!email || !email.includes('@')) {
+          if (DOM.editUserError) DOM.editUserError.textContent = 'Вкажіть коректну адресу електронної пошти.';
+          return;
+        }
+        if ((role === 'ADMIN' || role === 'QA') && !email.endsWith('@aurelia.ua')) {
+          if (DOM.editUserError) DOM.editUserError.textContent = 'Ролі ADMIN та QA доступні лише для адрес @aurelia.ua.';
+          return;
+        }
+        if (newPassword.trim().length > 0 && newPassword.trim().length < 6) {
+          if (DOM.editUserError) DOM.editUserError.textContent = 'Новий пароль повинен містити щонайменше 6 символів.';
+          return;
+        }
+
+        try {
+          if (DOM.editUserSubmitBtn) DOM.editUserSubmitBtn.disabled = true;
+          await window.AureliaAPI.updateAdminUser(AdminState.editingUserId, {
+            name,
+            email,
+            role,
+            is_verified,
+            ...(newPassword.trim() ? { newPassword: newPassword.trim() } : {})
+          });
+          closeModal(DOM.userEditModal);
+          await loadUsers();
+        } catch (err) {
+          if (DOM.editUserError) DOM.editUserError.textContent = err.message || 'Не вдалося зберегти зміни користувача.';
+        } finally {
+          if (DOM.editUserSubmitBtn) DOM.editUserSubmitBtn.disabled = false;
+        }
+      });
+    }
+  }
+
   function applyStaffRoleUI(user) {
     const readOnly = isReadOnlyQA(user);
     if (DOM.qaBadge) DOM.qaBadge.classList.toggle('is-hidden', !readOnly);
@@ -676,6 +1071,7 @@
     applyStaffRoleUI(user);
 
     initForm();
+    initUsersControls();
     loadProducts();
 
     // Verify JWT session cleanly with backend when online
@@ -688,6 +1084,9 @@
         }
         applyStaffRoleUI(freshUser);
         renderTable();
+        if (AdminState.activeTab === 'users') {
+          renderUsersTable();
+        }
       } catch (_) {}
     }
   }

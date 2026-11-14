@@ -62,6 +62,43 @@
     other:          { name: 'Мережа', program: 'Картка лояльності', categoryKey: 'groceries', logo: 'cat-groceries', badgeText: 'картка' }
   };
 
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function pluralizeUk(count, one, few, many) {
+    const n = Math.abs(Number(count) || 0) % 100;
+    const n1 = n % 10;
+    if (n > 10 && n < 20) return many;
+    if (n1 > 1 && n1 < 5) return few;
+    if (n1 === 1) return one;
+    return many;
+  }
+
+  function findProductForBasketItem(item) {
+    if (!item || !Array.isArray(AppState.products) || AppState.products.length === 0) return null;
+    const pid = String(item.productId ?? '');
+    const itemTitle = item.title ? String(item.title).trim().toLowerCase() : '';
+    const byId = AppState.products.find(p => String(p.id) === pid);
+    if (byId) {
+      const prodTitle = String(byId.title || byId.name || '').trim().toLowerCase();
+      if (!itemTitle || prodTitle === itemTitle) return byId;
+    }
+    if (itemTitle) {
+      const byTitle = AppState.products.find(p => String(p.title || p.name || '').trim().toLowerCase() === itemTitle);
+      if (byTitle) {
+        item.productId = byTitle.id;
+        return byTitle;
+      }
+    }
+    return null;
+  }
+
   function resolveEntityCategory(entity) {
     if (!entity) return CATEGORY_META.groceries;
     const explicitKey = entity.categoryKey || entity.category_key;
@@ -90,6 +127,15 @@
     return CATEGORY_META.groceries;
   }
 
+  function normalizeSubCategoryKey(sub) {
+    const s = String(sub || '').trim().toLowerCase();
+    if (s === 'волосся' || s === 'догляд за волоссям') return 'волосся';
+    if (s === 'косметика' || s === 'декоративна косметика') return 'косметика';
+    if (s === 'гігієна' || s === 'особиста гігієна') return 'гігієна';
+    if (s === 'дім та затишок' || s === 'дім та декор') return 'дім та затишок';
+    return s;
+  }
+
   const STORES = Object.keys(STORE_META).filter(s => s !== 'other');
   const CATALOG_PAGE_SIZE = 50;
 
@@ -110,20 +156,21 @@
     'Краса та Гігієна': [
       { id: 'all', title: 'Усе для краси', icon: 'cat-beauty' },
       { id: 'Догляд за шкірою', title: 'Догляд за шкірою', icon: 'sub-skincare' },
-      { id: 'Догляд за волоссям', title: 'Догляд за волоссям', icon: 'sub-haircare' },
-      { id: 'Декоративна косметика', title: 'Декоративна косметика', icon: 'sub-cosmetics' },
+      { id: 'Догляд за волоссям', title: 'Догляд за волоссям', icon: 'sub-hair' },
+      { id: 'Декоративна косметика', title: 'Декоративна косметика', icon: 'sub-makeup' },
       { id: 'Особиста гігієна', title: 'Особиста гігієна', icon: 'sub-hygiene' }
     ],
     'Дім та Побут': [
       { id: 'all', title: 'Усе для дому', icon: 'cat-home' },
       { id: 'Побутова хімія', title: 'Побутова хімія', icon: 'sub-cleaning' },
       { id: 'Кухня та Посуд', title: 'Кухня та Посуд', icon: 'sub-kitchen' },
-      { id: 'Дім та Затишок', title: 'Дім та Затишок', icon: 'sub-homedecor' }
+      { id: 'Паперова продукція', title: 'Паперова продукція', icon: 'sub-decor' },
+      { id: 'Дім та Затишок', title: 'Дім та Затишок', icon: 'sub-decor' }
     ],
     'Зоотовари': [
       { id: 'all', title: 'Усі зоотовари', icon: 'cat-pets' },
-      { id: 'Для котів', title: 'Для котів', icon: 'sub-catfood' },
-      { id: 'Для собак', title: 'Для собак', icon: 'sub-dogfood' }
+      { id: 'Для котів', title: 'Для котів', icon: 'sub-cats' },
+      { id: 'Для собак', title: 'Для собак', icon: 'sub-dogs' }
     ]
   };
 
@@ -542,10 +589,84 @@
       } catch (_) {}
     }
 
+    if (typeof target._onCancelResolve === 'function') {
+      const cancelCb = target._onCancelResolve;
+      target._onCancelResolve = null;
+      cancelCb(false);
+    }
+
     target._closeTimer = setTimeout(() => {
       target.classList.remove('is-closing');
       target._closeTimer = null;
     }, 380);
+  }
+
+  function showConfirmDialog({ title = 'Підтвердження дії', message = 'Ви впевнені?', confirmText = 'Підтвердити' } = {}) {
+    return new Promise((resolve) => {
+      let modal = document.getElementById('app-confirm-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'app-confirm-modal';
+        modal.className = 'modal-backdrop';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'app-confirm-title');
+        modal.innerHTML = `
+          <div class="modal-dialog admin-confirm-dialog">
+            <div class="modal-header">
+              <h2 id="app-confirm-title" class="modal-title">Підтвердження дії</h2>
+              <button type="button" class="modal-close-btn" data-close-modal aria-label="Закрити вікно підтвердження">
+                <svg class="icon" aria-hidden="true">
+                  <use href="assets/sprite.svg#icon-close"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body admin-confirm-body">
+              <p id="app-confirm-message" class="admin-confirm-message"></p>
+            </div>
+            <div class="modal-footer admin-confirm-footer">
+              <button type="button" id="app-confirm-cancel-btn" class="btn btn-secondary">Скасувати</button>
+              <button type="button" id="app-confirm-ok-btn" class="btn btn-primary">Підтвердити</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeModal(modal);
+        });
+        const xBtn = modal.querySelector('[data-close-modal]');
+        if (xBtn) xBtn.addEventListener('click', () => closeModal(modal));
+      }
+
+      const titleEl = modal.querySelector('#app-confirm-title');
+      const msgEl = modal.querySelector('#app-confirm-message');
+      const cancelBtn = modal.querySelector('#app-confirm-cancel-btn');
+      const okBtn = modal.querySelector('#app-confirm-ok-btn');
+
+      if (titleEl) titleEl.textContent = title;
+      if (msgEl) msgEl.textContent = message;
+      if (okBtn) okBtn.textContent = confirmText;
+
+      let settled = false;
+      const finish = (confirmed) => {
+        if (settled) return;
+        settled = true;
+        modal._onCancelResolve = null;
+        if (okBtn) okBtn.onclick = null;
+        if (cancelBtn) cancelBtn.onclick = null;
+        resolve(confirmed);
+      };
+
+      modal._onCancelResolve = finish;
+      if (cancelBtn) cancelBtn.onclick = () => closeModal(modal);
+      if (okBtn) {
+        okBtn.onclick = () => {
+          finish(true);
+          closeModal(modal);
+        };
+      }
+      openModal(modal);
+    });
   }
 
   function initModalEvents() {
@@ -1115,8 +1236,14 @@
       const actionIcon = card.format === 'barcode' ? 'icon-barcode' : 'icon-qr';
       const scanHint = card.format === 'barcode' ? 'Торкніться для показу коду' : 'Торкніться для показу QR';
 
+      const safeStoreName = escapeHtml(card.storeName || meta.name);
+      const safeProgram = escapeHtml(card.program || meta.program);
+      const safeNumber = escapeHtml(formattedNumber);
+      const safeNote = escapeHtml(card.note || 'Торкніться «Редагувати», щоб додати баланс або купон.');
+      const safeCardId = escapeHtml(card.id);
+
       return `
-        <article class="loyalty-card reveal-item is-visible scroll-item" data-store="${card.store}" data-cat="${catMeta.key}" data-card-id="${card.id}">
+        <article class="loyalty-card reveal-item is-visible scroll-item" data-store="${escapeHtml(card.store)}" data-cat="${catMeta.key}" data-card-id="${safeCardId}">
           <div class="card-body-stack">
             <div class="card-top">
               <div class="card-brand">
@@ -1125,12 +1252,12 @@
                     <svg class="icon icon-stroke cat-badge-icon" aria-hidden="true">
                       <use href="assets/sprite.svg#${catMeta.icon}"></use>
                     </svg>
-                    <span>${catMeta.label} · ${card.program || meta.program}</span>
+                    <span>${escapeHtml(catMeta.label)} · ${safeProgram}</span>
                   </span>
-                  <h3 class="card-store-name">${card.storeName || meta.name}</h3>
+                  <h3 class="card-store-name">${safeStoreName}</h3>
                 </div>
               </div>
-              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="${card.id}" aria-label="Показати на касі ${card.storeName || meta.name}" title="Торкніться для відкриття QR">
+              <button type="button" class="card-qr-badge-btn" data-action="scan" data-card-id="${safeCardId}" aria-label="Показати на касі ${safeStoreName}" title="Торкніться для відкриття QR">
                 <svg class="icon" aria-hidden="true">
                   <use href="assets/sprite.svg#${actionIcon}"></use>
                 </svg>
@@ -1139,36 +1266,36 @@
 
             <div class="card-number-wrapper">
               <span class="card-number-label">№ картки</span>
-              <div class="card-number-code">${formattedNumber}</div>
+              <div class="card-number-code">${safeNumber}</div>
             </div>
 
             <div class="card-note-box">
               <div class="card-note-header">
                 <span class="card-note-label">Особиста примітка / Баланс</span>
-                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="${card.id}" aria-label="Редагувати картку ${card.storeName || meta.name}">
+                <button type="button" class="card-note-edit-btn" data-action="edit" data-card-id="${safeCardId}" aria-label="Редагувати картку ${safeStoreName}">
                   <span>Редагувати</span>
                   <svg class="icon icon-xs" aria-hidden="true">
                     <use href="assets/sprite.svg#icon-edit"></use>
                   </svg>
                 </button>
               </div>
-              <p class="card-note-text">${card.note || 'Торкніться «Редагувати», щоб додати баланс або купон.'}</p>
+              <p class="card-note-text">${safeNote}</p>
             </div>
           </div>
 
           <div class="card-actions">
-            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="${card.id}" aria-label="Показати на касі ${card.storeName || meta.name}">
+            <button type="button" class="btn-card-scan-link" data-action="scan" data-card-id="${safeCardId}" aria-label="Показати на касі ${safeStoreName}">
               <svg class="icon icon-sm" aria-hidden="true">
                 <use href="assets/sprite.svg#${actionIcon}"></use>
               </svg>
               <span>${scanHint}</span>
             </button>
             <div class="card-action-group">
-              <button type="button" class="btn-card-open" data-action="scan" data-card-id="${card.id}">
+              <button type="button" class="btn-card-open" data-action="scan" data-card-id="${safeCardId}">
                 <span>Відкрити</span>
                 <span aria-hidden="true">›</span>
               </button>
-              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="${card.id}" aria-label="Видалити картку ${card.storeName || meta.name}">
+              <button type="button" class="btn-icon-subtle" data-action="delete" data-card-id="${safeCardId}" aria-label="Видалити картку ${safeStoreName}">
                 <svg class="icon icon-xs" aria-hidden="true">
                   <use href="assets/sprite.svg#icon-trash"></use>
                 </svg>
@@ -1216,7 +1343,12 @@
         const id = btn.dataset.cardId;
         const card = AppState.cards.find(c => String(c.id) === String(id));
         const name = card ? card.storeName : 'картку';
-        if (confirm(`Ви впевнені, що бажаєте видалити ${name}?`)) {
+        const confirmed = await showConfirmDialog({
+          title: 'Видалити картку',
+          message: `Ви впевнені, що бажаєте видалити картку «${name}»?`,
+          confirmText: 'Видалити'
+        });
+        if (confirmed) {
           if (window.AureliaAPI) {
             await window.AureliaAPI.deleteCard(id);
           }
@@ -1552,12 +1684,17 @@
     const validPrices = rawEntries.filter((entry) => {
       const p = parseFloat(entry.price);
       const inSelected = activeSelectedStores.includes(entry.store);
-      const matchesSingleStore = !selectedStore || selectedStore === 'all' || selectedStore === 'multi-store' || entry.store === selectedStore;
-      return !isNaN(p) && p > 0 && inSelected && matchesSingleStore;
+      return !isNaN(p) && p > 0 && inSelected;
     });
 
+    const matchesStoreFilter = !selectedStore || selectedStore === 'all'
+      ? validPrices.length > 0
+      : (selectedStore === 'multi-store'
+        ? validPrices.length >= 2
+        : validPrices.some((entry) => entry.store === selectedStore));
+
     if (validPrices.length === 0) {
-      return { validPrices: [], minPrice: 0, maxDiscount: 0, maxSavingsUah: 0, spreadSavings: 0 };
+      return { validPrices: [], matchesStoreFilter: false, minPrice: 0, maxDiscount: 0, maxSavingsUah: 0, spreadSavings: 0 };
     }
 
     const numericPrices = validPrices.map(e => parseFloat(e.price)).filter(p => !isNaN(p) && p > 0);
@@ -1583,6 +1720,7 @@
 
     return {
       validPrices,
+      matchesStoreFilter,
       minPrice: (isFinite(minPrice) && !isNaN(minPrice) && minPrice > 0) ? minPrice : 0,
       maxDiscount: (isFinite(maxDiscount) && !isNaN(maxDiscount) && maxDiscount > 0) ? maxDiscount : 0,
       maxSavingsUah: Math.max(spreadSavings, maxPromoSavings),
@@ -1773,14 +1911,15 @@
       });
     }
 
-    // Filter by Level 2 Subcategory
+    // Filter by Level 2 Subcategory (matching canonical aliases like "Волосся" <-> "Догляд за волоссям")
     if (AppState.catalogSubCategory !== 'all') {
+      const targetSubKey = normalizeSubCategoryKey(AppState.catalogSubCategory);
       list = list.filter(p => {
         const sub = p.subCategory || p.sub_category;
-        if (sub && sub === AppState.catalogSubCategory) return true;
-        if (p.category === AppState.catalogSubCategory) return true;
+        if (sub && normalizeSubCategoryKey(sub) === targetSubKey) return true;
+        if (p.category && normalizeSubCategoryKey(p.category) === targetSubKey) return true;
         if (window.AureliaAPI && typeof window.AureliaAPI.resolveCategories === 'function') {
-          return window.AureliaAPI.resolveCategories(p).subCategory === AppState.catalogSubCategory;
+          return normalizeSubCategoryKey(window.AureliaAPI.resolveCategories(p).subCategory) === targetSubKey;
         }
         return false;
       });
@@ -1800,11 +1939,7 @@
 
     list = list.filter((p) => {
       const m = getMetrics(p);
-      if (m.validPrices.length === 0) return false;
-
-      if (AppState.catalogStore === 'multi-store' && m.validPrices.length < 2) {
-        return false;
-      }
+      if (m.validPrices.length === 0 || !m.matchesStoreFilter) return false;
 
       if (AppState.catalogPriceMin !== null && m.minPrice < AppState.catalogPriceMin) {
         return false;
@@ -1950,35 +2085,43 @@
         `;
       }).join('') : '<div class="file-hint">Ціни оновлюються...</div>';
 
-      // Check if already in basket
-      const inBasket = AppState.basket.some(item => String(item.productId) === String(prod.id));
+      // Check if already in basket (by ID or exact title fallback)
+      const rawTitle = String(prod.title || prod.name || '').trim();
+      const lowerTitle = rawTitle.toLowerCase();
+      const inBasket = AppState.basket.some(item =>
+        String(item.productId) === String(prod.id) ||
+        (item.title && String(item.title).trim().toLowerCase() === lowerTitle)
+      );
 
       const priceCurrentHtml = minPrice > 0
         ? `${minPrice.toFixed(2)} ₴`
         : 'Уточнюється';
 
       const displayCategory = prod.subCategory || prod.category || prodCat.label;
+      const safeTitle = escapeHtml(rawTitle);
+      const safeUnit = escapeHtml(prod.unit || 'шт');
+      const safeDisplayCat = escapeHtml(displayCategory);
       const multiStoreBadgeHtml = priceEntries.length >= 2
-        ? `<span class="multi-store-badge">${priceEntries.length} мережі</span>`
+        ? `<span class="multi-store-badge">${priceEntries.length} ${pluralizeUk(priceEntries.length, 'мережа', 'мережі', 'мереж')}</span>`
         : '';
 
       return `
-        <article class="product-card reveal-item is-visible scroll-item" data-product-id="${prod.id}" data-cat="${prodCat.key}">
+        <article class="product-card reveal-item is-visible scroll-item" data-product-id="${escapeHtml(prod.id)}" data-cat="${prodCat.key}">
           <div class="product-lead">
             <div class="product-thumb-tile cat-${prodCat.key}" aria-hidden="true">
               <svg class="icon icon-stroke product-thumb-icon" aria-hidden="true">
                 <use href="assets/sprite.svg#${prodCat.icon}"></use>
               </svg>
-              <span class="product-unit-pill">${prod.unit || 'шт'}</span>
+              <span class="product-unit-pill">${safeUnit}</span>
             </div>
             <div class="product-lead-body">
               <div class="product-badge-row">
-                <span class="product-category-tag">${displayCategory}</span>
+                <span class="product-category-tag">${safeDisplayCat}</span>
                 ${multiStoreBadgeHtml}
                 ${maxDiscount > 0 ? `<span class="discount-tag">до -${maxDiscount}%</span>` : ''}
               </div>
-              <h3 class="product-title">${prod.title || prod.name}</h3>
-              <div class="product-unit-meta">${prodCat.label} · Одиниця: ${prod.unit || 'шт'}</div>
+              <h3 class="product-title">${safeTitle}</h3>
+              <div class="product-unit-meta">${escapeHtml(prodCat.label)} · Одиниця: ${safeUnit}</div>
             </div>
           </div>
 
@@ -1992,7 +2135,7 @@
               <span class="product-savings-label">${spreadSavings > 0 ? `Вигода: до ${spreadSavings.toFixed(2)} ₴` : (priceEntries.length > 1 ? 'Найкраща ціна від' : 'Актуальна ціна')}</span>
               <span class="price-current">${priceCurrentHtml}</span>
             </div>
-            <button type="button" class="btn ${inBasket ? 'btn-secondary' : 'btn-primary'}" data-add-basket="${prod.id}">
+            <button type="button" class="btn ${inBasket ? 'btn-secondary' : 'btn-primary'}" data-add-basket="${escapeHtml(prod.id)}">
               <svg class="icon icon-sm" aria-hidden="true">
                 <use href="assets/sprite.svg#icon-cart"></use>
               </svg>
@@ -2094,20 +2237,31 @@
   }
 
   function bindCatalogActions() {
-    if (!DOM.catalogContainer) return;
+    if (!DOM.catalogContainer || DOM.catalogContainer._delegatedCatalogActions) return;
+    DOM.catalogContainer._delegatedCatalogActions = true;
 
-    DOM.catalogContainer.querySelectorAll('[data-add-basket]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const prodId = btn.dataset.addBasket;
-        if (window.AureliaAPI) {
-          const existing = AppState.basket.find(i => String(i.productId) === String(prodId));
-          const newQty = existing ? existing.qty + 1 : 1;
-          AppState.basket = await window.AureliaAPI.toggleBasketItem(prodId, newQty);
-          btn.classList.remove('btn-primary');
-          btn.classList.add('btn-secondary');
-          btn.querySelector('span').textContent = 'У кошику ✓';
-        }
-      });
+    DOM.catalogContainer.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-add-basket]');
+      if (!btn || !DOM.catalogContainer.contains(btn)) return;
+
+      const prodId = btn.dataset.addBasket;
+      if (window.AureliaAPI) {
+        const prod = AppState.products.find(p => String(p.id) === String(prodId));
+        const prodTitle = prod ? (prod.title || prod.name || '') : '';
+        const existing = AppState.basket.find(i =>
+          String(i.productId) === String(prodId) ||
+          (prodTitle && i.title && String(i.title).trim().toLowerCase() === prodTitle.trim().toLowerCase())
+        );
+        const newQty = existing ? existing.qty + 1 : 1;
+        AppState.basket = await window.AureliaAPI.toggleBasketItem(prodId, newQty, {
+          title: prodTitle,
+          unit: prod ? (prod.unit || 'шт') : 'шт'
+        });
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+        const span = btn.querySelector('span');
+        if (span) span.textContent = 'У кошику ✓';
+      }
     });
   }
 
@@ -2281,7 +2435,12 @@
 
     if (DOM.btnClearBasket) {
       DOM.btnClearBasket.addEventListener('click', async () => {
-        if (confirm('Очистити весь кошик покупок?')) {
+        const confirmed = await showConfirmDialog({
+          title: 'Очистити кошик',
+          message: 'Ви впевнені, що бажаєте видалити всі товари з розумного кошика?',
+          confirmText: 'Очистити'
+        });
+        if (confirmed) {
           if (window.AureliaAPI) {
             AppState.basket = await window.AureliaAPI.clearBasket();
           }
@@ -2387,17 +2546,36 @@
   function renderBasket() {
     if (!DOM.basketItemsContainer) return;
 
+    const hasCatalog = AppState.products.length > 0;
+    const resolvedEntries = AppState.basket
+      .map(item => ({ item, prod: findProductForBasketItem(item) }))
+      .filter(entry => Boolean(entry.prod));
+
+    if (hasCatalog && resolvedEntries.length < AppState.basket.length) {
+      const staleItems = AppState.basket.filter(item => !findProductForBasketItem(item));
+      AppState.basket = resolvedEntries.map(entry => entry.item);
+      if (window.AureliaAPI && typeof window.AureliaAPI.toggleBasketItem === 'function') {
+        staleItems.forEach(stale => {
+          window.AureliaAPI.toggleBasketItem(stale.productId, 0).catch(() => {});
+        });
+      }
+    }
+
     // Update count badge & hero metric
-    const totalItems = AppState.basket.reduce((sum, item) => sum + item.qty, 0);
+    const totalItems = hasCatalog
+      ? resolvedEntries.reduce((sum, entry) => sum + entry.item.qty, 0)
+      : AppState.basket.reduce((sum, item) => sum + item.qty, 0);
     if (DOM.basketCountBadge) {
       DOM.basketCountBadge.textContent = totalItems;
     }
     const heroCountEl = document.getElementById('hero-basket-count');
     const heroSavingsEl = document.getElementById('hero-basket-savings');
     const heroPercentEl = document.getElementById('hero-basket-percent');
-    if (heroCountEl) heroCountEl.textContent = AppState.basket.length;
+    if (heroCountEl) heroCountEl.textContent = hasCatalog ? resolvedEntries.length : AppState.basket.length;
 
-    if (AppState.basket.length === 0) {
+    if (AppState.basket.length === 0 || (hasCatalog && resolvedEntries.length === 0)) {
+      if (DOM.basketCountBadge) DOM.basketCountBadge.textContent = 0;
+      if (heroCountEl) heroCountEl.textContent = 0;
       if (heroSavingsEl) heroSavingsEl.textContent = '0.00 ₴';
       if (heroPercentEl) heroPercentEl.textContent = '0%';
       DOM.basketItemsContainer.innerHTML = `
@@ -2429,10 +2607,7 @@
     }
 
     // Render list of basket items as Stitch architectural ledger rows
-    DOM.basketItemsContainer.innerHTML = AppState.basket.map(item => {
-      const prod = AppState.products.find(p => String(p.id) === String(item.productId));
-      if (!prod) return '';
-
+    DOM.basketItemsContainer.innerHTML = resolvedEntries.map(({ item, prod }) => {
       const validPrices = getProductValidPrices(prod);
       validPrices.sort((a, b) => a.price - b.price);
 
@@ -2447,36 +2622,40 @@
       const nextStoreName = nextBest ? (STORE_META[nextBest.store]?.name || nextBest.store) : '';
       const itemTotal = (minP * item.qty).toFixed(2);
       const itemOldTotal = oldP > minP ? (oldP * item.qty).toFixed(2) : '';
+      const safeTitle = escapeHtml(prod.title || prod.name || '');
+      const safeSubCategory = escapeHtml(prod.subCategory || prod.category || '');
+      const safeUnit = escapeHtml(prod.unit || 'шт');
+      const safeItemId = escapeHtml(item.productId);
 
       return `
-        <article class="basket-item reveal-item is-visible scroll-item" data-basket-product="${prod.id}" data-cat="${prodCat.key}">
+        <article class="basket-item reveal-item is-visible scroll-item" data-basket-product="${escapeHtml(prod.id)}" data-cat="${escapeHtml(prodCat.key)}">
           <div class="basket-item-lead">
-            <div class="basket-item-badge-col cat-${prodCat.key}">
+            <div class="basket-item-badge-col cat-${escapeHtml(prodCat.key)}">
               <span class="basket-disc-chip">${discPct > 0 ? `-${discPct}%` : 'БАЗОВА'}</span>
               <svg class="icon icon-stroke basket-cat-icon" aria-hidden="true">
-                <use href="assets/sprite.svg#${prodCat.icon}"></use>
+                <use href="assets/sprite.svg#${escapeHtml(prodCat.icon)}"></use>
               </svg>
             </div>
             <div class="basket-item-info">
               <div class="basket-item-store-row">
                 <span class="basket-store-tag">
                   <svg class="icon icon-stroke cat-badge-icon-xs" aria-hidden="true">
-                    <use href="assets/sprite.svg#${prodCat.icon}"></use>
+                    <use href="assets/sprite.svg#${escapeHtml(prodCat.icon)}"></use>
                   </svg>
-                  <span>${storeName || 'Мережа'} · ${minP.toFixed(2)} ₴</span>
+                  <span>${escapeHtml(storeName || 'Мережа')} · ${minP.toFixed(2)} ₴</span>
                 </span>
-                ${nextBest ? `<span class="basket-compare-hint">проти ${parseFloat(nextBest.price).toFixed(2)} ₴ у ${nextStoreName}</span>` : ''}
+                ${nextBest ? `<span class="basket-compare-hint">проти ${parseFloat(nextBest.price).toFixed(2)} ₴ у ${escapeHtml(nextStoreName)}</span>` : ''}
               </div>
-              <h3 class="basket-item-title">${prod.title || prod.name}</h3>
-              <span class="basket-item-meta">${prodCat.label} · ${prod.subCategory || prod.category || ''} · ${prod.unit || 'шт'}</span>
+              <h3 class="basket-item-title">${safeTitle}</h3>
+              <span class="basket-item-meta">${escapeHtml(prodCat.label)} · ${safeSubCategory} · ${safeUnit}</span>
             </div>
           </div>
 
           <div class="basket-item-actions">
             <div class="qty-control">
-              <button type="button" class="qty-btn" data-qty-change="-1" data-prod-id="${prod.id}" aria-label="Зменшити кількість">-</button>
+              <button type="button" class="qty-btn" data-qty-change="-1" data-prod-id="${safeItemId}" data-prod-title="${safeTitle}" data-prod-unit="${safeUnit}" aria-label="Зменшити кількість">-</button>
               <span class="qty-val">${item.qty}</span>
-              <button type="button" class="qty-btn" data-qty-change="1" data-prod-id="${prod.id}" aria-label="Збільшити кількість">+</button>
+              <button type="button" class="qty-btn" data-qty-change="1" data-prod-id="${safeItemId}" data-prod-title="${safeTitle}" data-prod-unit="${safeUnit}" aria-label="Збільшити кількість">+</button>
             </div>
 
             <div class="basket-price-col">
@@ -2484,7 +2663,7 @@
               ${itemOldTotal ? `<div class="price-old">${itemOldTotal} ₴</div>` : `<div class="basket-unit-calc">${item.qty} × ${minP.toFixed(2)} ₴</div>`}
             </div>
 
-            <button type="button" class="btn-icon-subtle" data-remove-basket="${prod.id}" aria-label="Видалити ${prod.title || prod.name}">
+            <button type="button" class="btn-icon-subtle" data-remove-basket="${safeItemId}" aria-label="Видалити ${safeTitle}">
               <svg class="icon icon-sm" aria-hidden="true">
                 <use href="assets/sprite.svg#icon-close"></use>
               </svg>
@@ -2500,33 +2679,38 @@
   }
 
   function bindBasketActions() {
-    if (!DOM.basketItemsContainer) return;
+    if (!DOM.basketItemsContainer || DOM.basketItemsContainer._delegatedBasketActions) return;
+    DOM.basketItemsContainer._delegatedBasketActions = true;
 
-    // Quantity buttons
-    DOM.basketItemsContainer.querySelectorAll('[data-qty-change]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const prodId = btn.dataset.prodId;
-        const change = parseInt(btn.dataset.qtyChange, 10);
+    DOM.basketItemsContainer.addEventListener('click', async (e) => {
+      const qtyBtn = e.target.closest('[data-qty-change]');
+      if (qtyBtn && DOM.basketItemsContainer.contains(qtyBtn)) {
+        const prodId = qtyBtn.dataset.prodId;
+        const change = parseInt(qtyBtn.dataset.qtyChange, 10);
         const item = AppState.basket.find(i => String(i.productId) === String(prodId));
         if (!item) return;
 
         const newQty = item.qty + change;
+        const prod = findProductForBasketItem(item);
+        const meta = {
+          title: item.title || prod?.title || prod?.name || qtyBtn.dataset.prodTitle || '',
+          unit: item.unit || prod?.unit || qtyBtn.dataset.prodUnit || ''
+        };
         if (window.AureliaAPI) {
-          AppState.basket = await window.AureliaAPI.toggleBasketItem(prodId, newQty);
+          AppState.basket = await window.AureliaAPI.toggleBasketItem(prodId, newQty, meta);
         }
         renderBasket();
-      });
-    });
+        return;
+      }
 
-    // Remove button
-    DOM.basketItemsContainer.querySelectorAll('[data-remove-basket]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const prodId = btn.dataset.removeBasket;
+      const removeBtn = e.target.closest('[data-remove-basket]');
+      if (removeBtn && DOM.basketItemsContainer.contains(removeBtn)) {
+        const prodId = removeBtn.dataset.removeBasket;
         if (window.AureliaAPI) {
           AppState.basket = await window.AureliaAPI.toggleBasketItem(prodId, 0);
         }
         renderBasket();
-      });
+      }
     });
   }
 
@@ -2539,22 +2723,31 @@
       : null;
     const cityActiveStores = cityConfig ? cityConfig.activeStores : STORES;
 
+    // Pre-resolve basket items & per-store valid prices once for both optimizer modes
+    const resolvedBasket = AppState.basket.map(item => {
+      const prod = findProductForBasketItem(item);
+      if (!prod) return null;
+      const validPrices = getProductValidPrices(prod);
+      validPrices.sort((a, b) => a.price - b.price);
+      const priceByStore = new Map();
+      validPrices.forEach(vp => {
+        const sk = String(vp.store || '').toLowerCase();
+        if (sk && !priceByStore.has(sk)) priceByStore.set(sk, vp);
+      });
+      return { item, prod, validPrices, priceByStore };
+    }).filter(Boolean);
+
     /* ── MODE A: Оптимальний маршрут (Split-Store Best Deal) ── */
     const routeStores = {};
-    AppState.basket.forEach(item => {
-      const prod = AppState.products.find(p => String(p.id) === String(item.productId));
-      if (!prod) return;
-
-      const validPrices = getProductValidPrices(prod);
+    resolvedBasket.forEach(({ item, prod, validPrices }) => {
       if (validPrices.length === 0) return;
-
-      validPrices.sort((a, b) => a.price - b.price);
       const best = validPrices[0];
 
       const itemPrice = parseFloat(best.price);
-      const itemOldPrice = parseFloat(best.oldPrice) && parseFloat(best.oldPrice) > itemPrice
-        ? parseFloat(best.oldPrice)
-        : Math.round(itemPrice * 1.25);
+      const parsedOld = parseFloat(best.oldPrice);
+      const itemOldPrice = (Number.isFinite(parsedOld) && parsedOld > itemPrice)
+        ? parsedOld
+        : itemPrice;
       const lineTotal = itemPrice * item.qty;
       const lineOldTotal = itemOldPrice * item.qty;
 
@@ -2628,18 +2821,20 @@
           <div class="optimal-stores-list">
             ${routeList.map(st => {
               const storeCat = resolveEntityCategory({ store: st.store });
+              const safeStoreName = escapeHtml(st.meta.name);
+              const itemsLabel = pluralizeUk(st.items.length, 'позиція', 'позиції', 'позицій');
               return `
               <div class="optimal-store-group">
                 <div class="optimal-store-header">
                   <div class="scorecard-store-group">
-                    <span class="store-modal-icon-box cat-${storeCat.key}" aria-hidden="true">
+                    <span class="store-modal-icon-box cat-${escapeHtml(storeCat.key)}" aria-hidden="true">
                       <svg class="icon icon-stroke" aria-hidden="true">
-                        <use href="assets/sprite.svg#${storeCat.icon}"></use>
+                        <use href="assets/sprite.svg#${escapeHtml(storeCat.icon)}"></use>
                       </svg>
                     </span>
                     <div>
-                      <strong>${st.meta.name}</strong>
-                      <div class="file-hint">${st.items.length} ${st.items.length === 1 ? 'позиція' : 'позиції'} у чеку</div>
+                      <strong>${safeStoreName}</strong>
+                      <div class="file-hint">${st.items.length} ${itemsLabel} у чеку</div>
                     </div>
                   </div>
                   <div class="optimal-store-subtotal">
@@ -2648,23 +2843,29 @@
                 </div>
 
                 <ul class="optimal-items-list">
-                  ${st.items.map(it => `
+                  ${st.items.map(it => {
+                    const safeTitle = escapeHtml(it.title);
+                    const safeUnit = escapeHtml(it.unit);
+                    const rawUrl = String(it.sourceUrl || '').trim();
+                    const safeUrl = /^https?:\/\//i.test(rawUrl) ? escapeHtml(rawUrl) : '';
+                    return `
                     <li class="optimal-item-row">
                       <div class="optimal-item-name">
-                        <span class="optimal-item-title">${it.title}</span>
-                        <span class="optimal-item-unit-calc">${it.qty} × ${it.price.toFixed(2)} грн / ${it.unit}</span>
+                        <span class="optimal-item-title">${safeTitle}</span>
+                        <span class="optimal-item-unit-calc">${it.qty} × ${it.price.toFixed(2)} грн / ${safeUnit}</span>
                       </div>
                       <div class="optimal-item-price-col">
                         <span class="optimal-line-total">${it.lineTotal.toFixed(2)} грн</span>
-                        ${it.sourceUrl ? `
-                          <a href="${it.sourceUrl}" target="_blank" rel="noopener noreferrer" class="link-store-source" aria-label="Відкрити ${it.title} на офіційному сайті ${st.meta.name}">
+                        ${safeUrl ? `
+                          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-store-source" aria-label="Відкрити ${safeTitle} на офіційному сайті ${safeStoreName}">
                             <span>На сайті</span>
                             <span aria-hidden="true">↗</span>
                           </a>
                         ` : ''}
                       </div>
                     </li>
-                  `).join('')}
+                  `;
+                  }).join('')}
                 </ul>
               </div>
             `; }).join('')}
@@ -2682,18 +2883,16 @@
       let sum = 0;
       let regularSum = 0;
       let matchedCount = 0;
+      const storeKey = String(store || '').toLowerCase();
 
-      AppState.basket.forEach(item => {
-        const prod = AppState.products.find(p => String(p.id) === String(item.productId));
-        if (prod) {
-          const validPrices = getProductValidPrices(prod);
-          const sp = validPrices.find(x => (x.store || '').toLowerCase() === store.toLowerCase());
-          if (sp && sp.price) {
-            sum += sp.price * item.qty;
-            const oldP = sp.oldPrice && sp.oldPrice > sp.price ? sp.oldPrice : Math.round(sp.price * 1.25);
-            regularSum += oldP * item.qty;
-            matchedCount++;
-          }
+      resolvedBasket.forEach(({ item, priceByStore }) => {
+        const sp = priceByStore.get(storeKey);
+        if (sp && sp.price) {
+          sum += sp.price * item.qty;
+          const parsedOldP = parseFloat(sp.oldPrice);
+          const oldP = (Number.isFinite(parsedOldP) && parsedOldP > sp.price) ? parsedOldP : sp.price;
+          regularSum += oldP * item.qty;
+          matchedCount++;
         }
       });
 
@@ -2723,13 +2922,14 @@
     const winner = storeTotals[0];
     const mostExpensive = storeTotals[storeTotals.length - 1];
     const singleStoreSavings = mostExpensive.total - winner.total;
+    const totalPositionsLabel = pluralizeUk(AppState.basket.length, 'позиції', 'позицій', 'позицій');
 
     // Update banner
     if (DOM.savingsTextDesc) {
       if (singleStoreSavings > 0 && storeTotals.length > 1) {
-        DOM.savingsTextDesc.textContent = `У мережі ${winner.meta.name} чек становить ${winner.total.toFixed(2)} грн (${winner.matchedCount} з ${AppState.basket.length} позицій) — економія ${singleStoreSavings.toFixed(2)} грн порівняно з найдорожчим варіантом!`;
+        DOM.savingsTextDesc.textContent = `У мережі ${winner.meta.name} чек становить ${winner.total.toFixed(2)} грн (${winner.matchedCount} з ${AppState.basket.length} ${totalPositionsLabel}) — економія ${singleStoreSavings.toFixed(2)} грн порівняно з найдорожчим варіантом!`;
       } else {
-        DOM.savingsTextDesc.textContent = `У мережі ${winner.meta.name} підсумок: ${winner.total.toFixed(2)} грн (${winner.matchedCount} з ${AppState.basket.length} позицій)`;
+        DOM.savingsTextDesc.textContent = `У мережі ${winner.meta.name} підсумок: ${winner.total.toFixed(2)} грн (${winner.matchedCount} з ${AppState.basket.length} ${totalPositionsLabel})`;
       }
     }
 
@@ -2743,14 +2943,14 @@
       return `
         <div class="scorecard-item ${isWinner ? 'is-winner' : ''}">
           <div class="scorecard-store-group">
-            <span class="store-modal-icon-box cat-${storeCat.key}" aria-hidden="true">
+            <span class="store-modal-icon-box cat-${escapeHtml(storeCat.key)}" aria-hidden="true">
               <svg class="icon icon-stroke" aria-hidden="true">
-                <use href="assets/sprite.svg#${storeCat.icon}"></use>
+                <use href="assets/sprite.svg#${escapeHtml(storeCat.icon)}"></use>
               </svg>
             </span>
             <div>
-              <strong>${st.meta.name}</strong>
-              <div class="file-hint">${st.matchedCount} з ${AppState.basket.length} позицій ${hasAllItems ? '• повний чек' : '• частковий чек'}</div>
+              <strong>${escapeHtml(st.meta.name)}</strong>
+              <div class="file-hint">${st.matchedCount} з ${AppState.basket.length} ${totalPositionsLabel} ${hasAllItems ? '• повний чек' : '• частковий чек'}</div>
               ${isWinner ? '<div class="best-price-badge">НАЙВИГІДНІШИЙ ЄДИНИЙ ЧЕК</div>' : ''}
             </div>
           </div>
@@ -3047,6 +3247,11 @@
 
       closeModal(DOM.authModal);
       updateAuthUI();
+      initImpersonationBanner();
+
+      if (window.AureliaAPI && typeof window.AureliaAPI.sendHeartbeat === 'function') {
+        window.AureliaAPI.sendHeartbeat().catch(() => {});
+      }
 
       if (DOM.cardsContainer && window.AureliaAPI) {
         AppState.cards = await window.AureliaAPI.getCards();
@@ -3509,6 +3714,89 @@
     initOfflineIndicator();
   }
 
+  function initImpersonationBanner() {
+    if (!window.AureliaAPI || typeof window.AureliaAPI.getAdminReturnSession !== 'function') return;
+    const adminReturn = window.AureliaAPI.getAdminReturnSession();
+    const existingBanner = document.getElementById('impersonation-banner');
+
+    if (!adminReturn) {
+      if (existingBanner) existingBanner.remove();
+      document.body.classList.remove('has-impersonation-banner');
+      return;
+    }
+
+    const currentUser = typeof window.AureliaAPI.getCurrentUser === 'function'
+      ? window.AureliaAPI.getCurrentUser()
+      : null;
+    const targetName = (currentUser && (currentUser.name || currentUser.email)) || 'Клієнт';
+    const adminName = adminReturn.name || 'bleki';
+
+    let banner = existingBanner;
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'impersonation-banner';
+      banner.className = 'impersonation-banner';
+      banner.setAttribute('role', 'region');
+      banner.setAttribute('aria-label', 'Режим імперсонації користувача');
+      document.body.prepend(banner);
+    }
+
+    banner.innerHTML = '';
+    const inner = document.createElement('div');
+    inner.className = 'impersonation-banner-inner';
+
+    const label = document.createElement('span');
+    label.className = 'impersonation-banner-text';
+    label.textContent = `Режим перегляду акаунта: ${targetName}`;
+
+    const exitBtn = document.createElement('button');
+    exitBtn.type = 'button';
+    exitBtn.id = 'btn-exit-impersonation';
+    exitBtn.className = 'btn btn-primary btn-sm impersonation-exit-btn';
+    exitBtn.textContent = `Повернутися в Адмін (${adminName})`;
+    exitBtn.addEventListener('click', () => {
+      window.AureliaAPI.returnFromImpersonation();
+      window.location.href = 'admin.html';
+    });
+
+    inner.appendChild(label);
+    inner.appendChild(exitBtn);
+    banner.appendChild(inner);
+    document.body.classList.add('has-impersonation-banner');
+  }
+
+  let heartbeatTimerId = null;
+
+  function initHeartbeatSync() {
+    if (!window.AureliaAPI || typeof window.AureliaAPI.sendHeartbeat !== 'function') return;
+
+    const triggerHeartbeat = () => {
+      const user = typeof window.AureliaAPI.getCurrentUser === 'function'
+        ? window.AureliaAPI.getCurrentUser()
+        : null;
+      if (user && user.token) {
+        window.AureliaAPI.sendHeartbeat().catch(() => {});
+      }
+    };
+
+    window.addEventListener('aurelia:basket-cleared', () => {
+      AppState.basket = [];
+      if (DOM.basketCountBadge) DOM.basketCountBadge.textContent = '0';
+      if (DOM.basketItemsContainer) renderBasket();
+      if (DOM.catalogContainer) renderCatalog();
+    });
+
+    triggerHeartbeat();
+    if (!heartbeatTimerId) {
+      heartbeatTimerId = window.setInterval(triggerHeartbeat, 45000);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        triggerHeartbeat();
+      }
+    });
+  }
+
   /* ─── 14. App Initialisation ─────────────────────────────────────────────── */
   function init() {
     cacheDOM();
@@ -3520,6 +3808,8 @@
     initCitySelector();
     initStoresModal();
     initAuth();
+    initImpersonationBanner();
+    initHeartbeatSync();
     initPageTransitions();
     initScrollReveal();
     initServiceWorker();

@@ -66,157 +66,20 @@ const ALL_18_STORES = [
   { store: 'epicentr', name: 'Епіцентр', defaultDomain: 'epicentrk.ua' }
 ];
 
-/* ─── Canonical Brand Dictionary (Ukrainian / Latin Equivalents) ─────────── */
-const BRAND_MAP = {
-  // Coffee & Tea
-  'jacobs': 'jacobs', 'якобз': 'jacobs',
-  'lavazza': 'lavazza', 'лавацца': 'lavazza',
-  'nescafe': 'nescafe', 'нескафе': 'nescafe',
-  'greenfield': 'greenfield', 'грінфілд': 'greenfield',
-  'tess': 'tess', 'тесс': 'tess',
-  'lovare': 'lovare', 'ловаре': 'lovare',
-  'curtis': 'curtis', 'кертіс': 'curtis',
-  'idealist': 'idealist', 'ідеаліст': 'idealist',
-  'monomakh': 'monomakh', 'мономах': 'monomakh',
-  'ambassador': 'ambassador', 'амбасадор': 'ambassador',
-  'paulig': 'paulig', 'пауліг': 'paulig',
-  'illy': 'illy', 'іллі': 'illy',
-  'tchibo': 'tchibo', 'чібо': 'tchibo',
-
-  // Dairy & Cheese
-  'ferma': 'ferma', 'ферма': 'ferma',
-  'yagotynske': 'yagotynske', 'яготинське': 'yagotynske', 'яготинська': 'yagotynske', 'яготин': 'yagotynske',
-  'galychyna': 'galychyna', 'галичина': 'galychyna',
-  'prostonashe': 'prostonashe', 'простонаше': 'prostonashe', 'просто наше': 'prostonashe',
-  'prostokvashyno': 'prostokvashyno', 'простоквашино': 'prostokvashyno',
-  'molokiya': 'molokiya', 'молокія': 'molokiya',
-  'president': 'president', 'президент': 'president',
-  'komo': 'komo', 'комо': 'komo',
-  'danone': 'danone', 'данон': 'danone',
-  'actimel': 'actimel', 'актімель': 'actimel', 'актимель': 'actimel',
-  'activia': 'activia', 'активіа': 'activia',
-  'chudo': 'chudo', 'чудо': 'chudo',
-  'mlekovita': 'mlekovita', 'млековіта': 'mlekovita',
-  'spomlek': 'spomlek', 'спомлек': 'spomlek',
-  'serenada': 'serenada', 'серенада': 'serenada',
-  'slavia': 'slavia', 'славія': 'slavia',
-  'bilyacerkva': 'bilyacerkva', 'білоцерківське': 'bilyacerkva',
-  'deliq': 'deliq', 'deli-q': 'deliq', 'deli q': 'deliq',
-  'novus': 'novus', 'metro chef': 'metrochef', 'aro': 'aro',
-
-  // Sweets & Chocolate
-  'roshen': 'roshen', 'рошен': 'roshen',
-  'milka': 'milka', 'мілка': 'milka',
-  'millennium': 'millennium', 'milenium': 'millennium', 'міленіум': 'millennium',
-  'svitoch': 'svitoch', 'світоч': 'svitoch',
-  'korona': 'korona', 'корона': 'korona',
-  'nutella': 'nutella', 'нутелла': 'nutella',
-  'ferrero': 'ferrero', 'ферреро': 'ferrero',
-  'raffaello': 'raffaello', 'рафаелло': 'raffaello',
-  'kinder': 'kinder', 'кіндер': 'kinder',
-  'barni': 'barni', 'барні': 'barni',
-  'lubimov': 'lubimov', 'любимов': 'lubimov', 'любімов': 'lubimov',
-  'avk': 'avk', 'авк': 'avk',
-  'konti': 'konti', 'конті': 'konti',
-
-  // Grocery & Oils
-  'monini': 'monini', 'моніні': 'monini',
-  'oleina': 'oleina', 'олейна': 'oleina',
-  'shedryidar': 'shedryidar', 'щедрий дар': 'shedryidar',
-  'chumak': 'chumak', 'чумак': 'chumak',
-  'torchin': 'torchin', 'торчин': 'torchin',
-  'barilla': 'barilla', 'барілла': 'barilla',
-  'veres': 'veres', 'верес': 'veres',
-  'grinvil': 'grinvil', 'грінвіль': 'grinvil',
-  'harkivmlyn': 'harkivmlyn', 'харківмлин': 'harkivmlyn',
-  'makfa': 'makfa', 'макфа': 'makfa',
-
-  // Meat & Fish
-  'bashchynsky': 'bashchynsky', 'бащинський': 'bashchynsky',
-  'nasharyaba': 'nasharyaba', 'наша ряба': 'nasharyaba',
-  'garmash': 'garmash', 'гармаш': 'garmash',
-  'alan': 'alan', 'алан': 'alan',
-  'yatran': 'yatran', 'ятрань': 'yatran',
-  'rancho': 'rancho', 'ранчо': 'rancho',
-  'sytyidvir': 'sytyidvir', 'ситий двір': 'sytyidvir',
-  'norven': 'norven', 'норвен': 'norven',
-  'vodnyimir': 'vodnyimir', 'водний світ': 'vodnyimir',
-
-  // Drinks & Water
-  'coca-cola': 'cocacola', 'coca cola': 'cocacola', 'кока-кола': 'cocacola', 'кола': 'cocacola',
-  'pepsi': 'pepsi', 'пепсі': 'pepsi',
-  'fanta': 'fanta', 'фанта': 'fanta',
-  'sprite': 'sprite', 'спрайт': 'sprite',
-  'borjomi': 'borjomi', 'боржомі': 'borjomi',
-  'morshynska': 'morshynska', 'моршинська': 'morshynska',
-  'mirgorodska': 'mirgorodska', 'миргородська': 'mirgorodska',
-  'sandora': 'sandora', 'сандора': 'sandora',
-  'rich': 'rich', 'річ': 'rich',
-  'sadochok': 'sadochok', 'садочок': 'sadochok',
-  'chudo-chado': 'chudochado', 'чудо-чадо': 'chudochado',
-
-  // Home & Cleaning
-  'fairy': 'fairy', 'фейрі': 'fairy',
-  'ariel': 'ariel', 'аріель': 'ariel',
-  'persil': 'persil', 'персіл': 'persil',
-  'perwoll': 'perwoll', 'перволь': 'perwoll',
-  'tide': 'tide', 'тайд': 'tide',
-  'domestos': 'domestos', 'доместос': 'domestos',
-  'frosch': 'frosch', 'фрош': 'frosch',
-  'zewa': 'zewa', 'зева': 'zewa',
-  'selpak': 'selpak', 'селпак': 'selpak',
-  'ruta': 'ruta', 'рута': 'ruta',
-  'silan': 'silan', 'сілан': 'silan',
-  'wash&free': 'washfree', 'wash & free': 'washfree',
-  'ms helen': 'mshelen',
-
-  // Beauty & Care
-  'nivea': 'nivea', 'нівеа': 'nivea',
-  'dove': 'dove', 'дав': 'dove',
-  'palmolive': 'palmolive', 'палмолів': 'palmolive',
-  'colgate': 'colgate', 'колгейт': 'colgate',
-  'blend-a-med': 'blendamed', 'блендамед': 'blendamed',
-  'head&shoulders': 'headshoulders', 'хеденшолдерс': 'headshoulders',
-  'pantene': 'pantene', 'пантін': 'pantene',
-  'garnier': 'garnier', 'гарньєр': 'garnier',
-  'loreal': 'loreal', 'лореаль': 'loreal',
-  'splat': 'splat', 'сплат': 'splat',
-  'biomed': 'biomed', 'біомед': 'biomed',
-
-  // Pets
-  'purina': 'purina', 'пуріна': 'purina',
-  'proplan': 'proplan', 'проплан': 'proplan',
-  'felix': 'felix', 'фелікс': 'felix',
-  'whiskas': 'whiskas', 'віскас': 'whiskas',
-  'pedigree': 'pedigree', 'педігрі': 'pedigree',
-  'gourmet': 'gourmet', 'гурме': 'gourmet',
-  'sheba': 'sheba', 'шеба': 'sheba',
-  'kitekat': 'kitekat', 'кітікет': 'kitekat'
+/* ─── Mixed Cyrillic/Latin Homoglyph Normalizer (ATB / HTML Titles) ─────── */
+const HOMOGLYPH_MAP = {
+  a: 'а', e: 'е', i: 'і', o: 'о', p: 'р', c: 'с', x: 'х', y: 'у', k: 'к', m: 'м', t: 'т', h: 'н', b: 'в',
+  A: 'А', B: 'В', C: 'С', E: 'Е', H: 'Н', I: 'І', K: 'К', M: 'М', O: 'О', P: 'Р', T: 'Т', X: 'Х'
 };
 
-const NOISE_WORDS = new Set([
-  'акція', 'знижка', 'новинка', 'хіт', 'пропозиція', 'ціна', 'тижня', 'день',
-  'супер', 'вигідно', 'краща', 'топ', 'пакет', 'упаковка', 'пач', 'пляшка',
-  'банка', 'вакуум', 'скло', 'пет', 'плів', 'коробка', 'стакан', 'дойпак',
-  'фасовка', 'ваговий', 'вагова', 'штука', 'штучний', 'штучне', 'україна',
-  'класичний', 'традиційний', 'екстра', 'добірний', 'домашній', 'преміум'
-]);
-
-const CONFLICT_VARIANTS = [
-  'сулугуні', 'моцарела', 'моцарелла', 'гауда', 'маасдам', 'тильзитер', 'чеддер', 'радамер', 'камамбер', 'брі', 'пармезан', 'фета',
-  'російський', 'голландський',
-  'молочний', 'чорний', 'темний', 'білий', 'пористий',
-  'розчинна', 'мелена', 'зернова', 'зерно', 'дріп', 'капсули',
-  'зелений', 'травяний', 'яловичина', 'свинина', 'курка', 'індичка', 'лосось', 'форель', 'тунець'
-];
-
-const CORE_PRODUCT_NOUNS = new Set([
-  'масло', 'сир', 'молоко', 'сметана', 'кефір', 'йогурт', 'вершки', 'ряжанка',
-  'кава', 'чай', 'шоколад', 'цукерки', 'печиво', 'вафлі', 'батончик',
-  'олія', 'макарони', 'спагеті', 'гречка', 'рис', 'борошно', 'цукор', 'сіль',
-  'ковбаса', 'сосиски', 'салямі', 'філе', 'фарш', 'лосось', 'форель', 'тунець',
-  'шампунь', 'гель', 'мило', 'порошок', 'паста', 'корм', 'відбілювач', 'плямовивідник', 'рушник'
-]);
+function normalizeHomoglyphs(str = '') {
+  return String(str || '').replace(/\S+/g, word => {
+    if (/[а-яіїєґА-ЯІЇЄҐ]/.test(word) && /[a-zA-Z]/.test(word)) {
+      return word.replace(/[aeiopcykmthbABCEHIKMOPTX]/g, ch => HOMOGLYPH_MAP[ch] || ch);
+    }
+    return word;
+  });
+}
 
 /* ─── URL and Store Identity Enforcement ─────────────────────────────────── */
 function isStoreUrlConsistent(store, url) {
@@ -292,20 +155,27 @@ function resolveStoreIdentity(url, expectedStoreKey) {
   return { store: detectedKey, storeName: detectedName };
 }
 
-/* ─── Word-Boundary Stem Matching Helper ───────────────────────────────── */
+/* ─── Word-Boundary Stem Matching Helper (Memoized RegExp) ───────────────── */
+const WORD_REGEX_CACHE = new Map();
+
 function hasWord(text = '', ...stemArgs) {
   if (!text) return false;
   const t = String(text).toLowerCase();
   const stems = stemArgs.flat(Infinity);
-  for (let s of stems) {
+  for (const s of stems) {
     if (!s) continue;
     const requireExact = s.endsWith(' ');
     const trimmed = s.trim().toLowerCase();
     if (!trimmed) continue;
-    const escaped = trimmed.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]+');
-    const regex = requireExact
-      ? new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped + '(?:[аеєиіїоуюя]|ом|ем|ям|ів|ей|ами|ями|ах|ях)?(?:$|[^а-яіїєґa-z0-9])', 'i')
-      : new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped, 'i');
+    const cacheKey = `${requireExact ? 'E:' : 'S:'}${trimmed}`;
+    let regex = WORD_REGEX_CACHE.get(cacheKey);
+    if (!regex) {
+      const escaped = trimmed.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s-]+');
+      regex = requireExact
+        ? new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped + '(?:[аеєиіїоуюя]|ом|ем|ям|ів|ей|ами|ями|ах|ях)?(?:$|[^а-яіїєґa-z0-9])', 'i')
+        : new RegExp('(?:^|[^а-яіїєґa-z0-9])' + escaped, 'i');
+      WORD_REGEX_CACHE.set(cacheKey, regex);
+    }
     if (regex.test(t)) return true;
   }
   return false;
@@ -366,8 +236,8 @@ function isValidProductPrice(title = '', price = 0, oldPrice = null) {
 
 /* ─── Strict 5-Stage Product Categorization Engine ───────────────────────── */
 function categorizeProduct(title = '', store = '', apiCategory = '') {
-  const rawTitle = String(title || '').trim();
-  const rawCategory = String(apiCategory || '').trim();
+  const rawTitle = normalizeHomoglyphs(title).trim();
+  const rawCategory = normalizeHomoglyphs(apiCategory).trim();
   const text = (rawTitle + ' ' + rawCategory).toLowerCase();
   const storeStr = String(store || '').toLowerCase().trim();
   const isBeautyStore = ['eva', 'prostor'].includes(storeStr);
@@ -411,42 +281,49 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   const householdLaundryTriggers = [
     'для прання', 'пральний порошок', 'капсули для прання', 'гель для прання',
     'ополіскувач для білизни', 'кондиціонер для білизни', 'відбілювач', 'плямовивідник',
-    'для миття посуду', 'таблетки для посудомийних', 'сіль для посудомийних',
-    'для чищення', 'для унітазу', 'для труб', 'для підлоги', 'для скла',
-    'освіжувач повітря', 'дифузор', 'антижир', 'антинакип'
+    'для миття посуду', 'миття дитячого посуду', 'миття посуду', 'засіб для посуду', 'гель для посуду',
+    'таблетки для посудомийних', 'сіль для посудомийних',
+    'для чищення', 'засіб чистячий', 'чистячий', 'для унітазу', 'для труб', 'забруднення труб', 'для підлоги', 'для скла',
+    'для прибирання', 'освіжувач повітря', 'дифузор', 'антижир', 'антинакип'
   ];
   const householdLaundryBrands = [
     'persil', 'ariel', 'tide', 'perwoll', 'lenor', 'silan', 'fairy',
     'somat', 'finish', 'domestos', 'breff', 'bref', 'cillit', 'mr. muscle',
-    'містер мускул', 'утьонок', 'sano', 'frosch', 'гала', 'gala', 'сарма', 'wash&free', 'savex'
+    'містер мускул', 'утьонок', 'sano', 'frosch', 'гала', 'gala', 'сарма', 'wash&free', 'savex', 'dr.beckmann'
   ];
   const paperTriggers = [
-    'туалетний папір', 'паперові рушники', 'серветки столові', 'серветки паперові', 'носові хустинки'
+    'туалетний папір', 'паперові рушники', 'рушники паперові', 'рушник кухонний', 'серветки косметичні',
+    'серветки столові', 'серветки паперові', 'носові хустинки'
   ];
   const paperBrands = [
     'zewa', 'рута', 'ruta', 'сніжна панда', 'обухів', 'selpak', 'kleenex'
   ];
   const kitchenTriggers = [
     'сковород', 'пательн', 'каструл', 'тарілк', 'чашк', 'склянк', 'келих',
-    'термос', 'контейнер для їжі', 'фольга алюмінієва', 'плівка харчова',
-    'пергамент для випічки', 'рукав для запікання', 'губка кухонна', 'губки для посуду',
-    'серветка для прибирання', 'пакети для сміття', 'мішки для сміття', 'бокс універсальний'
+    'термос', 'контейнер для їжі', 'фольга', 'фольги', 'плівка харчова', 'харчова плівка',
+    'пергамент', 'рукав для запікання', 'губк', 'губка кухонна', 'губки для посуду',
+    'серветка для прибирання', 'серветки для прибирання', 'пакети для сміття', 'мішки для сміття', 'бокс універсальний',
+    'взуття', 'капці', 'тапочки', 'шкарпетк',
+    'клей', 'клей-гель', 'батарей', 'пакети майка', 'грілки термохімічні', 'рукавички господарські', 'рукавичкі господарські'
   ];
   const kitchenBrands = [
     'фрекен бок', 'мельниця', 'luminarc', 'tefal', 'ardesto'
   ];
 
   const explicitHygieneTriggers = [
-    'шампунь', 'гель для душу', 'крем-гель для душу', 'бальзам для волосся', 'бальзам-ополіскувач',
+    'шампунь', 'гель для душу', 'крем-гель для душу', 'гель для купання', 'засіб для купання',
+    'мило рідке', 'мило туалетне', 'крем-мило', 'бальзам для волосся', 'бальзам-ополіскувач',
     'кондиціонер для волосся', 'фарба для волосся', 'маска для волосся', 'лак для волосся',
+    'маска-гель', 'маска для обличчя', 'патчі', 'тональний',
     'зубна паста', 'зубна щітка', 'дезодорант', 'антиперспірант', 'піна для гоління',
-    'гель для гоління', 'станок для гоління', 'прокладки', 'тампони', 'підгузки', 'підгузники',
-    'підгузки-трусики', 'підгузники-трусики', 'вологі серветки', 'пелюшки гігієнічні'
+    'гель для гоління', 'станок для гоління', 'станки для гоління', 'станків для гоління', 'презерватив',
+    'прокладки', 'тампони', 'підгузки', 'підгузники',
+    'підгузки-трусики', 'підгузники-трусики', 'вологі серветки', 'серветки вологі', 'пелюшки гігієнічні'
   ];
   const explicitHygieneBrands = [
     'head & shoulders', 'head&shoulders', 'pantene', 'fructis', 'syoss', 'gliss kur',
     'colgate', 'splat', 'biomed', 'oral-b', 'old spice', 'rexona', 'dove', 'palmolive',
-    'always', 'kotex', 'libresse', 'discreet', 'huggies', 'pampers', 'tesori d\'oriente', 'deepfresh'
+    'always', 'kotex', 'libresse', 'discreet', 'huggies', 'pampers', 'tesori d\'oriente', 'deepfresh', 'bubchen', 'paese'
   ];
 
   const isExplicitNonFood = hasWord(text, householdLaundryTriggers, householdLaundryBrands, paperTriggers, paperBrands, kitchenTriggers, kitchenBrands, explicitHygieneTriggers, explicitHygieneBrands);
@@ -459,7 +336,7 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     'крем-мед', 'пастила', 'козинак', 'драже', 'льодяник', 'жувальна гумка', 'джем', 'варення',
     'крем-сир', 'крем сир', 'крем-суп', 'вершковий сир', 'сир вершковий', 'плавлений',
     'моцарела', 'гауда', 'чеддер', 'пармезан', 'бринза', 'фета', 'сулугуні', 'кисломолочн',
-    'сирок', 'сметана', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска',
+    'сирок ', 'сметана', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска',
     'масло солодковершкове', 'масло селянське', 'масло вершкове', 'масло екстра',
     'солодковершкове масло', 'селянське масло', 'вершкове масло',
     '73%', '72.5%', '82%', '82.5%', 'маргарин', 'спред',
@@ -467,27 +344,29 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     'вершки питні', 'вершки кулінарні',
     'ковбас', 'сосиск', 'сардельк', 'шинк', 'бекон', 'грудинк', 'балик', 'салямі',
     'паштет печінковий', 'паштет м', 'паштет мясний', 'паштет печінк', 'паштет курячий',
-    'курк', 'куряч', 'індич', 'свинин', 'яловичин', 'телятин', 'фарш', 'стейк', 'крильця',
+    'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'крильця',
     'гомілк', 'стегно', 'лосос', 'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець',
-    'скумбрі', 'хек', 'мінтай', 'креветк', 'мідії', 'ікра', 'крабові', 'буженин', 'реберц',
+    'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'креветк', 'мідії', 'ікра', 'крабові', 'буженин', 'реберц',
     'хліб ', 'багет', 'лаваш', 'батон', 'тост', 'чіабата', 'макарон', 'спагет', 'локшин',
     'пенне', 'фузіллі', 'вермішель', 'крупа', 'гречк', 'рис басматі', 'рис круглозернистий',
     'рис довгозернистий', 'рис пропарений', 'рис жасмин', 'вівсян', 'пластівці', 'борошно',
     'цукор', 'олія соняшникова', 'соняшникова олія', 'олія оливкова', 'оливкова олія',
     'олія кукурудзяна', 'олія рафінована', 'оцет', 'бальзамічний', 'кетчуп', 'майонез',
     'гірчиц', 'соус', 'томатна паста', 'паста томатна', 'арахісова паста', 'паста шоколадна',
-    'nutella', 'нутелла', 'кава', 'еспресо', 'американо', 'капучино', 'лате', 'чай ',
-    'матча', 'какао', 'сік ', 'нектар', 'лимонад', 'вода мінеральна', 'вода питна',
-    'газован', 'енергетик', 'квас', 'пиво', 'вино', 'сидр', 'чіпси', 'сухарики',
+    'nutella', 'нутелла', 'кава', 'еспресо', 'американо', 'капучино', 'лате', 'чай ', 'цикорій',
+    'матча', 'какао', 'сік ', 'нектар', 'лимонад', 'смузі', 'вода мінеральна', 'вода питна',
+    'газован', 'енергетик', 'квас', 'пиво', 'вино ', 'вин ', 'сидр', 'чіпси', 'чипси', 'сухарики',
     'горішки', 'фісташки', 'мигдаль', 'фундук', 'яблук', 'банан', 'апельсин', 'лимон',
-    'мандарин', 'виноград', 'ківі', 'авокадо', 'помідор', 'томат', 'огірок', 'картопл',
-    'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат '
+    'мандарин', 'виноград', 'ківі', 'авокадо', 'хурма', 'батат', 'гарбуз', 'помело', 'пітахайя', 'кокос',
+    'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат '
   ];
   const isExplicitFood = !isExplicitNonFood && hasWord(text, EXPLICIT_FOOD_STEMS) && !isBeautyStore;
+  const isLaundryOrHome = hasWord(text, ['для прання', 'для білизни', 'кондиціонер для прання', 'посудомийних', 'для унітазу', 'для миття посуду']);
+  const isCosmeticBrandGuard = !isLaundryOrHome && hasWord(text, ['тональний', 'макіяж', 'пудра', "рум'яна", 'консилер', 'хайлайтер', 'блиск для губ', 'помада', 'paese', 'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'lamel', 'it cosmetics', 'kylie cosmetics', 'парфуми', 'туалетна вода', 'парфумована вода']);
 
   // STAGE 3: Household & Cleaning (mainCategory: 'Дім та Побут')
   if (!isExplicitFood) {
-    if (hasWord(text, householdLaundryTriggers, householdLaundryBrands)) {
+    if (!isCosmeticBrandGuard && hasWord(text, householdLaundryTriggers, householdLaundryBrands)) {
       return { mainCategory: 'Дім та Побут', subCategory: 'Побутова хімія', category: 'Побутова хімія' };
     }
     if (hasWord(text, paperTriggers, paperBrands)) {
@@ -512,7 +391,7 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     const makeupTriggers = [
       'туш для вій', 'помада', 'блиск для губ', 'тіні для повік', 'пудра',
       'консилер', 'олівець для брів', 'олівець для очей', 'лак для нігтів', 'парфум', 'туалетна вода',
-      'хайлайтер', 'рум\'яна', 'тінт для губ', 'кушон', 'палетка тіней'
+      'парфумована вода', 'хайлайтер', 'рум\'яна', 'тінт для губ', 'кушон', 'палетка тіней', 'тональний'
     ];
     const makeupBrands = [
       'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'nyx', 'paese', 'it cosmetics',
@@ -521,16 +400,17 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     ];
 
     const hygieneTriggers = [
-      'гель для душу', 'крем-гель для душу', 'мило рідке', 'мило туалетне', 'крем-мило', 'дезодорант',
+      'гель для душу', 'крем-гель для душу', 'гель для купання', 'засіб для купання',
+      'мило рідке', 'мило туалетне', 'крем-мило', 'дезодорант',
       'антиперспірант', 'зубна паста', 'зубна щітка', 'ополіскувач для ротової',
-      'прокладки', 'тампони', 'ватні диски', 'ватні палички', 'вологі серветки',
-      'пелюшки гігієнічні', 'бритва', 'станок для гоління', 'піна для гоління',
-      'гель для гоління', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики'
+      'прокладки', 'тампони', 'ватні диски', 'ватні палички', 'вологі серветки', 'серветки вологі',
+      'пелюшки гігієнічні', 'бритва', 'станок для гоління', 'станки для гоління', 'станків для гоління',
+      'піна для гоління', 'гель для гоління', 'презерватив', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики'
     ];
     const hygieneBrands = [
       'old spice', 'rexona', 'dove', 'palmolive', 'fa ', 'colgate', 'sensodyne',
       'lacalut', 'oral-b', 'parodontax', 'always', 'kotex', 'libresse', 'discreet',
-      'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', 'tesori d\'oriente', 'deepfresh'
+      'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', 'tesori d\'oriente', 'deepfresh', 'bubchen'
     ];
 
     const cosmeticCreamQualifiers = [
@@ -545,7 +425,7 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     const skincareTriggers = [
       'сироватка для обличчя', 'сироватка', 'тонік для обличчя', 'тонік', 'міцелярна',
       'пінка для вмивання', 'гель для вмивання', 'скраб для тіла', 'скраб для обличчя',
-      'скраб', 'маска для обличчя', 'патчі', 'лосьйон для тіла', 'лосьйон', 'молочко для тіла',
+      'скраб', 'маска для обличчя', 'маска-гель', 'патчі', 'лосьйон для тіла', 'лосьйон', 'молочко для тіла',
       'бальзам для губ', 'гігієнічна помада', 'пілінг'
     ];
     const skincareBrands = [
@@ -571,49 +451,68 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   }
 
   // STAGE 5: Groceries Subcategories (mainCategory: 'Продукти')
-  // 1. Солодощі (Bakery desserts with cream checked BEFORE Dairy!)
+  // 0. Prepared / Savory Grocery Guard (Chips, Popcorn, Spices, Dumplings, Breakfast Cereals, Purees) -> Бакалія
+  const savoryGroceryTriggers = [
+    'приправа', 'перець чорний', 'перець духмяний', 'перець горошок', 'лист лавровий', 'часник сушений', 'паприка',
+    'чипси', 'чіпси', 'попкорн', 'сухарики', 'грінки', 'брускети', 'крекери',
+    'вареники', 'пельмені', 'равіолі', 'ньокі', 'хінкалі', 'млинці', 'пампушка',
+    'хумус', 'оливки', 'маслини', 'ікра кабачкова', 'ікра баклажанна',
+    'готові сніданки', 'сніданок готовий', 'каша ', 'пюре ', 'піца', 'тісто ', 'борошно',
+    'макарон', 'спагет', 'крупа', 'булгур', 'кукурудза цукрова', 'кукурудза ', 'горошок ',
+    'олія ', 'майонез', 'кетчуп'
+  ];
+  if (hasWord(text, savoryGroceryTriggers)) {
+    return { mainCategory: 'Продукти', subCategory: 'Бакалія', category: 'Бакалія' };
+  }
+
+  // 1. М'ясо та Риба (checked BEFORE Sweets & Dairy so "Шинка Рулет", "Ковбаса з молоком", "Креветка сира" never misclassify)
+  const startsAsCheese = /^\s*(?:крем[- ])?сир\b/i.test(rawTitle);
+  const meatFishTriggers = [
+    'м\'яс', 'мяс', 'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'качк', 'гуск',
+    'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'філе', 'крильця', 'гомілк', 'стегно', 'ковбас', 'сосиск', 'сардельк',
+    'шинк', 'бекон', 'балик', 'салямі', 'паштет', 'буженин', 'реберц', 'риба', 'лосос',
+    'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'судак', 'сібас', 'сибас', 'короп',
+    'креветк', 'мідії', 'кальмар', 'ікра', 'крабові', 'наша ряба', 'ранчо', 'бащинський',
+    'глобино', 'м\'ясна гільдія', 'алан', 'водний світ', 'санта бремор'
+  ];
+  if (!startsAsCheese && hasWord(text, meatFishTriggers)) {
+    return { mainCategory: 'Продукти', subCategory: 'М\'ясо та Риба', category: 'М\'ясо та Риба' };
+  }
+
+  // 2. Солодощі (Bakery desserts with cream checked BEFORE Dairy; alcohol guarded out unless candy)
+  const isCandyOrConfection = hasWord(text, ['цукерк', 'шоколад', 'батончик', 'торт', 'тістечко', 'праліне']);
+  const isAlcoholDrink = !isCandyOrConfection && hasWord(text, ['настоянк', 'вермут', 'віскі', 'горілка', 'лікер', 'вино ', 'вин ', 'ігристе', 'шампанське', 'пиво', 'ром ', 'бренді', 'джин ', 'текіл']);
   const sweetsTriggers = [
-    'донат', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'кекс', 'мафін',
-    'рулет', 'штрудель', 'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'пастила',
+    'донат', 'донатс', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'кекс', 'мафін',
+    'рулет', 'штрудель', 'сирник', 'пампухи зі згущ', 'булочка з корицею', 'вафельний лист', 'з фундуком та какао', 'горіхово-шоколадна', 'бат рис',
+    'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'пастила',
     'цукерк', 'шоколад', 'батончик', 'халва', 'козинак', 'драже', 'льодяник', 'жувальна гумка',
-    'морозиво', 'десерт', 'мед', 'крем-мед', 'джем', 'варення', 'згущене молоко', 'згущене',
+    'морозиво', 'десерт', 'мед ', 'крем-мед', 'джем', 'варення', 'згущене молоко', 'згущене',
     'паста шоколадна', 'nutella', 'нутелла', 'barni', 'барні', 'рошен', 'roshen', 'milka', 'мілка',
     'ferrero', 'kinder', 'кіндер', 'raffaello', 'рафаелло', 'конті', 'konti', 'авк', 'avk', 'ярич'
   ];
-  if (hasWord(text, sweetsTriggers)) {
+  if (!isAlcoholDrink && hasWord(text, sweetsTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Солодощі', category: 'Солодощі' };
   }
 
-  // 2. Молочні та Сири
+  // 3. Молочні та Сири
   const dairyTriggers = [
     'молоко', 'масло солодковершкове', 'масло вершкове', 'масло селянське', 'масло екстра',
     'солодковершкове масло', 'вершкове масло', 'селянське масло', 'маргарин', 'спред',
-    'сир ', 'крем-сир', 'крем сир', 'сирок', 'моцарела', 'гауда', 'пармезан', 'чеддер',
+    'сир ', 'крем-сир', 'крем сир', 'сирок ', 'моцарела', 'гауда', 'пармезан', 'чеддер',
     'сулугуні', 'бринза', 'фета', 'сметана', 'вершки', 'йогурт', 'кефір', 'ряжанка',
     'айран', 'закваска', 'плавлений', 'творог', 'кисломолочн', 'комо', 'яготинськ',
     'ферма', 'активіа', 'актимель', 'данон', 'danone', 'президент', 'president',
     'mlekovita', 'spomlek', 'простонаше', 'камамбер', 'брі '
   ];
-  if (hasWord(text, dairyTriggers)) {
+  const isDairyButter = hasWord(text, ['масло']) && hasWord(text, ['солодковершков', 'вершков', 'селянськ', 'екстра', 'кисловершков']);
+  if (isDairyButter || hasWord(text, dairyTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Молочні та Сири', category: 'Молочні та Сири' };
-  }
-
-  // 3. М'ясо та Риба
-  const meatFishTriggers = [
-    'м\'яс', 'мяс', 'курк', 'куряч', 'індич', 'свинин', 'яловичин', 'телятин', 'качк', 'гуск',
-    'фарш', 'стейк', 'філе', 'крильця', 'гомілк', 'стегно', 'ковбас', 'сосиск', 'сардельк',
-    'шинк', 'бекон', 'балик', 'салямі', 'паштет', 'буженин', 'реберц', 'риба', 'лосос',
-    'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай',
-    'креветк', 'мідії', 'кальмар', 'ікра', 'крабові', 'наша ряба', 'ранчо', 'бащинський',
-    'глобино', 'м\'ясна гільдія', 'алан', 'водний світ', 'санта бремор'
-  ];
-  if (hasWord(text, meatFishTriggers)) {
-    return { mainCategory: 'Продукти', subCategory: 'М\'ясо та Риба', category: 'М\'ясо та Риба' };
   }
 
   // 4. Кава та Чай
   const coffeeTeaTriggers = [
-    'кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'матча', 'какао',
+    'кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'цикорій', 'матча', 'какао',
     'гарячий шоколад', 'дріп', 'jacobs', 'lavazza', 'greenfield', 'tess', 'curtis', 'lovare',
     'ліптон', 'lipton', 'paulig', 'чорна карта', 'жокей', 'idealist'
   ];
@@ -623,25 +522,30 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
 
   // 5. Напої
   const drinksTriggers = [
-    'вода', 'сік ', 'сок', 'нектар', 'морс', 'лимонад', 'напій', 'кола', 'pepsi', 'coca-cola',
+    'вода', 'сік ', 'сок', 'нектар', 'морс', 'лимонад', 'смузі', 'напій', 'кола', 'pepsi', 'coca-cola',
     'fanta', 'sprite', 'schweppes', 'комбуча', 'квас', 'енергетик', 'red bull', 'monster',
-    'пиво', 'вино', 'шампанське', 'ігристе', 'сидр', 'моршинськ', 'боржомі', 'borjomi',
-    'поляна квасова', 'садочок', 'sandora', 'rich', 'наш сік', 'віскі', 'горілка', 'коньяк', 'ром '
+    'пиво', 'вино ', 'вин ', 'lambrusc', 'sauvign', 'chardonnay', 'шампанське', 'ігристе', 'сидр', 'моршинськ', 'боржомі', 'borjomi',
+    'поляна квасова', 'садочок', 'sandora', 'rich', 'наш сік', 'віскі', 'горілка', 'коньяк', 'ром ',
+    'лікер', 'вермут', 'джин ', 'бренді', 'текіл', 'настоянк', 'аперитив', 'бітер', 'ромов'
   ];
   if (hasWord(text, drinksTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Напої', category: 'Напої' };
   }
 
-  // 6. Овочі та Фрукти (excludes tomato paste and sauces)
-  const isTomatoPasteOrSauce = (hasWord(text, 'томат') && hasWord(text, 'паста')) || hasWord(text, ['томатна паста', 'паста томатна', 'кетчуп', 'соус томатний']);
+  // 6. Овочі та Фрукти (excludes sauces, chips, spices, canned/pickled goods, and purees)
+  const isProcessedFoodNotFreshProduce = hasWord(text, [
+    'томатна паста', 'паста томатна', 'кетчуп', 'соус', 'чипс', 'чіпс',
+    'сухарик', 'сушен', 'приправ', 'спеці', 'маринован', 'консерв', 'пюре', 'квашен'
+  ]) || (hasWord(text, 'томат') && hasWord(text, 'паста'));
   const produceTriggers = [
     'яблук', 'банан', 'апельсин', 'лимон', 'мандарин', 'виноград', 'ківі', 'авокадо',
+    'хурма', 'батат', 'гарбуз', 'помело', 'пітахайя', 'кокос',
     'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник',
     'зелень', 'салат ', 'айсберг', 'рукола', 'шпинат', 'кабачок', 'баклажан', 'буряк',
     'редис', 'печериц', 'гриб', 'ягоди', 'полуниц', 'малин', 'лохина', 'чорниц', 'кавун',
     'диня', 'гранат', 'груш', 'слив', 'персик', 'нектарин', 'броколі', 'чері'
   ];
-  if (!isTomatoPasteOrSauce && hasWord(text, produceTriggers)) {
+  if (!isProcessedFoodNotFreshProduce && hasWord(text, produceTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Овочі та Фрукти', category: 'Овочі та Фрукти' };
   }
 
@@ -652,157 +556,100 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
 // Backward-compatible alias
 const mapCategory = categorizeProduct;
 
-/* ─── Product Signature Normalization ────────────────────────────────────── */
-function normalizeProductSignature(title = '', ean = null, producerBrand = null) {
-  if (!title) return { raw: '', brand: null, weight: null, fat: null, tokens: [], cleanKey: '', ean: null };
+/* ─── Zero-Dictionary Brand & Canonical Fingerprint Extraction ───────────── */
+const PACKAGING_NOISE_WORDS = new Set([
+  'акці', 'акція', 'знижк', 'знижка', 'упаковк', 'упаковка', 'пачк', 'пачка',
+  'пляшк', 'пляшка', 'пакет', 'банк', 'банка', 'скл', 'скло', 'пет', 'стакан', 'дойпак', 'коробк',
+  'вагов', 'ваговий', 'фасован', 'фасований', 'україн', 'україна', 'тм',
+  'солодковершков', 'солодковершкове', 'пастеризован', 'пастеризоване',
+  'ультрапастеризован', 'ультрапастеризоване', 'ультрапастеризировані', 'питн', 'питне'
+]);
 
-  let s = String(title).toLowerCase()
-    .replace(/(\d+),(\d+)/g, '$1.$2')
-    .replace(/[«»""''„“]/g, '')
-    .replace(/[,;]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // 1. Extract fat percentage (e.g. 73%, 82.5%, 2.5%, 15%, 20%)
-  let fat = null;
-  const fatMatch = s.match(/(\d+(?:\.\d+)?)\s*%/);
-  if (fatMatch) {
-    fat = parseFloat(fatMatch[1]) + '%';
-  }
-
-  // 2. Extract weight/volume into canonical unit (g, ml, pcs)
-  let weight = null;
-  const kgMatch = s.match(/(\d+(?:\.\d+)?)\s*кг/);
-  if (kgMatch) {
-    weight = Math.round(parseFloat(kgMatch[1]) * 1000) + 'g';
-  } else {
-    const gMatch = s.match(/(\d+(?:\.\d+)?)\s*г(?!\w)/);
-    if (gMatch) {
-      weight = Math.round(parseFloat(gMatch[1])) + 'g';
-    } else {
-      const lMatch = s.match(/(\d+(?:\.\d+)?)\s*л(?!\w)/);
-      if (lMatch) {
-        weight = Math.round(parseFloat(lMatch[1]) * 1000) + 'ml';
-      } else {
-        const mlMatch = s.match(/(\d+(?:\.\d+)?)\s*мл/);
-        if (mlMatch) {
-          weight = Math.round(parseFloat(mlMatch[1])) + 'ml';
-        } else {
-          const pcsMatch = s.match(/(\d+)\s*шт/);
-          if (pcsMatch) weight = pcsMatch[1] + 'pcs';
-        }
-      }
-    }
-  }
-
-  // 3. Identify canonical brand name
-  let brand = null;
-  if (producerBrand && typeof producerBrand === 'string') {
-    const pb = producerBrand.toLowerCase().trim();
-    if (pb && pb !== 'без тм' && pb !== 'without-brand' && pb !== 'null') {
-      for (const [key, b] of Object.entries(BRAND_MAP)) {
-        if (pb.includes(key)) {
-          brand = b;
-          break;
-        }
-      }
-      if (!brand && pb.length >= 3) {
-        brand = pb.replace(/[^\p{L}\p{N}]/gu, '');
-      }
-    }
-  }
-
-  if (!brand) {
-    for (const [key, b] of Object.entries(BRAND_MAP)) {
-      const regex = new RegExp('(?:^|\\s|[\\(\\-«])' + key + '(?:$|\\s|[\\)\\-»])', 'i');
-      if (regex.test(s)) {
-        brand = b;
-        break;
-      }
-    }
-  }
-
-  // 4. Tokenize and clean word tokens (stripping units, brand and noise)
-  const tokenString = s
-    .replace(/\b\d+(?:\.\d+)?\s*(?:кг|г|мл|л|шт|%)\b/gi, ' ')
-    .replace(/[^\p{L}\s]/gu, ' ');
-
-  const cleanTokens = tokenString
-    .split(/\s+/)
-    .map(w => w.trim())
-    .filter(w => w.length > 2 && !NOISE_WORDS.has(w));
-
-  // Extract clean barcode (only standard numeric 8-14 digits)
-  const cleanEan = (ean && /^\d{8,14}$/.test(String(ean).trim())) ? String(ean).trim() : null;
-
-  return {
-    raw: title,
-    brand,
-    weight,
-    fat,
-    tokens: cleanTokens,
-    ean: cleanEan
-  };
+function extractBrandFromTitle(title = '', nativeBrand = null) {
+  const nb = typeof nativeBrand === 'string' ? nativeBrand.trim() : '';
+  if (nb && !/^(без тм|without-brand|null|none)$/i.test(nb)) return nb;
+  const cleanTitle = normalizeHomoglyphs(title).trim();
+  const quoted = cleanTitle.match(/[«"„]([^»"“]{2,})[»"“]/);
+  if (quoted) return quoted[1].trim();
+  const tmMatch = cleanTitle.match(/(?:^|\s)тм\s+[«"„]?([А-ЯІЇЄҐA-Z][\p{L}'-]{1,})/iu);
+  if (tmMatch) return tmMatch[1].trim();
+  const latinMatch = cleanTitle.match(/\b([a-z]{3,})\b/i);
+  if (latinMatch && !/^(pcs|max|pro|bio|eco|pet)$/i.test(latinMatch[1])) return latinMatch[1].trim();
+  const capMatch = cleanTitle.match(/\s([А-ЯІЇЄҐ][а-яіїєґ']{2,})/);
+  if (capMatch && !PACKAGING_NOISE_WORDS.has(capMatch[1].toLowerCase())) return capMatch[1].trim();
+  return null;
 }
 
-function areProductsMatching(sigA, sigB, subCatA, subCatB) {
-  // CRITERION 1: Strict numeric EAN barcode match
-  if (sigA.ean && sigB.ean && sigA.ean === sigB.ean) {
-    return true;
+function normalizeUaToken(word = '') {
+  let s = word.toLowerCase();
+  if (s.length >= 5) s = s.replace(/(ий|ій|ая|ое|ого|ому|ему|ою|их|іх|ої)$/u, '');
+  if (s.length >= 4) s = s.replace(/(а|я|е|є|і|ї|о|у|ю|и)$/u, '');
+  return s;
+}
+
+function extractNormalizedUnit(text = '') {
+  const clean = normalizeHomoglyphs(text).replace(/(\d+),(\d+)/g, '$1.$2');
+  const multi = clean.match(/(\d+)\s*[*xх×]\s*(\d+(?:\.\d+)?)\s*(кг|kg|г|гр|g|л|l|мл|ml)(?!\p{L})/iu);
+  if (multi) {
+    const total = parseInt(multi[1], 10) * parseFloat(multi[2]);
+    const u = multi[3].toLowerCase();
+    return (u === 'кг' || u === 'kg') ? `${Math.round(total * 1000)}g`
+      : (u === 'л' || u === 'l') ? `${Math.round(total * 1000)}ml`
+      : (u === 'мл' || u === 'ml') ? `${Math.round(total)}ml` : `${Math.round(total)}g`;
   }
+  const comboPcs = clean.match(/(\d+)\s*\+\s*(\d+)\s*(шт|pcs)(?!\p{L})/iu);
+  if (comboPcs) return `${parseInt(comboPcs[1], 10) + parseInt(comboPcs[2], 10)}pcs`;
+  const single = clean.match(/(\d+(?:\.\d+)?)\s*(кг|kg|г|гр|g|л|l|мл|ml|шт|pcs)(?!\p{L})/iu);
+  if (!single) return '';
+  const val = parseFloat(single[1]);
+  const u = single[2].toLowerCase();
+  if (u === 'кг' || u === 'kg') return `${Math.round(val * 1000)}g`;
+  if (u === 'г' || u === 'гр' || u === 'g') return `${Math.round(val)}g`;
+  if (u === 'л' || u === 'l') return `${Math.round(val * 1000)}ml`;
+  if (u === 'мл' || u === 'ml') return `${Math.round(val)}ml`;
+  return `${Math.round(val)}pcs`;
+}
 
-  // CRITERION 2: Exact brand + weight + fat% + core nouns match
-  if (subCatA && subCatB && subCatA !== subCatB) return false;
+function getCanonicalProductKey(item = {}) {
+  const title = normalizeHomoglyphs(item.title || item.name || '').trim();
+  const rawEan = item.ean ? String(item.ean).trim() : '';
+  const ean = /^\d{8,14}$/.test(rawEan) ? rawEan : null;
+  const subCategory = (item.subCategory || item.sub_category || item.category || '').trim();
+  const normalizedUnit = extractNormalizedUnit(title) || extractNormalizedUnit(item.unit || item.weight || '');
+  const pctMatch = title.replace(/(\d+),(\d+)/g, '$1.$2').match(/(\d+(?:\.\d+)?)\s*%/);
+  const normalizedPercent = pctMatch ? `${parseFloat(pctMatch[1])}%` : '';
+  const brand = extractBrandFromTitle(title, item.brand || item.producerBrand || null);
 
-  if (!sigA.brand || !sigB.brand || sigA.brand !== sigB.brand) {
-    return false;
-  }
+  const stripped = title
+    .toLowerCase()
+    .replace(/(\d+),(\d+)/g, '$1.$2')
+    .replace(/\b\d+\s*[*xх×]\s*\d+(?:\.\d+)?\s*(?:кг|kg|г|гр|g|л|l|мл|ml)\b/giu, ' ')
+    .replace(/\d+(?:\.\d+)?\s*(?:кг|kg|г|гр|g|л|l|мл|ml|шт|pcs|%)/giu, ' ')
+    .replace(/(?:^|\s)[пмтжсз]\/(?:ет|е|уп|у|п|б)(?=\s|$)/giu, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ');
 
-  if (!sigA.weight || !sigB.weight || sigA.weight !== sigB.weight) {
-    return false;
-  }
+  const coreTokens = [...new Set(
+    stripped.split(/\s+/)
+      .filter(w => w.length >= 2 || /^\d+$/.test(w))
+      .map(normalizeUaToken)
+      .filter(w => (w.length >= 2 || /^\d+$/.test(w)) && !PACKAGING_NOISE_WORDS.has(w))
+  )].sort();
 
-  if (sigA.fat || sigB.fat) {
-    if (sigA.fat !== sigB.fat) return false;
-  }
+  const canonicalKey = (subCategory && normalizedUnit && brand && coreTokens.length >= 2)
+    ? `${subCategory} | ${normalizedUnit} | ${normalizedPercent} | ${coreTokens.join(' ')}`
+    : null;
 
-  const setA = new Set(sigA.tokens);
-  const setB = new Set(sigB.tokens);
+  return { ean, canonicalKey, brand, normalizedUnit, normalizedPercent, coreTokens };
+}
 
-  for (const v of CONFLICT_VARIANTS) {
-    const hasA = setA.has(v) || sigA.raw.toLowerCase().includes(v);
-    const hasB = setB.has(v) || sigB.raw.toLowerCase().includes(v);
-    if (hasA !== hasB) {
-      return false;
-    }
-  }
+function normalizeProductSignature(title = '', ean = null, producerBrand = null, unit = '', subCategory = 'Бакалія') {
+  return getCanonicalProductKey({ title, ean, brand: producerBrand, unit, subCategory });
+}
 
-  let hasCoreMatch = false;
-  for (const noun of CORE_PRODUCT_NOUNS) {
-    if ((setA.has(noun) || sigA.raw.toLowerCase().includes(noun)) &&
-        (setB.has(noun) || sigB.raw.toLowerCase().includes(noun))) {
-      hasCoreMatch = true;
-      break;
-    }
-  }
-
-  if (hasCoreMatch) return true;
-
-  let commonCount = 0;
-  for (const t of setA) {
-    if (setB.has(t)) {
-      commonCount++;
-    } else {
-      for (const tb of setB) {
-        if ((t.length >= 4 && tb.startsWith(t.slice(0, -1))) || (tb.length >= 4 && t.startsWith(tb.slice(0, -1)))) {
-          commonCount++;
-          break;
-        }
-      }
-    }
-  }
-
-  return commonCount >= 2;
+function areProductsMatching(sigA, sigB) {
+  if (!sigA || !sigB) return false;
+  if (sigA.ean && sigB.ean && sigA.ean === sigB.ean) return true;
+  return Boolean(sigA.canonicalKey && sigB.canonicalKey && sigA.canonicalKey === sigB.canonicalKey);
 }
 
 /* ─── Fast Network Fetch with AbortController ────────────────────────────── */
@@ -892,12 +739,16 @@ async function fetchSilpoAllPromotions(branchId) {
     const unit = item.displayRatio ? String(item.displayRatio).trim() : (item.ratio ? 'кг' : (item.unit === 'kg' ? 'кг' : 'шт'));
     const catInfo = categorizeProduct(title, 'silpo', item.categoryTitle || '');
 
+    const ean = Array.isArray(item.barcodes) && item.barcodes[0] ? String(item.barcodes[0]).trim() : null;
+    const brand = extractBrandFromTitle(title, item.brandTitle || item.brand || null);
+
     validItems.push({
       sourceStore: 'silpo',
       sourceStoreName: 'Сільпо',
       title,
-      producerBrand: item.brandTitle || null,
-      ean: null,
+      brand,
+      producerBrand: brand,
+      ean,
       mainCategory: catInfo.mainCategory,
       subCategory: catInfo.subCategory,
       category: catInfo.category,
@@ -1000,14 +851,15 @@ async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
 
     const unit = item.unit === 'kg' ? 'кг' : (item.bundle && item.bundle > 1 ? `${item.bundle} шт` : (item.unit === 'pcs' ? 'шт' : (item.unit || 'шт')));
     const catInfo = categorizeProduct(title, storeKey, item.category?.title || '');
-    const producerBrand = item.producer?.trademark || item.producer?.name || null;
+    const brand = extractBrandFromTitle(title, item.producer?.trademark || item.brand || null);
     const ean = item.ean ? String(item.ean).trim() : null;
 
     validItems.push({
       sourceStore: storeKey,
       sourceStoreName: storeName,
       title,
-      producerBrand,
+      brand,
+      producerBrand: brand,
       ean,
       mainCategory: catInfo.mainCategory,
       subCategory: catInfo.subCategory,
@@ -1097,11 +949,13 @@ async function fetchThrashPromotions() {
           const sourceUrl = slug ? `https://thrash.ua/product/${slug}` : 'https://thrash.ua/promotions/campaigns';
           const catInfo = categorizeProduct(prod.title, storeKey);
 
+          const thrashBrand = extractBrandFromTitle(prod.title, null);
           validItems.push({
             sourceStore: storeKey,
             sourceStoreName: storeName,
             title: prod.title.trim(),
-            producerBrand: null,
+            brand: thrashBrand,
+            producerBrand: thrashBrand,
             ean: null,
             mainCategory: catInfo.mainCategory,
             subCategory: catInfo.subCategory,
@@ -1161,11 +1015,14 @@ async function fetchAvroraPromotions() {
           if (!seenUrls.has(href)) {
             seenUrls.add(href);
             const catInfo = categorizeProduct(title, storeKey);
+            const avroraTitle = title.replace(/\s+/g, ' ').trim();
+            const avroraBrand = extractBrandFromTitle(avroraTitle, null);
             validItems.push({
               sourceStore: storeKey,
               sourceStoreName: storeName,
-              title: title.replace(/\s+/g, ' ').trim(),
-              producerBrand: null,
+              title: avroraTitle,
+              brand: avroraBrand,
+              producerBrand: avroraBrand,
               ean: null,
               mainCategory: catInfo.mainCategory,
               subCategory: catInfo.subCategory,
@@ -1203,19 +1060,22 @@ async function fetchRukavychkaPromotions() {
 
   try {
     const pages = [1, 2, 3];
-    for (const p of pages) {
-      const url = `https://market.rukavychka.ua/specials/?page=${p}`;
-      try {
-        const res = await fetchWithTimeout(url, {
+    const fetchResults = await Promise.allSettled(
+      pages.map(p =>
+        fetchWithTimeout(`https://market.rukavychka.ua/specials/?page=${p}`, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml',
             'Accept-Language': 'uk-UA,uk;q=0.9'
           }
-        }, 4500);
+        }, 4500).then(res => (res.ok ? res.text() : null))
+      )
+    );
 
-        if (!res.ok) continue;
-        const html = await res.text();
+    for (const settled of fetchResults) {
+      if (settled.status !== 'fulfilled' || !settled.value) continue;
+      try {
+        const html = settled.value;
         const $ = cheerio.load(html);
 
         $('.fm-module-item, .product-layout, .fm-category-product-caption').each((i, el) => {
@@ -1234,11 +1094,14 @@ async function fetchRukavychkaPromotions() {
           if (title && href && isValidProductPrice(title, price, oldPrice) && !seenUrls.has(href)) {
             seenUrls.add(href);
             const catInfo = categorizeProduct(title, storeKey);
+            const rukTitle = title.replace(/\s+/g, ' ').trim();
+            const rukBrand = extractBrandFromTitle(rukTitle, null);
             validItems.push({
               sourceStore: storeKey,
               sourceStoreName: storeName,
-              title: title.replace(/\s+/g, ' ').trim(),
-              producerBrand: null,
+              title: rukTitle,
+              brand: rukBrand,
+              producerBrand: rukBrand,
               ean: null,
               mainCategory: catInfo.mainCategory,
               subCategory: catInfo.subCategory,
@@ -1396,11 +1259,14 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
             if (!seenAtb.has(it.sourceUrl) && it.sourceUrl.includes('atbmarket.com') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
               seenAtb.add(it.sourceUrl);
               const catInfo = categorizeProduct(it.title, 'atb');
+              const atbTitle = it.title.replace(/\s+/g, ' ').trim();
+              const atbBrand = extractBrandFromTitle(atbTitle, null);
               atbItems.push({
                 sourceStore: 'atb',
                 sourceStoreName: 'АТБ-Маркет',
-                title: it.title.replace(/\s+/g, ' ').trim(),
-                producerBrand: null,
+                title: atbTitle,
+                brand: atbBrand,
+                producerBrand: atbBrand,
                 ean: null,
                 mainCategory: catInfo.mainCategory,
                 subCategory: catInfo.subCategory,
@@ -1454,7 +1320,7 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
           if (sourceUrl && !sourceUrl.startsWith('http')) sourceUrl = 'https://eva.ua' + sourceUrl;
 
           if (title && price > 0 && oldPrice > price && sourceUrl && sourceUrl.includes('eva.ua')) {
-            res.push({ title, price, oldPrice, sourceUrl });
+            res.push({ title, brand, price, oldPrice, sourceUrl });
           }
         });
         return res;
@@ -1465,12 +1331,15 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
       evaExtracted.forEach(it => {
         if (!seenEva.has(it.sourceUrl) && it.sourceUrl.includes('eva.ua') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
           seenEva.add(it.sourceUrl);
-          const catInfo = categorizeProduct(it.title, 'eva');
+          const evaTitle = it.title.replace(/\s+/g, ' ').trim();
+          const evaBrand = extractBrandFromTitle(evaTitle, it.brand || null);
+          const catInfo = categorizeProduct(evaTitle, 'eva');
           evaItems.push({
             sourceStore: 'eva',
             sourceStoreName: 'EVA',
-            title: it.title.replace(/\s+/g, ' ').trim(),
-            producerBrand: null,
+            title: evaTitle,
+            brand: evaBrand,
+            producerBrand: evaBrand,
             ean: null,
             mainCategory: catInfo.mainCategory,
             subCategory: catInfo.subCategory,
@@ -1529,11 +1398,13 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
         if (cleanThrash.length > 0) {
           const items = cleanThrash.map(it => {
             const catInfo = categorizeProduct(it.title, 'thrash');
+            const fbThrashBrand = extractBrandFromTitle(it.title, null);
             return {
               sourceStore: 'thrash',
               sourceStoreName: 'Траш!',
               title: it.title,
-              producerBrand: null,
+              brand: fbThrashBrand,
+              producerBrand: fbThrashBrand,
               ean: null,
               mainCategory: catInfo.mainCategory,
               subCategory: catInfo.subCategory,
@@ -1589,11 +1460,13 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
         if (cleanAvrora.length > 0) {
           const items = cleanAvrora.map(it => {
             const catInfo = categorizeProduct(it.title, 'avrora');
+            const fbAvroraBrand = extractBrandFromTitle(it.title, null);
             return {
               sourceStore: 'avrora',
               sourceStoreName: 'Аврора',
               title: it.title,
-              producerBrand: null,
+              brand: fbAvroraBrand,
+              producerBrand: fbAvroraBrand,
               ean: null,
               mainCategory: catInfo.mainCategory,
               subCategory: catInfo.subCategory,
@@ -1632,43 +1505,49 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
 }
 
 /* ─── 7. Smart Cross-Store Matching & Deduplication Engine ───────────────── */
+function computeBestPromoTag(prices = [], fallbackTag = 'Акція') {
+  let maxDiscount = 0;
+  for (const pr of prices) {
+    const p = parseFloat(pr.price);
+    const oldP = parseFloat(pr.oldPrice !== undefined ? pr.oldPrice : pr.old_price);
+    if (p > 0 && oldP > p) {
+      const pct = Math.round(((oldP - p) / oldP) * 100);
+      if (pct > maxDiscount) maxDiscount = pct;
+    }
+  }
+  return maxDiscount > 0 ? `-${maxDiscount}% Акція` : (fallbackTag || 'Акція');
+}
+
 function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
   const groups = [];
+  const byEan = new Map();
+  const byKey = new Map();
 
   for (const item of scrapedItems) {
-    if (!item.title || !item.sourceUrl || !isValidProductPrice(item.title, item.price, item.oldPrice)) continue;
+    const title = (item.title || item.name || '').trim();
+    const storeStr = String(item.sourceStore || '').toLowerCase().trim();
+    if (!title || !storeStr || !item.sourceUrl || !isValidProductPrice(title, item.price, item.oldPrice)) continue;
+    if (activeStores && !activeStores.includes(storeStr)) continue;
+    if (!isStoreUrlConsistent(storeStr, item.sourceUrl)) continue;
 
-    if (activeStores && !activeStores.includes(item.sourceStore)) continue;
-
-    if (!isStoreUrlConsistent(item.sourceStore, item.sourceUrl)) continue;
-
-    const sigItem = normalizeProductSignature(item.title, item.ean, item.producerBrand);
-
-    let matchedGroup = null;
-    for (const g of groups) {
-      if (areProductsMatching(g.sig, sigItem, g.subCategory, item.subCategory)) {
-        matchedGroup = g;
-        break;
-      }
-    }
+    const sigItem = getCanonicalProductKey({ ...item, title });
+    let matchedGroup = (sigItem.ean && byEan.get(sigItem.ean)) ||
+                       (sigItem.canonicalKey && byKey.get(sigItem.canonicalKey)) ||
+                       null;
 
     if (matchedGroup) {
-      if (item.title.length > matchedGroup.title.length && !item.title.includes('  ')) {
-        matchedGroup.title = item.title;
+      if (sigItem.ean && !byEan.has(sigItem.ean)) byEan.set(sigItem.ean, matchedGroup);
+      if (sigItem.canonicalKey && !byKey.has(sigItem.canonicalKey)) byKey.set(sigItem.canonicalKey, matchedGroup);
+      if (title.length > matchedGroup.title.length && !title.includes('  ')) {
+        matchedGroup.title = title;
       }
-      if (matchedGroup.storePrices.has(item.sourceStore)) {
-        const existing = matchedGroup.storePrices.get(item.sourceStore);
-        if (item.price < existing.price) {
-          matchedGroup.storePrices.set(item.sourceStore, {
-            store: item.sourceStore,
-            price: item.price,
-            oldPrice: item.oldPrice,
-            sourceUrl: item.sourceUrl
-          });
-        }
-      } else {
-        matchedGroup.storePrices.set(item.sourceStore, {
-          store: item.sourceStore,
+      if (sigItem.normalizedUnit && (!matchedGroup.unit || matchedGroup.unit === 'шт')) {
+        matchedGroup.unit = sigItem.normalizedUnit;
+      }
+      const existing = matchedGroup.storePrices.get(storeStr);
+      if (!existing || item.price < existing.price) {
+        matchedGroup.storePrices.set(storeStr, {
+          store: storeStr,
           price: item.price,
           oldPrice: item.oldPrice,
           sourceUrl: item.sourceUrl
@@ -1676,23 +1555,29 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
       }
     } else {
       const storePrices = new Map();
-      storePrices.set(item.sourceStore, {
-        store: item.sourceStore,
+      storePrices.set(storeStr, {
+        store: storeStr,
         price: item.price,
         oldPrice: item.oldPrice,
         sourceUrl: item.sourceUrl
       });
 
-      groups.push({
-        title: item.title,
+      const newGroup = {
+        title,
         sig: sigItem,
+        ean: sigItem.ean || null,
+        brand: sigItem.brand || item.brand || null,
+        city: item.city || null,
         mainCategory: item.mainCategory || 'Продукти',
         subCategory: item.subCategory || item.category || 'Бакалія',
         category: item.category || item.subCategory || 'Бакалія',
-        unit: sigItem.weight || item.unit || 'шт',
+        unit: sigItem.normalizedUnit || item.unit || 'шт',
         promoTag: item.promoTag || 'Суперціна',
         storePrices
-      });
+      };
+      groups.push(newGroup);
+      if (sigItem.ean) byEan.set(sigItem.ean, newGroup);
+      if (sigItem.canonicalKey) byKey.set(sigItem.canonicalKey, newGroup);
     }
   }
 
@@ -1711,11 +1596,8 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
           : null;
 
         if (!storeStr || isNaN(numPrice) || numPrice <= 0 || !urlStr) continue;
-
         if (!isValidProductPrice(g.title, numPrice, numOld)) continue;
-
         if (activeStores && !activeStores.includes(storeStr)) continue;
-
         if (!isStoreUrlConsistent(storeStr, urlStr)) {
           console.warn(`[DROPPED INCONSISTENT PRICE] Store: ${storeStr}, URL: ${urlStr}`);
           continue;
@@ -1731,18 +1613,22 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
       }
 
       verifiedPrices.sort((a, b) => a.price - b.price);
+      const promoTag = computeBestPromoTag(verifiedPrices, g.promoTag);
 
       return {
         name: g.title,
         title: g.title,
+        ...(g.brand ? { brand: g.brand } : {}),
+        ...(g.ean ? { ean: g.ean } : {}),
+        ...(g.city ? { city: g.city } : {}),
         mainCategory: g.mainCategory || 'Продукти',
         main_category: g.mainCategory || 'Продукти',
         subCategory: g.subCategory || g.category || 'Бакалія',
         sub_category: g.subCategory || g.category || 'Бакалія',
         category: g.category || g.subCategory || 'Бакалія',
         unit: g.unit,
-        promoTag: verifiedPrices.length > 1 ? `Порівняння в ${verifiedPrices.length} мережах` : g.promoTag,
-        promo_tag: verifiedPrices.length > 1 ? `Порівняння в ${verifiedPrices.length} мережах` : g.promoTag,
+        promoTag,
+        promo_tag: promoTag,
         syncedAt: now,
         updated_at: now,
         prices: verifiedPrices
@@ -1751,6 +1637,36 @@ function groupAndMatchLiveProducts(scrapedItems, activeStores = null) {
     .filter(prod => Array.isArray(prod.prices) && prod.prices.length > 0);
 
   return finalProducts;
+}
+
+function mergeCatalogProducts(products = [], activeStores = null) {
+  if (!Array.isArray(products) || products.length === 0) return [];
+  const flatOffers = [];
+  for (const p of products) {
+    const title = (p.name || p.title || '').trim();
+    if (!title) continue;
+    for (const pr of (p.prices || [])) {
+      if (!pr || !pr.store || !pr.sourceUrl) continue;
+      const storeKey = String(pr.store).toLowerCase().trim();
+      const catInfo = categorizeProduct(title, storeKey, '');
+      flatOffers.push({
+        sourceStore: storeKey,
+        title,
+        brand: p.brand || p.producerBrand || extractBrandFromTitle(title, null),
+        ean: p.ean || null,
+        city: p.city || null,
+        mainCategory: catInfo.mainCategory,
+        subCategory: catInfo.subCategory,
+        category: catInfo.category,
+        unit: p.unit || 'шт',
+        price: Number(parseFloat(pr.price).toFixed(2)),
+        oldPrice: (pr.oldPrice ?? pr.old_price) ? Number(parseFloat(pr.oldPrice ?? pr.old_price).toFixed(2)) : null,
+        promoTag: p.promoTag || p.promo_tag || 'Акція',
+        sourceUrl: pr.sourceUrl || pr.source_url
+      });
+    }
+  }
+  return groupAndMatchLiveProducts(flatOffers, activeStores);
 }
 
 let latestSyncStats = [];
@@ -1926,14 +1842,23 @@ function getLatestSyncStats() {
 /**
  * Returns live status and product counts for all 18 supported retail chains in the given city.
  */
+let localStoreStatusCache = { mtimeMs: -1, products: [] };
+
 function getStoresStatus(cityId = 'ivano-frankivsk') {
   const cityConfig = getCityConfig(cityId);
   const countsByStore = {};
   try {
     const localStorePath = path.resolve(__dirname, '..', 'db', 'local-store.json');
     if (fs.existsSync(localStorePath)) {
-      const data = JSON.parse(fs.readFileSync(localStorePath, 'utf8'));
-      (data.products || []).forEach(p => {
+      const stat = fs.statSync(localStorePath);
+      if (stat.mtimeMs !== localStoreStatusCache.mtimeMs) {
+        const data = JSON.parse(fs.readFileSync(localStorePath, 'utf8'));
+        localStoreStatusCache = {
+          mtimeMs: stat.mtimeMs,
+          products: Array.isArray(data.products) ? data.products : []
+        };
+      }
+      localStoreStatusCache.products.forEach(p => {
         (p.prices || []).forEach(pr => {
           const s = String(pr.store || '').toLowerCase().trim();
           if (cityConfig.activeStores.includes(s)) {
@@ -1975,9 +1900,13 @@ module.exports = {
   categorizeProduct,
   mapCategory,
   hasWord,
+  normalizeHomoglyphs,
+  extractBrandFromTitle,
+  getCanonicalProductKey,
   normalizeProductSignature,
   areProductsMatching,
   groupAndMatchLiveProducts,
+  mergeCatalogProducts,
   isStoreUrlConsistent,
   resolveStoreIdentity,
   isValidProductPrice,

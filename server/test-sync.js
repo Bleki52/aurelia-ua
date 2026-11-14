@@ -16,8 +16,19 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const db = require('./db');
-const { syncLivePromotions, getLatestSyncStats, getStoresStatus, isStoreUrlConsistent, categorizeProduct, isValidProductPrice, ALL_18_STORES } = require('./services/storeScraper');
+const {
+  syncLivePromotions,
+  getLatestSyncStats,
+  getStoresStatus,
+  isStoreUrlConsistent,
+  categorizeProduct,
+  isValidProductPrice,
+  mergeCatalogProducts,
+  getCanonicalProductKey,
+  ALL_18_STORES
+} = require('./services/storeScraper');
 const { getCityConfig, getAllCities, isStoreInCity } = require('./config/cities');
 
 function sanitizeLocalStoreFile() {
@@ -78,15 +89,24 @@ function sanitizeLocalStoreFile() {
     });
   }
 
-  raw.products = cleanedProducts;
+  const usersCountBefore = Array.isArray(raw.users) ? raw.users.length : 0;
+  const cardsCountBefore = Array.isArray(raw.loyalty_cards) ? raw.loyalty_cards.length : 0;
+
+  const mergedProducts = mergeCatalogProducts(cleanedProducts);
+  raw.products = mergedProducts.map((p, idx) => ({ ...p, id: idx + 1 }));
   fs.writeFileSync(storePath, JSON.stringify(raw, null, 2), 'utf8');
 
-  const petIceCreams = cleanedProducts.filter(p =>
+  const verifyRaw = JSON.parse(fs.readFileSync(storePath, 'utf8'));
+  const usersPreserved = Array.isArray(verifyRaw.users) && verifyRaw.users.length === usersCountBefore;
+  const cardsPreserved = Array.isArray(verifyRaw.loyalty_cards) && verifyRaw.loyalty_cards.length === cardsCountBefore;
+
+  const multiStoreMerged = mergedProducts.filter(p => Array.isArray(p.prices) && p.prices.length >= 2);
+  const petIceCreams = mergedProducts.filter(p =>
     (p.mainCategory === 'Зоотовари' || p.main_category === 'Зоотовари') &&
     /морозиво|йогурт|сирок|десерт|згущен/i.test(p.name || p.title || '')
   );
   const cheapRows = [];
-  cleanedProducts.forEach(p => {
+  mergedProducts.forEach(p => {
     (p.prices || []).forEach(pr => {
       if (!isValidProductPrice(p.name || p.title, pr.price, pr.oldPrice ?? pr.old_price ?? null)) {
         cheapRows.push({ title: p.name || p.title, store: pr.store, price: pr.price });
@@ -94,15 +114,35 @@ function sanitizeLocalStoreFile() {
     });
   });
 
-  console.log(`\n🧼 [SANITIZE] Очищення local-store.json завершено:`);
+  console.log(`\n🧼 [SANITIZE & MERGE] Очищення та канонічне об'єднання local-store.json завершено:`);
   console.log(`   • Видалено некоректних цінових записів: ${removedPrices}`);
   console.log(`   • Видалено порожніх товарів:            ${removedProducts}`);
   console.log(`   • Перекатегоризовано товарів:           ${recategorized}`);
-  console.log(`   • Залишилось валідних товарів:          ${cleanedProducts.length}`);
+  console.log(`   • Канонічних товарів після злиття:      ${mergedProducts.length} (було ${cleanedProducts.length})`);
+  console.log(`   • Карток порівняння 2+ мереж:           ${multiStoreMerged.length}`);
+  console.log(`   • Акаунти користувачів збережено:       ${usersPreserved ? 'ТАК' : 'ПОМИЛКА'} (${usersCountBefore})`);
+  console.log(`   • Картки лояльності збережено:          ${cardsPreserved ? 'ТАК' : 'ПОМИЛКА'} (${cardsCountBefore})`);
   console.log(`   • Морозива/десертів у Зоотоварах:       ${petIceCreams.length}`);
   console.log(`   • Товарів із ціною 1.00 / 2.00 ₴ або < норми: ${cheapRows.length}`);
 
-  return { removedPrices, removedProducts, recategorized, totalRemaining: cleanedProducts.length };
+  if (multiStoreMerged.length > 0) {
+    console.log('\n🏆 5 ПРИКЛАДІВ ОБ\'ЄДНАНИХ ТОВАРІВ ПОРІВНЯННЯ (2+ МЕРЕЖІ):');
+    console.log('----------------------------------------------------------------');
+    multiStoreMerged.slice(0, 5).forEach((p, idx) => {
+      const sideBySide = p.prices.map(pr => `${pr.store.toUpperCase()}: ${Number(pr.price).toFixed(2)} ₴`).join(' | ');
+      console.log(`  ${idx + 1}. ${p.title} (${p.unit}) -> ${sideBySide}`);
+    });
+  }
+
+  return {
+    removedPrices,
+    removedProducts,
+    recategorized,
+    totalRemaining: mergedProducts.length,
+    multiStoreCount: multiStoreMerged.length,
+    canonicalSampleCount: mergedProducts.filter(p => getCanonicalProductKey(p).canonicalKey).length,
+    mergedProducts
+  };
 }
 
 async function runTest() {
@@ -110,7 +150,18 @@ async function runTest() {
     console.log('================================================================');
     console.log('🧼 AURELIA UA — ОЧИЩЕННЯ ТА ВАЛІДАЦІЯ LOCAL-STORE.JSON');
     console.log('================================================================\n');
-    sanitizeLocalStoreFile();
+    const cleanStats = sanitizeLocalStoreFile();
+    if (process.env.DATABASE_URL && Array.isArray(cleanStats.mergedProducts) && cleanStats.mergedProducts.length > 0) {
+      try {
+        await db.initDatabase();
+        if (db.isPostgresConnected()) {
+          await db.syncProducts(cleanStats.mergedProducts, 'ivano-frankivsk');
+          console.log(`✅ PostgreSQL синхронізовано з очищеним каталогом (${cleanStats.mergedProducts.length} товарів).`);
+        }
+      } finally {
+        if (typeof db.closeDatabase === 'function') await db.closeDatabase();
+      }
+    }
     process.exit(0);
   }
 
@@ -238,15 +289,18 @@ async function runTest() {
 
     // Аналіз крос-мережевого матчингу
     const multiStoreProducts = verifiedCatalog.filter(p => p.prices && p.prices.length >= 2);
-    console.log(`\n🔥 Товарів із точним порівнянням у 2+ мережах в Івано-Франківську: ${multiStoreProducts.length}`);
+    console.log(`\n🔥 Загалом товарів після канонічного злиття: ${verifiedCatalog.length}`);
+    console.log(`🔥 Товарів із точним порівнянням у 2+ мережах в Івано-Франківську: ${multiStoreProducts.length}`);
 
     if (multiStoreProducts.length > 0) {
-      console.log('\n🏆 ПРИКЛАДИ ПОРІВНЯННЯ ЦІН У СУПЕРМАРКЕТАХ ІВАНО-ФРАНКІВСЬКА:');
+      console.log('\n🏆 5 ПРИКЛАДІВ ПОРІВНЯННЯ ЦІН У СУПЕРМАРКЕТАХ ІВАНО-ФРАНКІВСЬКА:');
       console.log('----------------------------------------------------------------');
       const sampleMulti = multiStoreProducts.slice(0, 5);
       sampleMulti.forEach((p, idx) => {
-        console.log(`\n[Матч #${idx + 1}] ${p.name || p.title}`);
-        console.log(`   Категорія: ${p.mainCategory} › ${p.subCategory} | Одиниця: ${p.unit} | Кількість цін: ${p.prices.length}`);
+        const sideBySide = p.prices.map(pr => `${pr.store.toUpperCase()}: ${Number(pr.price).toFixed(2)} ₴`).join(' | ');
+        console.log(`\n[Матч #${idx + 1}] ${p.name || p.title} (${p.unit})`);
+        console.log(`   Порівняння: ${sideBySide}`);
+        console.log(`   Категорія: ${p.mainCategory} › ${p.subCategory} | Кількість цін: ${p.prices.length}`);
         p.prices.forEach(pr => {
           const oldStr = pr.oldPrice ? ` (було ${Number(pr.oldPrice).toFixed(2)} грн)` : '';
           console.log(`     • [${pr.store.toUpperCase().padEnd(6, ' ')}] : ${Number(pr.price).toFixed(2)} грн${oldStr} -> ${pr.sourceUrl}`);

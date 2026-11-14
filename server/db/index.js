@@ -29,6 +29,9 @@ const STAFF_ACCOUNTS = [
     verification_expires: null,
     reset_code: null,
     reset_expires: null,
+    last_seen_at: null,
+    basket_data: [],
+    basket_cleared_at: null,
     created_at: new Date().toISOString()
   },
   {
@@ -42,6 +45,9 @@ const STAFF_ACCOUNTS = [
     verification_expires: null,
     reset_code: null,
     reset_expires: null,
+    last_seen_at: null,
+    basket_data: [],
+    basket_cleared_at: null,
     created_at: new Date().toISOString()
   },
   {
@@ -55,6 +61,9 @@ const STAFF_ACCOUNTS = [
     verification_expires: null,
     reset_code: null,
     reset_expires: null,
+    last_seen_at: null,
+    basket_data: [],
+    basket_cleared_at: null,
     created_at: new Date().toISOString()
   }
 ];
@@ -72,238 +81,35 @@ function getEffectiveUserRole(user) {
   return (r === 'ADMIN' || r === 'QA') ? r : 'USER';
 }
 
+const SEED_TS = new Date().toISOString();
 const SEED_CARDS = [
-  {
-    id: 1,
-    user_id: 1,
-    store: 'silpo',
-    program: 'Власний Рахунок',
-    card_number: '990001248831',
-    qr_payload: '990001248831',
-    points: '142.50 балів',
-    cashback: 'Преміум гість',
-    screenshot_data: null,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 2,
-    user_id: 1,
-    store: 'atb',
-    program: 'Картка АТБ',
-    card_number: '414949910023',
-    qr_payload: '414949910023',
-    points: 'Знижка до 5%',
-    cashback: 'Екстра Знижка',
-    screenshot_data: null,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 3,
-    user_id: 1,
-    store: 'novus',
-    program: 'Ваша Картка',
-    card_number: '290000418552',
-    qr_payload: '290000418552',
-    points: '85.00 грн',
-    cashback: 'VIP Покупець',
-    screenshot_data: null,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 4,
-    user_id: 1,
-    store: 'varus',
-    program: 'VARUS Poshuk',
-    card_number: '770089231104',
-    qr_payload: '770089231104',
-    points: '230 бонусів',
-    cashback: 'VARUS Family',
-    screenshot_data: null,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 5,
-    user_id: 1,
-    store: 'metro',
-    program: 'METRO Club',
-    card_number: '500291103381',
-    qr_payload: '500291103381',
-    points: 'Партнерська ціна',
-    cashback: 'Бізнес Клієнт',
-    screenshot_data: null,
-    created_at: new Date().toISOString()
-  }
-];
+  [1, 'silpo', 'Власний Рахунок', '990001248831', '142.50 балів', 'Преміум гість'],
+  [2, 'atb',   'Картка АТБ',     '414949910023', 'Знижка до 5%', 'Екстра Знижка'],
+  [3, 'novus', 'Ваша Картка',    '290000418552', '85.00 грн',    'VIP Покупець'],
+  [4, 'varus', 'VARUS Poshuk',   '770089231104', '230 бонусів',  'VARUS Family'],
+  [5, 'metro', 'METRO Club',     '500291103381', 'Партнерська ціна', 'Бізнес Клієнт']
+].map(([id, store, program, num, points, cashback]) => ({
+  id, user_id: 1, store, program, card_number: num, qr_payload: num, points, cashback, screenshot_data: null, created_at: SEED_TS
+}));
+
+const mkSeedProd = (id, name, category, promo_tag, prices) => ({
+  id, name, category, promo_tag, updated_at: SEED_TS,
+  prices: prices.map(([store, price, old_price]) => ({ store, price, old_price }))
+});
 
 const SEED_PRODUCTS = [
-  {
-    id: 1,
-    name: 'Кава Lavazza Crema e Gusto мелена 250 г',
-    category: 'Кава та Чай',
-    promo_tag: 'Хіт продажу',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 149.90, old_price: 199.00 },
-      { store: 'atb', price: 139.50, old_price: 189.00 },
-      { store: 'novus', price: 154.00, old_price: 205.00 },
-      { store: 'varus', price: 145.00, old_price: 195.00 },
-      { store: 'metro', price: 142.00, old_price: 185.00 }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Чай Greenfield Golden Ceylon чорний 100 пакетиків',
-    category: 'Кава та Чай',
-    promo_tag: 'Знижка тижня',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 129.00, old_price: 175.00 },
-      { store: 'atb', price: 135.00, old_price: 180.00 },
-      { store: 'novus', price: 124.90, old_price: 169.00 },
-      { store: 'varus', price: 128.00, old_price: 172.00 },
-      { store: 'metro', price: 126.00, old_price: 170.00 }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Молоко Яготинське 2.6% пастеризоване 900 г',
-    category: 'Молочні',
-    promo_tag: 'Соціальна ціна',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 38.99, old_price: 47.90 },
-      { store: 'atb', price: 36.40, old_price: 44.50 },
-      { store: 'novus', price: 39.50, old_price: 48.00 },
-      { store: 'varus', price: 37.90, old_price: 46.00 },
-      { store: 'metro', price: 37.00, old_price: 45.00 }
-    ]
-  },
-  {
-    id: 4,
-    name: 'Сир твердий КОМО Тенеро 50% брус 180 г',
-    category: 'Молочні',
-    promo_tag: 'Краща ціна',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 64.99, old_price: 89.90 },
-      { store: 'atb', price: 67.50, old_price: 91.00 },
-      { store: 'novus', price: 69.90, old_price: 94.00 },
-      { store: 'varus', price: 66.00, old_price: 89.00 },
-      { store: 'metro', price: 65.50, old_price: 88.00 }
-    ]
-  },
-  {
-    id: 5,
-    name: 'Філе індички охолоджене фермерське 1 кг',
-    category: "М'ясо та Риба",
-    promo_tag: 'Свіже м’ясо',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 219.00, old_price: 289.00 },
-      { store: 'atb', price: 215.00, old_price: 279.00 },
-      { store: 'novus', price: 225.00, old_price: 295.00 },
-      { store: 'varus', price: 209.90, old_price: 275.00 },
-      { store: 'metro', price: 212.00, old_price: 280.00 }
-    ]
-  },
-  {
-    id: 6,
-    name: 'Лосось слабосолений філе Norven 180 г',
-    category: "М'ясо та Риба",
-    promo_tag: 'Делікатес',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 179.00, old_price: 239.00 },
-      { store: 'atb', price: 169.90, old_price: 229.00 },
-      { store: 'novus', price: 185.00, old_price: 245.00 },
-      { store: 'varus', price: 174.00, old_price: 230.00 },
-      { store: 'metro', price: 172.00, old_price: 228.00 }
-    ]
-  },
-  {
-    id: 7,
-    name: 'Шоколад Roshen екстрачорний з цілим ліщиною 85 г',
-    category: 'Солодощі',
-    promo_tag: 'Суперціна',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 34.50, old_price: 48.00 },
-      { store: 'atb', price: 31.90, old_price: 45.00 },
-      { store: 'novus', price: 36.00, old_price: 49.00 },
-      { store: 'varus', price: 33.50, old_price: 47.00 },
-      { store: 'metro', price: 32.50, old_price: 46.00 }
-    ]
-  },
-  {
-    id: 8,
-    name: 'Цукерки Ferrero Rocher хрусткі з горіхом 200 г',
-    category: 'Солодощі',
-    promo_tag: 'Преміум',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 199.00, old_price: 265.00 },
-      { store: 'atb', price: 195.00, old_price: 259.00 },
-      { store: 'novus', price: 189.90, old_price: 255.00 },
-      { store: 'varus', price: 196.00, old_price: 260.00 },
-      { store: 'metro', price: 192.00, old_price: 258.00 }
-    ]
-  },
-  {
-    id: 9,
-    name: 'Олія соняшникова Чумак рафінована 850 мл',
-    category: 'Бакалія',
-    promo_tag: 'Топ вибір',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 54.90, old_price: 68.00 },
-      { store: 'atb', price: 49.90, old_price: 64.00 },
-      { store: 'novus', price: 56.00, old_price: 69.00 },
-      { store: 'varus', price: 52.50, old_price: 66.00 },
-      { store: 'metro', price: 51.00, old_price: 65.00 }
-    ]
-  },
-  {
-    id: 10,
-    name: 'Макарони Barilla Spaghetti n.5 спагеті 500 г',
-    category: 'Бакалія',
-    promo_tag: 'Італія',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 59.90, old_price: 85.00 },
-      { store: 'atb', price: 58.50, old_price: 82.00 },
-      { store: 'novus', price: 54.90, old_price: 79.00 },
-      { store: 'varus', price: 61.00, old_price: 86.00 },
-      { store: 'metro', price: 56.00, old_price: 80.00 }
-    ]
-  },
-  {
-    id: 11,
-    name: 'Вода мінеральна Borjomi лікувальна 0.5 л скло',
-    category: 'Напої',
-    promo_tag: 'Знижка',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 39.90, old_price: 52.00 },
-      { store: 'atb', price: 37.50, old_price: 49.00 },
-      { store: 'novus', price: 41.00, old_price: 54.00 },
-      { store: 'varus', price: 38.90, old_price: 50.00 },
-      { store: 'metro', price: 38.00, old_price: 49.50 }
-    ]
-  },
-  {
-    id: 12,
-    name: 'Сік Sandora Гранатовий 100% преміум 0.95 л',
-    category: 'Напої',
-    promo_tag: '100% Сік',
-    updated_at: new Date().toISOString(),
-    prices: [
-      { store: 'silpo', price: 68.00, old_price: 89.00 },
-      { store: 'atb', price: 69.50, old_price: 91.00 },
-      { store: 'novus', price: 66.90, old_price: 88.00 },
-      { store: 'varus', price: 67.50, old_price: 89.00 },
-      { store: 'metro', price: 65.00, old_price: 85.00 }
-    ]
-  }
+  mkSeedProd(1, 'Кава Lavazza Crema e Gusto мелена 250 г', 'Кава та Чай', 'Хіт продажу', [['silpo', 149.90, 199], ['atb', 139.50, 189], ['novus', 154, 205], ['varus', 145, 195], ['metro', 142, 185]]),
+  mkSeedProd(2, 'Чай Greenfield Golden Ceylon чорний 100 пакетиків', 'Кава та Чай', 'Знижка тижня', [['silpo', 129, 175], ['atb', 135, 180], ['novus', 124.90, 169], ['varus', 128, 172], ['metro', 126, 170]]),
+  mkSeedProd(3, 'Молоко Яготинське 2.6% пастеризоване 900 г', 'Молочні', 'Соціальна ціна', [['silpo', 38.99, 47.90], ['atb', 36.40, 44.50], ['novus', 39.50, 48], ['varus', 37.90, 46], ['metro', 37, 45]]),
+  mkSeedProd(4, 'Сир твердий КОМО Тенеро 50% брус 180 г', 'Молочні', 'Краща ціна', [['silpo', 64.99, 89.90], ['atb', 67.50, 91], ['novus', 69.90, 94], ['varus', 66, 89], ['metro', 65.50, 88]]),
+  mkSeedProd(5, 'Філе індички охолоджене фермерське 1 кг', "М'ясо та Риба", 'Свіже м’ясо', [['silpo', 219, 289], ['atb', 215, 279], ['novus', 225, 295], ['varus', 209.90, 275], ['metro', 212, 280]]),
+  mkSeedProd(6, 'Лосось слабосолений філе Norven 180 г', "М'ясо та Риба", 'Делікатес', [['silpo', 179, 239], ['atb', 169.90, 229], ['novus', 185, 245], ['varus', 174, 230], ['metro', 172, 228]]),
+  mkSeedProd(7, 'Шоколад Roshen екстрачорний з цілим ліщиною 85 г', 'Солодощі', 'Суперціна', [['silpo', 34.50, 48], ['atb', 31.90, 45], ['novus', 36, 49], ['varus', 33.50, 47], ['metro', 32.50, 46]]),
+  mkSeedProd(8, 'Цукерки Ferrero Rocher хрусткі з горіхом 200 г', 'Солодощі', 'Преміум', [['silpo', 199, 265], ['atb', 195, 259], ['novus', 189.90, 255], ['varus', 196, 260], ['metro', 192, 258]]),
+  mkSeedProd(9, 'Олія соняшникова Чумак рафінована 850 мл', 'Бакалія', 'Топ вибір', [['silpo', 54.90, 68], ['atb', 49.90, 64], ['novus', 56, 69], ['varus', 52.50, 66], ['metro', 51, 65]]),
+  mkSeedProd(10, 'Макарони Barilla Spaghetti n.5 спагеті 500 г', 'Бакалія', 'Італія', [['silpo', 59.90, 85], ['atb', 58.50, 82], ['novus', 54.90, 79], ['varus', 61, 86], ['metro', 56, 80]]),
+  mkSeedProd(11, 'Вода мінеральна Borjomi лікувальна 0.5 л скло', 'Напої', 'Знижка', [['silpo', 39.90, 52], ['atb', 37.50, 49], ['novus', 41, 54], ['varus', 38.90, 50], ['metro', 38, 49.50]]),
+  mkSeedProd(12, 'Сік Sandora Гранатовий 100% преміум 0.95 л', 'Напої', '100% Сік', [['silpo', 68, 89], ['atb', 69.50, 91], ['novus', 66.90, 88], ['varus', 67.50, 89], ['metro', 65, 85]])
 ];
 
 /* ─── Local JSON Database Driver ─────────────────────────────────────────── */
@@ -348,7 +154,10 @@ function reconcileLocalUsers(rawUsers) {
         password_hash: u.password_hash || staffMatch.password_hash,
         is_verified: true,
         verification_code: null,
-        verification_expires: null
+        verification_expires: null,
+        last_seen_at: u.last_seen_at !== undefined ? u.last_seen_at : null,
+        basket_data: Array.isArray(u.basket_data) ? u.basket_data : [],
+        basket_cleared_at: u.basket_cleared_at !== undefined ? u.basket_cleared_at : null
       };
     }
 
@@ -360,7 +169,10 @@ function reconcileLocalUsers(rawUsers) {
       u.verification_code === undefined ||
       u.verification_expires === undefined ||
       u.reset_code === undefined ||
-      u.reset_expires === undefined
+      u.reset_expires === undefined ||
+      u.last_seen_at === undefined ||
+      u.basket_data === undefined ||
+      u.basket_cleared_at === undefined
     ) {
       changed = true;
     }
@@ -372,7 +184,10 @@ function reconcileLocalUsers(rawUsers) {
       verification_code: u.verification_code !== undefined ? u.verification_code : null,
       verification_expires: u.verification_expires !== undefined ? u.verification_expires : null,
       reset_code: u.reset_code !== undefined ? u.reset_code : null,
-      reset_expires: u.reset_expires !== undefined ? u.reset_expires : null
+      reset_expires: u.reset_expires !== undefined ? u.reset_expires : null,
+      last_seen_at: u.last_seen_at !== undefined ? u.last_seen_at : null,
+      basket_data: Array.isArray(u.basket_data) ? u.basket_data : [],
+      basket_cleared_at: u.basket_cleared_at !== undefined ? u.basket_cleared_at : null
     };
   }) : [];
 
@@ -459,36 +274,62 @@ async function seedProductsFromLocalStore() {
     const client = await pgPool.connect();
     try {
       await client.query('BEGIN');
-      for (const p of localProds) {
-        const name = (p.title || p.name).trim();
-        const city = p.city || 'ivano-frankivsk';
-        const mainCat = p.mainCategory || p.main_category || 'Продукти';
-        const subCat = p.subCategory || p.sub_category || p.category || 'Бакалія';
-        const cat = p.category || subCat;
-        const promoTag = p.promoTag || p.promo_tag || 'Акція';
-        const syncedAt = p.syncedAt || p.synced_at || p.updated_at || new Date().toISOString();
+      const priceRowsQueue = [];
+      const PRODUCT_BATCH_SIZE = 200;
 
-        const insProd = await client.query(
-          `INSERT INTO products (name, city, category, main_category, sub_category, promo_tag, synced_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-          [name, city, cat, mainCat, subCat, promoTag, syncedAt]
-        );
-        const prodId = insProd.rows[0].id;
-
-        for (const pr of p.prices) {
-          const storeSlug = String(pr.store || '').toLowerCase().trim();
-          const price = parseFloat(pr.price);
-          if (!storeSlug || isNaN(price) || price <= 0) continue;
-          const oldPrice = parseFloat(pr.oldPrice !== undefined ? pr.oldPrice : pr.old_price) || null;
-          const sourceUrl = pr.sourceUrl || pr.source_url || null;
-
-          await client.query(
-            `INSERT INTO product_prices (product_id, store, price, old_price, source_url)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [prodId, storeSlug, price, oldPrice, sourceUrl]
+      for (let i = 0; i < localProds.length; i += PRODUCT_BATCH_SIZE) {
+        const chunk = localProds.slice(i, i + PRODUCT_BATCH_SIZE);
+        const values = [];
+        const placeholders = chunk.map((p, idx) => {
+          const base = idx * 7;
+          const mainCat = p.mainCategory || p.main_category || 'Продукти';
+          const subCat = p.subCategory || p.sub_category || p.category || 'Бакалія';
+          values.push(
+            (p.title || p.name).trim(),
+            p.city || 'ivano-frankivsk',
+            p.category || subCat,
+            mainCat,
+            subCat,
+            p.promoTag || p.promo_tag || 'Акція',
+            p.syncedAt || p.synced_at || p.updated_at || new Date().toISOString()
           );
-        }
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
+        });
+
+        const insRes = await client.query(
+          `INSERT INTO products (name, city, category, main_category, sub_category, promo_tag, synced_at)
+           VALUES ${placeholders.join(', ')} RETURNING id`,
+          values
+        );
+
+        insRes.rows.forEach((row, idx) => {
+          for (const pr of chunk[idx].prices) {
+            const storeSlug = String(pr.store || '').toLowerCase().trim();
+            const price = parseFloat(pr.price);
+            if (!storeSlug || isNaN(price) || price <= 0) continue;
+            const oldPrice = parseFloat(pr.oldPrice !== undefined ? pr.oldPrice : pr.old_price) || null;
+            const sourceUrl = pr.sourceUrl || pr.source_url || null;
+            priceRowsQueue.push([row.id, storeSlug, price, oldPrice, sourceUrl]);
+          }
+        });
       }
+
+      const PRICE_BATCH_SIZE = 400;
+      for (let i = 0; i < priceRowsQueue.length; i += PRICE_BATCH_SIZE) {
+        const chunk = priceRowsQueue.slice(i, i + PRICE_BATCH_SIZE);
+        const values = [];
+        const placeholders = chunk.map((r, idx) => {
+          const base = idx * 5;
+          values.push(r[0], r[1], r[2], r[3], r[4]);
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+        });
+        await client.query(
+          `INSERT INTO product_prices (product_id, store, price, old_price, source_url)
+           VALUES ${placeholders.join(', ')}`,
+          values
+        );
+      }
+
       await client.query('COMMIT');
       console.log(`✅ ${localProds.length} товарів успішно завантажено в хмарну базу PostgreSQL!`);
       return true;
@@ -538,6 +379,9 @@ async function initDatabase() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expires TIMESTAMP;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(12);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT NULL;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_data JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_cleared_at TIMESTAMP DEFAULT NULL;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
         ALTER TABLE loyalty_cards ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
         CREATE INDEX IF NOT EXISTS idx_loyalty_cards_user_id ON loyalty_cards(user_id);
@@ -675,7 +519,10 @@ async function findUserByIdentifier(identifier) {
 
 async function findUserById(id) {
   if (isPostgres) {
-    const res = await pgPool.query('SELECT id, name, email, role, is_verified, created_at FROM users WHERE id = $1', [id]);
+    const res = await pgPool.query(
+      'SELECT id, name, email, role, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at FROM users WHERE id = $1',
+      [id]
+    );
     return res.rows[0] || null;
   }
   const store = loadLocalStore();
@@ -683,6 +530,295 @@ async function findUserById(id) {
   if (!u) return null;
   const { password_hash, verification_code, verification_expires, reset_code, reset_expires, ...safeUser } = u;
   return safeUser;
+}
+
+const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
+function computeIsUserOnline(lastSeenAt) {
+  if (!lastSeenAt) return false;
+  const ts = new Date(lastSeenAt).getTime();
+  if (!Number.isFinite(ts) || ts <= 0) return false;
+  return (Date.now() - ts) <= ONLINE_WINDOW_MS;
+}
+
+function sanitizeBasketArray(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(Boolean)
+    .map(item => ({
+      productId: String(item.productId || item.id || ''),
+      qty: Math.max(1, parseInt(item.qty, 10) || 1)
+    }))
+    .filter(item => item.productId.length > 0);
+}
+
+async function touchUserActivity(userId, options = {}) {
+  if (!userId) return null;
+  const { basket, lastClearedAckAt } = options || {};
+  const hasBasketUpdate = Array.isArray(basket);
+  const nowIso = new Date().toISOString();
+
+  if (isPostgres) {
+    const existingRes = await pgPool.query(
+      'SELECT id, basket_data, basket_cleared_at FROM users WHERE id = $1 LIMIT 1',
+      [userId]
+    );
+    if (existingRes.rowCount === 0) return null;
+    const row = existingRes.rows[0];
+    const clearedMs = row.basket_cleared_at ? new Date(row.basket_cleared_at).getTime() : 0;
+    const ackMs = lastClearedAckAt ? new Date(lastClearedAckAt).getTime() : 0;
+    const clientOutdatedAfterClear = Boolean(clearedMs > 0 && (!ackMs || isNaN(ackMs) || clearedMs > ackMs));
+
+    if (hasBasketUpdate && !clientOutdatedAfterClear) {
+      const normalizedBasket = sanitizeBasketArray(basket);
+      const upd = await pgPool.query(
+        `UPDATE users
+         SET last_seen_at = NOW(), basket_data = $2::jsonb
+         WHERE id = $1
+         RETURNING last_seen_at, basket_data, basket_cleared_at`,
+        [userId, JSON.stringify(normalizedBasket)]
+      );
+      return upd.rows[0];
+    }
+
+    const upd = await pgPool.query(
+      `UPDATE users
+       SET last_seen_at = NOW()
+       WHERE id = $1
+       RETURNING last_seen_at, basket_data, basket_cleared_at`,
+      [userId]
+    );
+    return upd.rows[0];
+  }
+
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) return null;
+
+  store.users[idx].last_seen_at = nowIso;
+  const clearedMs = store.users[idx].basket_cleared_at ? new Date(store.users[idx].basket_cleared_at).getTime() : 0;
+  const ackMs = lastClearedAckAt ? new Date(lastClearedAckAt).getTime() : 0;
+  const clientOutdatedAfterClear = Boolean(clearedMs > 0 && (!ackMs || isNaN(ackMs) || clearedMs > ackMs));
+
+  if (hasBasketUpdate && !clientOutdatedAfterClear) {
+    store.users[idx].basket_data = sanitizeBasketArray(basket);
+  } else if (!Array.isArray(store.users[idx].basket_data)) {
+    store.users[idx].basket_data = [];
+  }
+
+  saveLocalStore(store);
+  return {
+    last_seen_at: store.users[idx].last_seen_at,
+    basket_data: store.users[idx].basket_data,
+    basket_cleared_at: store.users[idx].basket_cleared_at || null
+  };
+}
+
+async function getAllUsersForAdmin() {
+  if (isPostgres) {
+    const usersRes = await pgPool.query(
+      `SELECT id, name, email, role, is_verified, last_seen_at, basket_data, basket_cleared_at, created_at
+       FROM users
+       ORDER BY id ASC`
+    );
+    const cardsRes = await pgPool.query(
+      `SELECT id, user_id, store, card_number, created_at
+       FROM loyalty_cards
+       ORDER BY id DESC`
+    );
+
+    const cardsByUser = {};
+    for (const c of cardsRes.rows) {
+      const uid = String(c.user_id);
+      if (!cardsByUser[uid]) cardsByUser[uid] = [];
+      const storeSlug = String(c.store || 'silpo').toLowerCase().trim();
+      cardsByUser[uid].push({
+        id: c.id,
+        store: storeSlug,
+        storeName: STORE_NAMES[storeSlug] || storeSlug.toUpperCase(),
+        number: c.card_number || ''
+      });
+    }
+
+    return usersRes.rows.map(u => {
+      const basketArr = Array.isArray(u.basket_data) ? u.basket_data : [];
+      const basketCount = basketArr.reduce((sum, item) => sum + Math.max(1, parseInt(item?.qty, 10) || 1), 0);
+      return {
+        id: u.id,
+        name: u.name || (u.email ? u.email.split('@')[0] : 'Користувач'),
+        email: u.email,
+        role: getEffectiveUserRole(u),
+        is_verified: Boolean(u.is_verified),
+        created_at: u.created_at,
+        last_seen_at: u.last_seen_at || null,
+        is_online: computeIsUserOnline(u.last_seen_at),
+        basket_count: basketCount,
+        basket_cleared_at: u.basket_cleared_at || null,
+        cards: cardsByUser[String(u.id)] || []
+      };
+    });
+  }
+
+  const store = loadLocalStore();
+  const cardsByUser = {};
+  (store.loyalty_cards || []).forEach(c => {
+    const uid = String(c.user_id);
+    if (!cardsByUser[uid]) cardsByUser[uid] = [];
+    const storeSlug = String(c.store || 'silpo').toLowerCase().trim();
+    cardsByUser[uid].push({
+      id: c.id,
+      store: storeSlug,
+      storeName: STORE_NAMES[storeSlug] || storeSlug.toUpperCase(),
+      number: c.card_number || c.number || ''
+    });
+  });
+
+  return [...(store.users || [])]
+    .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0))
+    .map(u => {
+      const basketArr = Array.isArray(u.basket_data) ? u.basket_data : [];
+      const basketCount = basketArr.reduce((sum, item) => sum + Math.max(1, parseInt(item?.qty, 10) || 1), 0);
+      return {
+        id: u.id,
+        name: u.name || (u.email ? u.email.split('@')[0] : 'Користувач'),
+        email: u.email,
+        role: getEffectiveUserRole(u),
+        is_verified: Boolean(u.is_verified),
+        created_at: u.created_at || null,
+        last_seen_at: u.last_seen_at || null,
+        is_online: computeIsUserOnline(u.last_seen_at),
+        basket_count: basketCount,
+        basket_cleared_at: u.basket_cleared_at || null,
+        cards: cardsByUser[String(u.id)] || []
+      };
+    });
+}
+
+async function updateUserByAdmin(userId, updates = {}) {
+  const existing = await findUserById(userId);
+  if (!existing) return null;
+
+  const isPrimaryAdmin = String(existing.email || '').trim().toLowerCase() === 'bleki@aurelia.ua';
+  const nextName = updates.name !== undefined ? String(updates.name).trim() : existing.name;
+  const nextEmail = updates.email !== undefined ? String(updates.email).trim().toLowerCase() : String(existing.email).toLowerCase();
+  const requestedRole = updates.role !== undefined ? String(updates.role).trim().toUpperCase() : getEffectiveUserRole(existing);
+  const nextVerified = updates.is_verified !== undefined ? Boolean(updates.is_verified) : Boolean(existing.is_verified);
+
+  if (!nextName || nextName.length < 2) {
+    const err = new Error('Ім’я користувача повинно містити щонайменше 2 символи.');
+    err.status = 400;
+    err.code = 'INVALID_NAME';
+    throw err;
+  }
+
+  if (!nextEmail || !nextEmail.includes('@')) {
+    const err = new Error('Вкажіть коректну адресу електронної пошти.');
+    err.status = 400;
+    err.code = 'INVALID_EMAIL';
+    throw err;
+  }
+
+  if (!['USER', 'QA', 'ADMIN'].includes(requestedRole)) {
+    const err = new Error('Недопустима роль користувача.');
+    err.status = 400;
+    err.code = 'INVALID_ROLE';
+    throw err;
+  }
+
+  if (isPrimaryAdmin && requestedRole !== 'ADMIN') {
+    const err = new Error('Неможливо зняти роль ADMIN з головного адміністратора bleki@aurelia.ua.');
+    err.status = 400;
+    err.code = 'PROTECTED_ADMIN_ROLE';
+    throw err;
+  }
+
+  if (isPrimaryAdmin && nextEmail !== 'bleki@aurelia.ua') {
+    const err = new Error('Неможливо змінити системний Email головного адміністратора bleki@aurelia.ua.');
+    err.status = 400;
+    err.code = 'PROTECTED_ADMIN_EMAIL';
+    throw err;
+  }
+
+  if ((requestedRole === 'ADMIN' || requestedRole === 'QA') && !isStaffDomainEmail(nextEmail)) {
+    const err = new Error('Ролі ADMIN та QA доступні лише для корпоративних адрес @aurelia.ua.');
+    err.status = 400;
+    err.code = 'STAFF_DOMAIN_REQUIRED';
+    throw err;
+  }
+
+  const dupEmailUser = await findUserByEmail(nextEmail);
+  if (dupEmailUser && String(dupEmailUser.id) !== String(existing.id)) {
+    const err = new Error('Користувач із таким Email уже існує.');
+    err.status = 409;
+    err.code = 'EMAIL_EXISTS';
+    throw err;
+  }
+
+  if (isPostgres) {
+    if (updates.password_hash) {
+      const res = await pgPool.query(
+        `UPDATE users
+         SET name = $2, email = $3, role = $4, is_verified = $5, password_hash = $6
+         WHERE id = $1
+         RETURNING id, name, email, role, is_verified, last_seen_at, basket_cleared_at, created_at`,
+        [userId, nextName, nextEmail, requestedRole, nextVerified, updates.password_hash]
+      );
+      return res.rows[0] || null;
+    }
+    const res = await pgPool.query(
+      `UPDATE users
+       SET name = $2, email = $3, role = $4, is_verified = $5
+       WHERE id = $1
+       RETURNING id, name, email, role, is_verified, last_seen_at, basket_cleared_at, created_at`,
+      [userId, nextName, nextEmail, requestedRole, nextVerified]
+    );
+    return res.rows[0] || null;
+  }
+
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) return null;
+  store.users[idx].name = nextName;
+  store.users[idx].email = nextEmail;
+  store.users[idx].role = requestedRole;
+  store.users[idx].is_verified = nextVerified;
+  if (updates.password_hash) {
+    store.users[idx].password_hash = updates.password_hash;
+  }
+  saveLocalStore(store);
+  const { password_hash: _, verification_code: _vc, verification_expires: _ve, reset_code: _rc, reset_expires: _re, ...safeUser } = store.users[idx];
+  return safeUser;
+}
+
+async function deleteUserCardByAdmin(userId, cardId) {
+  return deleteCard(userId, cardId);
+}
+
+async function clearUserBasketByAdmin(userId) {
+  if (!userId) return null;
+  const nowIso = new Date().toISOString();
+  if (isPostgres) {
+    const res = await pgPool.query(
+      `UPDATE users
+       SET basket_data = '[]'::jsonb, basket_cleared_at = NOW()
+       WHERE id = $1
+       RETURNING id, name, email, basket_cleared_at`,
+      [userId]
+    );
+    return res.rows[0] || null;
+  }
+  const store = loadLocalStore();
+  const idx = store.users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) return null;
+  store.users[idx].basket_data = [];
+  store.users[idx].basket_cleared_at = nowIso;
+  saveLocalStore(store);
+  return {
+    id: store.users[idx].id,
+    name: store.users[idx].name,
+    email: store.users[idx].email,
+    basket_cleared_at: store.users[idx].basket_cleared_at
+  };
 }
 
 async function createUser({
@@ -716,6 +852,9 @@ async function createUser({
     verification_expires: verification_expires || null,
     reset_code: null,
     reset_expires: null,
+    last_seen_at: null,
+    basket_data: [],
+    basket_cleared_at: null,
     created_at: new Date().toISOString()
   };
   store.users.push(newUser);
@@ -825,7 +964,19 @@ const STORE_NAMES = {
   novus: 'NOVUS',
   varus: 'VARUS',
   metro: 'METRO',
-  auchan: 'АШАН'
+  auchan: 'АШАН',
+  epicentrk_food: 'Епіцентр Food',
+  velmart: 'Велмарт',
+  thrash: 'ТРАШ!',
+  simi: 'Сімі',
+  blyzenko: 'Близенько',
+  taistra: 'Тайстра',
+  arsen: 'Арсен',
+  rukavychka: 'Рукавичка',
+  eva: 'EVA',
+  prostor: 'Prostor',
+  avrora: 'Аврора',
+  epicentr: 'Епіцентр К'
 };
 
 function formatCard(c) {
@@ -972,6 +1123,9 @@ function formatProduct(p) {
 // 2. Картки лояльності (Loyalty Cards — Strict Per-User Isolation)
 async function getCardsByUser(userId) {
   if (!userId) return [];
+  try {
+    await touchUserActivity(userId);
+  } catch (_) {}
   if (isPostgres) {
     const res = await pgPool.query(
       'SELECT * FROM loyalty_cards WHERE user_id = $1 ORDER BY id DESC',
@@ -1563,65 +1717,128 @@ async function syncProducts(scrapedProducts, city) {
     })
     .filter(item => item.title && Array.isArray(item.prices) && item.prices.length > 0);
 
+  const { mergeCatalogProducts } = require('../services/storeScraper');
+  const mergedProducts = typeof mergeCatalogProducts === 'function'
+    ? mergeCatalogProducts(validProducts)
+    : validProducts;
+  const productsToPersist = mergedProducts.length > 0 ? mergedProducts : validProducts;
+
   if (isPostgres) {
-    // 1. Completely purge existing products and prices
-    await pgPool.query('TRUNCATE TABLE product_prices, products RESTART IDENTITY CASCADE;');
+    const client = await pgPool.connect();
+    const insertedProducts = [];
+    const priceRowsQueue = [];
 
-    const insertedList = [];
-    for (const item of validProducts) {
-      const name = item.title;
-      const cat = item.category;
-      const mainCat = item.mainCategory || item.main_category || 'Продукти';
-      const subCat = item.subCategory || item.sub_category || cat;
-      const tag = item.promo_tag;
-      const itemCity = item.city || city || 'ivano-frankivsk';
-      const syncedAt = item.syncedAt || now;
+    try {
+      await client.query('BEGIN');
+      // 1. Purge ONLY catalog tables (never touch users or loyalty_cards)
+      await client.query('TRUNCATE TABLE product_prices, products RESTART IDENTITY CASCADE;');
 
-      const prodRes = await pgPool.query(
-        `INSERT INTO products (name, city, category, main_category, sub_category, promo_tag, synced_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-        [name, itemCity, cat, mainCat, subCat, tag, syncedAt]
-      );
-      const newProd = prodRes.rows[0];
-      const insertedPrices = [];
+      const PRODUCT_BATCH_SIZE = 200;
+      for (let i = 0; i < productsToPersist.length; i += PRODUCT_BATCH_SIZE) {
+        const chunk = productsToPersist.slice(i, i + PRODUCT_BATCH_SIZE);
+        const values = [];
+        const placeholders = chunk.map((item, idx) => {
+          const base = idx * 7;
+          const cat = item.category;
+          const mainCat = item.mainCategory || item.main_category || 'Продукти';
+          const subCat = item.subCategory || item.sub_category || cat;
+          values.push(
+            item.title,
+            item.city || city || 'ivano-frankivsk',
+            cat,
+            mainCat,
+            subCat,
+            item.promo_tag,
+            item.syncedAt || now
+          );
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
+        });
 
-      for (const pr of item.prices) {
-        const prRes = await pgPool.query(
-          `INSERT INTO product_prices (product_id, store, price, old_price, source_url) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-          [newProd.id, pr.store, pr.price, pr.oldPrice !== undefined ? pr.oldPrice : pr.old_price, pr.sourceUrl || pr.source_url || null]
+        const prodRes = await client.query(
+          `INSERT INTO products (name, city, category, main_category, sub_category, promo_tag, synced_at)
+           VALUES ${placeholders.join(', ')} RETURNING *`,
+          values
         );
-        insertedPrices.push({
-          store: prRes.rows[0].store,
-          price: parseFloat(prRes.rows[0].price),
-          old_price: prRes.rows[0].old_price ? parseFloat(prRes.rows[0].old_price) : null,
-          oldPrice: prRes.rows[0].old_price ? parseFloat(prRes.rows[0].old_price) : null,
-          sourceUrl: prRes.rows[0].source_url || null
+
+        prodRes.rows.forEach((newProd, idx) => {
+          const sourceItem = chunk[idx];
+          const prodEntry = { newProd, syncedAt: sourceItem.syncedAt || now, prices: [] };
+          insertedProducts.push(prodEntry);
+
+          for (const pr of sourceItem.prices) {
+            priceRowsQueue.push({
+              prodEntry,
+              productId: newProd.id,
+              store: pr.store,
+              price: pr.price,
+              oldPrice: pr.oldPrice !== undefined ? pr.oldPrice : pr.old_price,
+              sourceUrl: pr.sourceUrl || pr.source_url || null
+            });
+          }
         });
       }
 
-      insertedList.push(formatProduct({
-        ...newProd,
-        syncedAt,
-        prices: insertedPrices
-      }));
+      const PRICE_BATCH_SIZE = 400;
+      for (let i = 0; i < priceRowsQueue.length; i += PRICE_BATCH_SIZE) {
+        const chunk = priceRowsQueue.slice(i, i + PRICE_BATCH_SIZE);
+        const values = [];
+        const placeholders = chunk.map((row, idx) => {
+          const base = idx * 5;
+          values.push(row.productId, row.store, row.price, row.oldPrice, row.sourceUrl);
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+        });
+
+        const prRes = await client.query(
+          `INSERT INTO product_prices (product_id, store, price, old_price, source_url)
+           VALUES ${placeholders.join(', ')} RETURNING *`,
+          values
+        );
+
+        prRes.rows.forEach((savedPr, idx) => {
+          chunk[idx].prodEntry.prices.push({
+            store: savedPr.store,
+            price: parseFloat(savedPr.price),
+            old_price: savedPr.old_price ? parseFloat(savedPr.old_price) : null,
+            oldPrice: savedPr.old_price ? parseFloat(savedPr.old_price) : null,
+            sourceUrl: savedPr.source_url || null
+          });
+        });
+      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
     }
 
-    // Dual Sync: mirror into local-store.json so both databases stay 100% in sync
+    const insertedList = insertedProducts.map(entry => formatProduct({
+      ...entry.newProd,
+      syncedAt: entry.syncedAt,
+      prices: entry.prices
+    }));
+
+    // Dual Sync: mirror into local-store.json while preserving users & loyalty_cards
     const store = loadLocalStore();
-    store.products = validProducts;
-    store.product_prices = buildSeedProductPrices(validProducts);
+    store.users = Array.isArray(store.users) ? store.users : [];
+    store.loyalty_cards = Array.isArray(store.loyalty_cards) ? store.loyalty_cards : [];
+    store.products = productsToPersist;
+    store.product_prices = buildSeedProductPrices(productsToPersist);
     saveLocalStore(store);
 
     return insertedList.filter(p => p && Array.isArray(p.prices) && p.prices.length > 0);
   }
 
-  // Local JSON Mode: Populate BOTH data.products AND data.product_prices!
+  // Local JSON Mode: Populate BOTH data.products AND data.product_prices (users & loyalty_cards untouched)
   const store = loadLocalStore();
+  store.users = Array.isArray(store.users) ? store.users : [];
+  store.loyalty_cards = Array.isArray(store.loyalty_cards) ? store.loyalty_cards : [];
   let nextId = 1;
   let nextPriceId = 1;
   const allProductPrices = [];
 
-  store.products = validProducts.map(item => {
+  store.products = productsToPersist.map(item => {
     const prodId = nextId++;
     const formattedPrices = item.prices.map(pr => {
       const priceEntry = {
@@ -1700,6 +1917,11 @@ module.exports = {
   verifyUserEmail,
   setPasswordResetCode,
   resetUserPassword,
+  touchUserActivity,
+  getAllUsersForAdmin,
+  updateUserByAdmin,
+  deleteUserCardByAdmin,
+  clearUserBasketByAdmin,
   // Cards
   getCardsByUser,
   getCards,

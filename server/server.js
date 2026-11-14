@@ -10,6 +10,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const apiRoutes = require('./routes');
+const adminUsersRoutes = require('./routes/adminUsers');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ app.get('/api/health', handleHealthCheck);
 app.get('/health', handleHealthCheck);
 
 /* ─── Route Mounting ───────────────────────────────────────────────────────── */
+app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api', apiRoutes);
 
 // Health check endpoint
@@ -92,11 +94,11 @@ async function startServer() {
     console.log('Ініціалізація бази даних AURELIA UA...');
     await db.initDatabase();
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`====================================================`);
       console.log(` AURELIA UA API Server запущено на порту ${PORT}`);
       console.log(` Режим БД: ${db.isPostgresConnected() ? 'PostgreSQL' : 'Локальне сховище (local-store.json)'}`);
-      console.log(` Ендпоінти: http://localhost:${PORT}/api`);
+      console.log(` Ендпоінти: http://0.0.0.0:${PORT}/api`);
       console.log(`====================================================`);
     });
 

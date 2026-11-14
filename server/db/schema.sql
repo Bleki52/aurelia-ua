@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
     verification_expires TIMESTAMP,
     reset_code VARCHAR(12),
     reset_expires TIMESTAMP,
+    last_seen_at TIMESTAMP DEFAULT NULL,
+    basket_data JSONB DEFAULT '[]'::jsonb,
+    basket_cleared_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
