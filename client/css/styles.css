@@ -241,8 +241,7 @@ button,
 .footer-badge,
 .sync-status-badge,
 .hero-metric-badge,
-.store-status-badge,
-.store-not-in-city-badge {
+.store-status-badge {
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -3778,28 +3777,7 @@ h3 {
 }
 
 .store-toggle-card.is-not-in-city {
-  opacity: 0.45;
-  filter: grayscale(0.8);
-}
-
-.store-toggle-card.is-not-in-city .store-toggle-label {
-  cursor: not-allowed;
-}
-
-.store-not-in-city-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 0.1rem 0.38rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--danger-bg);
-  color: var(--danger);
-  border: 1px solid var(--border-subtle);
-  margin-top: 0;
-  width: fit-content;
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .btn-stores-selector {

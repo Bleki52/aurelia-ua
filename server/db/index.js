@@ -568,6 +568,36 @@ async function initDatabase() {
         }
       }
 
+      // Auto-recategorize any existing products whose main_category / sub_category shifted under refined rules
+      try {
+        const { categorizeProduct } = require('../services/storeScraper');
+        const allRows = await pgPool.query('SELECT id, name, main_category, sub_category, category FROM products');
+        const updates = [];
+        for (const r of allRows.rows) {
+          const next = categorizeProduct(r.name || '', '');
+          if (r.main_category !== next.mainCategory || r.sub_category !== next.subCategory || r.category !== next.category) {
+            updates.push({ id: r.id, main: next.mainCategory, sub: next.subCategory, cat: next.category });
+          }
+        }
+        if (updates.length > 0) {
+          await pgPool.query(
+            `UPDATE products AS p
+             SET main_category = u.main_cat, sub_category = u.sub_cat, category = u.cat
+             FROM UNNEST($1::int[], $2::text[], $3::text[], $4::text[]) AS u(id, main_cat, sub_cat, cat)
+             WHERE p.id = u.id`,
+            [
+              updates.map(u => u.id),
+              updates.map(u => u.main),
+              updates.map(u => u.sub),
+              updates.map(u => u.cat)
+            ]
+          );
+          console.log(`🏷️ Оновлено категорії для ${updates.length} товарів у PostgreSQL.`);
+        }
+      } catch (recatErr) {
+        console.warn('⚠️ Помилка авто-перекатегоризації PostgreSQL:', recatErr.message);
+      }
+
       return;
     } catch (err) {
       console.warn('⚠️ Не вдалося підключитися до PostgreSQL (працюємо в автономному режимі):', err.message);
@@ -577,7 +607,25 @@ async function initDatabase() {
 
   // Fallback to local JSON database
   console.log('📁 Працюємо в режимі локальної БД: server/db/local-store.json');
-  loadLocalStore();
+  const localStore = loadLocalStore();
+  try {
+    const { categorizeProduct } = require('../services/storeScraper');
+    let localChanged = false;
+    if (Array.isArray(localStore.products)) {
+      localStore.products.forEach(p => {
+        const next = categorizeProduct(p.title || p.name || '', '');
+        if (p.mainCategory !== next.mainCategory || p.subCategory !== next.subCategory || p.category !== next.category) {
+          p.mainCategory = next.mainCategory;
+          p.main_category = next.mainCategory;
+          p.subCategory = next.subCategory;
+          p.sub_category = next.subCategory;
+          p.category = next.category;
+          localChanged = true;
+        }
+      });
+      if (localChanged) saveLocalStore(localStore);
+    }
+  } catch (_) {}
 }
 
 /* ─── Unified Data Access Methods ────────────────────────────────────────── */
@@ -2144,7 +2192,7 @@ async function syncProducts(scrapedProducts, city = 'all') {
     store.product_prices = buildSeedProductPrices(productsToPersist);
     saveLocalStore(store);
 
-    return insertedList.filter(p => p && Array.isArray(p.prices) && p.prices.length > 0);
+    return getProducts({ city });
   }
 
   // Local JSON Mode: Populate BOTH data.products AND data.product_prices (users & loyalty_cards untouched)

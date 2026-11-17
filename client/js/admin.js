@@ -8,9 +8,14 @@
 (function () {
   'use strict';
 
+  const ADMIN_PAGE_SIZE = 50;
+
   const AdminState = {
     products: [],
     searchQuery: '',
+    currentPage: 1,
+    pageStart: 0,
+    visibleCount: ADMIN_PAGE_SIZE,
     editingProductId: null,
     activeTab: 'products',
     users: [],
@@ -87,6 +92,7 @@
     DOM.productsSection = document.getElementById('admin-products-section');
     DOM.usersSection = document.getElementById('admin-users-section');
     DOM.tbody = document.getElementById('admin-products-tbody');
+    DOM.pagination = document.getElementById('admin-products-pagination');
     DOM.searchInput = document.getElementById('admin-search-input');
     DOM.citySelect = document.getElementById('admin-city-select');
     DOM.btnAdd = document.getElementById('btn-admin-add-product');
@@ -187,11 +193,103 @@
     `).join('');
   }
 
+  function resetAdminPagination() {
+    AdminState.currentPage = 1;
+    AdminState.pageStart = 0;
+    AdminState.visibleCount = ADMIN_PAGE_SIZE;
+  }
+
+  function buildAdminPaginationSequence(currentPage, totalPages) {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    const left = Math.max(2, currentPage - 1);
+    const right = Math.min(totalPages - 1, currentPage + 1);
+    if (left > 2) pages.push('...');
+    for (let p = left; p <= right; p++) pages.push(p);
+    if (right < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  }
+
+  function renderAdminPagination(totalItems, totalPages, startIdx, renderedCount) {
+    if (!DOM.pagination) return;
+    if (totalItems === 0) {
+      DOM.pagination.innerHTML = '';
+      return;
+    }
+
+    const shownStart = startIdx + 1;
+    const shownEnd = Math.min(totalItems, startIdx + renderedCount);
+    const remainingAfter = Math.max(0, totalItems - shownEnd);
+    const activeEndPage = Math.min(totalPages, Math.ceil(shownEnd / ADMIN_PAGE_SIZE));
+
+    const loadMoreHtml = remainingAfter > 0
+      ? `<button type="button" class="pagination-load-more-btn" data-admin-action="load-more-50">
+           <svg class="icon icon-sm" aria-hidden="true">
+             <use href="assets/sprite.svg#icon-plus"></use>
+           </svg>
+           <span>Показати ще ${Math.min(ADMIN_PAGE_SIZE, remainingAfter)} позицій (залишилось ${remainingAfter})</span>
+         </button>`
+      : '';
+
+    let pagesHtml = '';
+    if (totalPages > 1) {
+      const seq = buildAdminPaginationSequence(AdminState.currentPage, totalPages);
+      const prevDisabled = AdminState.currentPage <= 1 ? 'disabled' : '';
+      const nextDisabled = AdminState.currentPage >= totalPages ? 'disabled' : '';
+
+      pagesHtml = `
+        <div class="pagination-pages">
+          <button type="button" class="pagination-page-btn" data-admin-page="${Math.max(1, AdminState.currentPage - 1)}" aria-label="Попередня сторінка" ${prevDisabled}>‹</button>
+          ${seq.map(item => {
+            if (item === '...') {
+              return '<span class="pagination-ellipsis" aria-hidden="true">…</span>';
+            }
+            const isCurrent = item >= AdminState.currentPage && item <= activeEndPage;
+            return `<button type="button" class="pagination-page-btn ${isCurrent ? 'is-active' : ''}" data-admin-page="${item}" aria-label="Сторінка ${item}" ${isCurrent ? 'aria-current="page"' : ''}>${item}</button>`;
+          }).join('')}
+          <button type="button" class="pagination-page-btn" data-admin-page="${Math.min(totalPages, AdminState.currentPage + 1)}" aria-label="Наступна сторінка" ${nextDisabled}>›</button>
+        </div>
+      `;
+    }
+
+    DOM.pagination.innerHTML = `
+      ${loadMoreHtml}
+      ${pagesHtml}
+      <p class="pagination-counter">Показано ${shownStart}–${shownEnd} з ${totalItems} акційних позицій</p>
+    `;
+
+    const loadMoreBtn = DOM.pagination.querySelector('[data-admin-action="load-more-50"]');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        AdminState.visibleCount += ADMIN_PAGE_SIZE;
+        renderTable();
+      });
+    }
+
+    DOM.pagination.querySelectorAll('[data-admin-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nextPage = parseInt(btn.dataset.adminPage, 10);
+        if (isNaN(nextPage) || nextPage < 1 || nextPage > totalPages) return;
+        AdminState.currentPage = nextPage;
+        AdminState.pageStart = (nextPage - 1) * ADMIN_PAGE_SIZE;
+        AdminState.visibleCount = ADMIN_PAGE_SIZE;
+        renderTable();
+        if (DOM.tbody) {
+          DOM.tbody.closest('.admin-table-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
   async function loadProducts() {
     const selectedCity = DOM.citySelect ? DOM.citySelect.value : 'all';
     if (window.AureliaAPI) {
       AdminState.products = await window.AureliaAPI.getProducts(selectedCity === 'all' ? undefined : selectedCity);
     }
+    resetAdminPagination();
     updateStats();
     renderTable();
   }
@@ -283,10 +381,19 @@
           </td>
         </tr>
       `;
+      if (DOM.pagination) DOM.pagination.innerHTML = '';
       return;
     }
 
-    DOM.tbody.innerHTML = list.map(product => {
+    const totalItems = list.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / ADMIN_PAGE_SIZE));
+    if (AdminState.currentPage > totalPages) AdminState.currentPage = totalPages;
+    if (AdminState.currentPage < 1) AdminState.currentPage = 1;
+    const startIdx = Math.min(AdminState.pageStart, (totalPages - 1) * ADMIN_PAGE_SIZE);
+    AdminState.pageStart = startIdx;
+    const visibleList = list.slice(startIdx, startIdx + AdminState.visibleCount);
+
+    DOM.tbody.innerHTML = visibleList.map(product => {
       const prices = getProductPricesList(product);
       const minPrice = prices.length > 0 ? Math.min(...prices.map(p => p.price)) : 0;
       const mainCat = escapeHtml(product.mainCategory || 'Продукти');
@@ -356,6 +463,7 @@
     }).join('');
 
     bindTableActions();
+    renderAdminPagination(totalItems, totalPages, startIdx, visibleList.length);
   }
 
   function getCurrentStaffUser() {
@@ -680,6 +788,7 @@
     if (DOM.searchInput) {
       DOM.searchInput.addEventListener('input', (e) => {
         AdminState.searchQuery = e.target.value.trim();
+        resetAdminPagination();
         renderTable();
       });
     }

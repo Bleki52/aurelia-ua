@@ -306,11 +306,12 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   const storeStr = String(store || '').toLowerCase().trim();
   const isBeautyStore = ['eva', 'prostor'].includes(storeStr);
 
-  // Guard: Human dessert/dairy stems block pet categorization (e.g. "Морозиво ... з наповнювачем")
+  // Guard: Human food/drink stems block pet categorization (e.g. "Чай Great British", "Морозиво ... з наповнювачем")
   const HUMAN_FOOD_BLOCK_PET_STEMS = [
     'морозиво', 'йогурт', 'сирок', 'десерт', 'тістечко', 'круасан', 'пончик', 'донат',
     'торт', 'рулет', 'вафлі', 'вафл', 'печиво', 'шоколад', 'цукерк', 'згущене молоко',
-    'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо'
+    'згущене', 'варен', 'джем', 'карамель', 'шоколадний', 'пломбір', 'ріжок', 'ескімо',
+    'чай ', 'кава ', 'какао', 'напій', 'сир ', 'масло '
   ];
   const isHumanFoodBlockingPet = hasWord(text, HUMAN_FOOD_BLOCK_PET_STEMS);
 
@@ -329,7 +330,7 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   const petBrands = [
     'whiskas', 'віскас', 'felix', 'фелікс', 'purina', 'пуріна', 'gourmet', 'гурме',
     'sheba', 'шеба', 'friskies', 'фріскіс', 'optimeal', 'оптіміл', 'клуб 4 лапи', 'club 4 paws',
-    'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit', 'savory', 'josera'
+    'pedigree', 'педігрі', 'chappi', 'чаппі', 'brit ', 'savory', 'josera'
   ];
   if (!isHumanFoodBlockingPet && (hasWord(text, petIndicators, petBrands) || isPetLitter || (hasWord(text, ['корм ']) && !hasWord(text, ['кормчий'])))) {
     let sub = 'Усі зоотовари';
@@ -341,94 +342,108 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     return { mainCategory: 'Зоотовари', subCategory: sub, category: sub };
   }
 
-  // Pre-checks for Explicit Household & Hygiene
+  // Non-food triggers
   const householdLaundryTriggers = [
-    'для прання', 'пральний порошок', 'капсули для прання', 'гель для прання',
-    'ополіскувач для білизни', 'кондиціонер для білизни', 'відбілювач', 'плямовивідник',
+    'для прання', 'пральний порошок', 'капсули для прання', 'гель для прання', 'засіб миючий',
+    'ополіскувач для білизни', 'кондиціонер для білизни', 'кондиціонер для прання', 'відбілювач', 'плямовивідник',
     'для миття посуду', 'миття дитячого посуду', 'миття посуду', 'засіб для посуду', 'гель для посуду',
-    'таблетки для посудомийних', 'сіль для посудомийних',
-    'для чищення', 'засіб чистячий', 'чистячий', 'для унітазу', 'для труб', 'забруднення труб', 'для підлоги', 'для скла',
+    'таблетки для посудомийних', 'сіль для посудомийних', 'засіб універсальний',
+    'для чищення', 'засіб чистячий', 'чистячий', 'поліроль', 'для унітазу', 'для труб', 'забруднення труб', 'для підлоги', 'для скла',
     'для прибирання', 'освіжувач повітря', 'дифузор', 'антижир', 'антинакип'
   ];
   const householdLaundryBrands = [
-    'persil', 'ariel', 'tide', 'perwoll', 'lenor', 'silan', 'fairy',
+    'persil', 'ariel', 'tide', 'perwoll', 'lenor', 'silan', 'coccolino', 'fairy', 'cif ',
     'somat', 'finish', 'domestos', 'breff', 'bref', 'cillit', 'mr. muscle',
     'містер мускул', 'утьонок', 'sano', 'frosch', 'гала', 'gala', 'сарма', 'wash&free', 'savex', 'dr.beckmann'
   ];
   const paperTriggers = [
-    'туалетний папір', 'паперові рушники', 'рушники паперові', 'рушник кухонний', 'серветки косметичні',
-    'серветки столові', 'серветки паперові', 'носові хустинки'
+    'туалетний папір', 'папір туалетний', 'паперові рушники', 'рушники паперові', 'рушники папер', 'рушник папер',
+    'рушник кухонний', 'серветки косметичні', 'серветки столові', 'серветки паперові', 'носові хустинки'
   ];
   const paperBrands = [
-    'zewa', 'рута', 'ruta', 'сніжна панда', 'обухів', 'selpak', 'kleenex'
+    'zewa', 'рута', 'ruta', 'сніжна панда', 'обухів', 'кохавинка', 'кохавинська папірня', 'emeka', 'selpak', 'kleenex'
   ];
   const kitchenTriggers = [
     'сковород', 'пательн', 'каструл', 'тарілк', 'чашк', 'склянк', 'келих',
-    'термос', 'контейнер для їжі', 'фольга', 'фольги', 'плівка харчова', 'харчова плівка',
-    'пергамент', 'рукав для запікання', 'губк', 'губка кухонна', 'губки для посуду',
-    'серветка для прибирання', 'серветки для прибирання', 'пакети для сміття', 'мішки для сміття', 'бокс універсальний',
-    'взуття', 'капці', 'тапочки', 'шкарпетк',
-    'клей', 'клей-гель', 'батарей', 'пакети майка', 'грілки термохімічні', 'рукавички господарські', 'рукавичкі господарські'
+    'термос ', 'контейнер для їжі', 'фольга', 'фольги', 'плівка харчова', 'харчова плівка',
+    'пергамент', 'форм для випік', 'рукав для запікання', 'губк', 'губка кухонна', 'губки кухонні', 'губки для посуду',
+    'серветка для прибирання', 'серветки для прибирання', 'серветки господарські', 'серветки кухонні',
+    'серветки віскозні', 'мікрофібра', 'пакети для сміття', 'мішки для сміття', 'пакети майка',
+    'бокс універсальний', 'рукавички господарські', 'рукавичкі господарські'
   ];
   const kitchenBrands = [
     'фрекен бок', 'мельниця', 'luminarc', 'tefal', 'ardesto'
   ];
+  const homeComfortTriggers = [
+    'взуття', 'капці', 'тапочки', 'калоші', 'шкарпетк', 'клей', 'клей-гель', 'батарей',
+    'валик для одягу', 'валик для чищення', 'грілки термохімічні', 'ліхтар', 'свічк', 'плед'
+  ];
 
   const explicitHygieneTriggers = [
-    'шампунь', 'гель для душу', 'крем-гель для душу', 'гель для купання', 'засіб для купання',
-    'мило рідке', 'мило туалетне', 'крем-мило', 'бальзам для волосся', 'бальзам-ополіскувач',
-    'кондиціонер для волосся', 'фарба для волосся', 'маска для волосся', 'лак для волосся',
-    'маска-гель', 'маска для обличчя', 'патчі', 'тональний',
-    'зубна паста', 'зубна щітка', 'дезодорант', 'антиперспірант', 'піна для гоління',
-    'гель для гоління', 'станок для гоління', 'станки для гоління', 'станків для гоління', 'презерватив',
-    'прокладки', 'тампони', 'підгузки', 'підгузники',
-    'підгузки-трусики', 'підгузники-трусики', 'вологі серветки', 'серветки вологі', 'пелюшки гігієнічні'
+    'шампунь', 'гель для душу', 'крем-гель для душу', 'гель-догляд для душу', 'гель-доглад для душу',
+    'гель для купання', 'засіб для купання', 'мило ', 'мило тверде', 'мило рідке', 'мило туалетне', 'мило дитяче', 'крем-мило',
+    'бальзам для волосся', 'бальзам-ополіскувач', 'експрес-кондиціонер', 'кондиціонер для волосся',
+    'фарба для волосся', 'маска для волосся', 'маска-крем для волосся', 'лак для волосся',
+    'маска-гель', 'маска для обличчя', 'маска тканинна', 'ліфтинг-маска', 'патчі', 'тональний', 'міцелярна',
+    'зубна паста', 'зубна щітка', 'зубна нитка', 'дезодорант', 'антиперспірант', 'антиперспирант',
+    'піна для гоління', 'гель для гоління', 'крем для гоління', 'лосьйон після гоління', 'для гоління',
+    'станок для гоління', 'станки для гоління', 'станків для гоління', 'бритв', 'презерватив',
+    'прокладки', 'тампони', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики',
+    'вологі серветки', 'серветки вологі', 'для інтимної гігієни', 'серветки для інтимної', 'пелюшки гігієнічні',
+    'ватні диски', 'ватні палички', 'для обличчя', 'для рук', 'для ніг', 'для брів', 'для вій'
   ];
   const explicitHygieneBrands = [
-    'head & shoulders', 'head&shoulders', 'pantene', 'fructis', 'syoss', 'gliss kur',
+    'head & shoulders', 'head&shoulders', 'pantene', 'fructis', 'syoss', 'gliss',
     'colgate', 'splat', 'biomed', 'oral-b', 'old spice', 'rexona', 'dove', 'palmolive',
-    'always', 'kotex', 'libresse', 'discreet', 'huggies', 'pampers', 'tesori d\'oriente', 'deepfresh', 'bubchen', 'paese'
+    'always', 'kotex', 'libresse', 'discreet', 'huggies', 'pampers', 'tesori d\'oriente', 'deepfresh', 'bubchen', 'paese',
+    'nivea', 'garnier', 'eveline', 'via beauty', 'viabeauty', 'farmstay'
   ];
 
-  const isExplicitNonFood = hasWord(text, householdLaundryTriggers, householdLaundryBrands, paperTriggers, paperBrands, kitchenTriggers, kitchenBrands, explicitHygieneTriggers, explicitHygieneBrands);
+  const isExplicitNonFood = hasWord(
+    text,
+    householdLaundryTriggers, householdLaundryBrands,
+    paperTriggers, paperBrands,
+    kitchenTriggers, kitchenBrands,
+    homeComfortTriggers,
+    explicitHygieneTriggers, explicitHygieneBrands
+  );
 
   // STAGE 2: Hard Food Lock (isExplicitFood)
   const EXPLICIT_FOOD_STEMS = [
     'донат', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'штрудель',
-    'рулет', 'кекс', 'мафін', 'булочка', 'пиріг', 'печиво', 'вафлі', 'вафл', 'пряник',
+    'рулет', 'кекс', 'мафін', 'булочка', 'пиріг', 'пиріж', 'печиво', 'вафлі', 'вафл', 'пряник',
     'зефір', 'мармелад', 'цукерк', 'шоколад', 'батончик', 'халва', 'морозиво', 'десерт',
     'крем-мед', 'пастила', 'козинак', 'драже', 'льодяник', 'жувальна гумка', 'джем', 'варення',
     'крем-сир', 'крем сир', 'крем-суп', 'вершковий сир', 'сир вершковий', 'плавлений',
     'моцарела', 'гауда', 'чеддер', 'пармезан', 'бринза', 'фета', 'сулугуні', 'кисломолочн',
     'сирок ', 'сметана', 'йогурт', 'кефір', 'ряжанка', 'айран', 'закваска',
-    'масло солодковершкове', 'масло селянське', 'масло вершкове', 'масло екстра',
+    'масло солодковершкове', 'масло селянське', 'масло вершкове', 'масло екстра', 'масло бутербродне',
     'солодковершкове масло', 'селянське масло', 'вершкове масло',
     '73%', '72.5%', '82%', '82.5%', 'маргарин', 'спред',
     'молоко питне', 'молоко ультрапастеризоване', 'молоко пастеризоване', 'згущене',
-    'вершки питні', 'вершки кулінарні',
+    'вершки питні', 'вершки кулінарні', 'вершки ',
     'ковбас', 'сосиск', 'сардельк', 'шинк', 'бекон', 'грудинк', 'балик', 'салямі',
-    'паштет печінковий', 'паштет м', 'паштет мясний', 'паштет печінк', 'паштет курячий',
-    'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'крильця',
+    'паштет ', 'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин',
+    'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'крильця',
     'гомілк', 'стегно', 'лосос', 'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець',
     'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'креветк', 'мідії', 'ікра', 'крабові', 'буженин', 'реберц',
-    'хліб ', 'багет', 'лаваш', 'батон', 'тост', 'чіабата', 'макарон', 'спагет', 'локшин',
-    'пенне', 'фузіллі', 'вермішель', 'крупа', 'гречк', 'рис басматі', 'рис круглозернистий',
-    'рис довгозернистий', 'рис пропарений', 'рис жасмин', 'вівсян', 'пластівці', 'борошно',
+    'хліб ', 'багет', 'лаваш', 'батон', 'тост', 'чіабата', 'макарон', 'спагет', 'локшин', 'рамен',
+    'пенне', 'фузіллі', 'вермішель', 'крупа', 'гречк', 'рис ', 'вівсян', 'пластівці', 'борошно',
     'цукор', 'олія соняшникова', 'соняшникова олія', 'олія оливкова', 'оливкова олія',
     'олія кукурудзяна', 'олія рафінована', 'оцет', 'бальзамічний', 'кетчуп', 'майонез',
     'гірчиц', 'соус', 'томатна паста', 'паста томатна', 'арахісова паста', 'паста шоколадна',
     'nutella', 'нутелла', 'кава', 'еспресо', 'американо', 'капучино', 'лате', 'чай ', 'цикорій',
     'матча', 'какао', 'сік ', 'нектар', 'лимонад', 'смузі', 'вода мінеральна', 'вода питна',
-    'газован', 'енергетик', 'квас', 'пиво', 'вино ', 'вин ', 'сидр', 'чіпси', 'чипси', 'сухарики',
+    'газован', 'енергетик', 'квас', 'пиво', 'вино ', 'вин ', 'сидр', 'чіпси', 'чипси', 'крекер', 'сухарики',
     'горішки', 'фісташки', 'мигдаль', 'фундук', 'яблук', 'банан', 'апельсин', 'лимон',
     'мандарин', 'виноград', 'ківі', 'авокадо', 'хурма', 'батат', 'гарбуз', 'помело', 'пітахайя', 'кокос',
     'помідор', 'томат', 'огірок', 'картопл', 'моркв', 'цибул', 'капуст', 'перець', 'часник', 'зелень', 'салат '
   ];
   const isExplicitFood = !isExplicitNonFood && hasWord(text, EXPLICIT_FOOD_STEMS) && !isBeautyStore;
-  const isLaundryOrHome = hasWord(text, ['для прання', 'для білизни', 'кондиціонер для прання', 'посудомийних', 'для унітазу', 'для миття посуду']);
+  const isLaundryOrHome = hasWord(text, ['для прання', 'для білизни', 'кондиціонер для прання', 'посудомийних', 'для унітазу', 'для миття посуду', 'coccolino', 'cif ', 'засіб універсальний']);
   const isCosmeticBrandGuard = !isLaundryOrHome && hasWord(text, ['тональний', 'макіяж', 'пудра', "рум'яна", 'консилер', 'хайлайтер', 'блиск для губ', 'помада', 'paese', 'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'lamel', 'it cosmetics', 'kylie cosmetics', 'парфуми', 'туалетна вода', 'парфумована вода']);
 
-  // STAGE 3: Household & Cleaning (mainCategory: 'Дім та Побут')
+  // STAGE 3: Household & Home Comfort (mainCategory: 'Дім та Побут')
   if (!isExplicitFood) {
     if (!isCosmeticBrandGuard && hasWord(text, householdLaundryTriggers, householdLaundryBrands)) {
       return { mainCategory: 'Дім та Побут', subCategory: 'Побутова хімія', category: 'Побутова хімія' };
@@ -439,91 +454,92 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     if (hasWord(text, kitchenTriggers, kitchenBrands)) {
       return { mainCategory: 'Дім та Побут', subCategory: 'Кухня та Посуд', category: 'Кухня та Посуд' };
     }
+    if (hasWord(text, homeComfortTriggers)) {
+      return { mainCategory: 'Дім та Побут', subCategory: 'Дім та Затишок', category: 'Дім та Затишок' };
+    }
   }
 
   // STAGE 4: Beauty, Skincare & Personal Care (mainCategory: 'Краса та Гігієна')
   if (!isExplicitFood) {
     const hairTriggers = [
-      'шампунь', 'бальзам для волосся', 'бальзам-ополіскувач', 'кондиціонер для волосся',
-      'маска для волосся', 'фарба для волосся', 'лак для волосся', 'спрей для волосся', 'олія для волосся'
+      'шампунь', 'для волосся', 'бальзам для волосся', 'бальзам-ополіскувач', 'кондиціонер для волосся',
+      'експрес-кондиціонер', 'маска для волосся', 'маска-крем для волосся', 'фарба для волосся', 'лак для волосся', 'спрей для волосся', 'олія для волосся'
     ];
     const hairBrands = [
       'head & shoulders', 'head&shoulders', 'pantene', 'elseve', 'syoss',
-      'gliss kur', 'schauma', 'tresemme', 'palette', 'fructis'
+      'gliss', 'schauma', 'tresemme', 'palette', 'fructis', 'got2b', 'fortesse'
     ];
 
     const makeupTriggers = [
-      'туш для вій', 'помада', 'блиск для губ', 'тіні для повік', 'пудра',
+      'туш для вій', 'помада', 'блиск для губ', 'тіні для повік', 'пудра', 'для брів', 'для вій',
       'консилер', 'олівець для брів', 'олівець для очей', 'лак для нігтів', 'парфум', 'туалетна вода',
       'парфумована вода', 'хайлайтер', 'рум\'яна', 'тінт для губ', 'кушон', 'палетка тіней', 'тональний'
     ];
     const makeupBrands = [
-      'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'nyx', 'paese', 'it cosmetics',
+      'maybelline', 'vivienne sabo', 'bourjois', 'max factor', 'nyx', 'paese', 'it cosmetics', 'pupa',
       'charlotte tilbury', 'juliette has a gun', 'kayali', 'nishane', 'rare beauty', 'billie eilish',
-      'gritti', 'lamel', 'milk touch', 'kylie cosmetics', 'a\'pieu', 'make up academy', 'xerjoff'
+      'gritti', 'lamel', 'milk touch', 'kylie cosmetics', 'a\'pieu', 'make up academy', 'xerjoff',
+      'franck boclet', 'memo paris', 'micallef', 'guerlain', 'tiziana terenzi', 'narciso rodriguez', 'elie saab'
     ];
 
-    const hygieneTriggers = [
-      'гель для душу', 'крем-гель для душу', 'гель для купання', 'засіб для купання',
-      'мило рідке', 'мило туалетне', 'крем-мило', 'дезодорант',
-      'антиперспірант', 'зубна паста', 'зубна щітка', 'ополіскувач для ротової',
-      'прокладки', 'тампони', 'ватні диски', 'ватні палички', 'вологі серветки', 'серветки вологі',
-      'пелюшки гігієнічні', 'бритва', 'станок для гоління', 'станки для гоління', 'станків для гоління',
+    const explicitWashOrDeoOrIntimate = hasWord(text, [
+      'для душу', 'для купання', 'мило ', 'крем-мило', 'дезодорант', 'антиперспірант', 'антиперспирант',
+      'зубна паста', 'зубна щітка', 'зубна нитка', 'ополіскувач для ротової', 'прокладки', 'тампони',
+      'ватні диски', 'ватні палички', 'вологі серветки', 'серветки вологі', 'серветки для інтимної', 'для інтимної гігієни',
+      'пелюшки гігієнічні', 'бритв', 'станок для гоління', 'станки для гоління', 'станків для гоління',
       'піна для гоління', 'гель для гоління', 'презерватив', 'підгузки', 'підгузники', 'підгузки-трусики', 'підгузники-трусики'
+    ]);
+
+    const skincareTriggers = [
+      'сироватка', 'тонік', 'міцелярна', 'пінка для вмивання', 'гель для вмивання', 'скраб',
+      'маска для обличчя', 'маска тканинна', 'ліфтинг-маска', 'маска-гель', 'патчі',
+      'лосьйон для тіла', 'молочко для тіла', 'бальзам для губ', 'гігієнічна помада', 'пілінг',
+      'для обличчя', 'для рук', 'для ніг', 'навколо очей', 'від тріщин'
     ];
+    const cosmeticCreamQualifiers = [
+      'для обличчя', 'для рук', 'для тіла', 'для ніг', 'для шкіри', 'для повік',
+      'навколо очей', 'від зморшок', 'від тріщин', 'зволожуючий', 'зволожуюча', 'зволожуюче',
+      'живильний', 'живильна', 'живильне', 'сонцезахисний', 'сонцезахисна', 'spf',
+      'bb-крем', 'bb крем', 'cc-крем', 'cc крем', 'після гоління', 'для депіляції', 'дитячий крем'
+    ];
+    const isCosmeticCream = hasWord(text, ['крем', 'бальзам', 'лосьйон']) && !explicitWashOrDeoOrIntimate && (hasWord(text, cosmeticCreamQualifiers) || isBeautyStore);
+    const skincareBrands = [
+      'nivea', 'garnier', 'l\'oreal', 'loreal', 'cerave', 'la roche', 'vichy',
+      'bioderma', 'eveline', 'ziaja', 'zaja', 'біокон', 'heimish', 'christina', 'babor', 'elemis', '3lab', 'hollyskin', 'via beauty', 'viabeauty', 'farmstay', 'arko men'
+    ];
+
     const hygieneBrands = [
       'old spice', 'rexona', 'dove', 'palmolive', 'fa ', 'colgate', 'sensodyne',
       'lacalut', 'oral-b', 'parodontax', 'always', 'kotex', 'libresse', 'discreet',
-      'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', 'tesori d\'oriente', 'deepfresh', 'bubchen'
+      'bella', 'gillette', 'bic', 'pampers', 'huggies', 'splat', 'biomed', 'tesori d\'oriente', 'deepfresh', 'bubchen', 'lactacyd', 'younika', 'seni', 'tena'
     ];
 
-    const cosmeticCreamQualifiers = [
-      'для обличчя', 'для рук', 'для тіла', 'для ніг', 'для шкіри', 'для повік',
-      'навколо очей', 'від зморшок', 'зволожуючий', 'зволожуюча', 'зволожуюче',
-      'живильний', 'живильна', 'живильне', 'сонцезахисний', 'сонцезахисна', 'spf',
-      'тональний', 'bb-крем', 'bb крем', 'cc-крем', 'cc крем',
-      'після гоління', 'для гоління', 'для депіляції', 'дитячий крем'
-    ];
-    const isCosmeticCream = hasWord(text, ['крем']) && !hasWord(text, ['гель для душу', 'мило']) && (hasWord(text, cosmeticCreamQualifiers) || isBeautyStore);
-
-    const skincareTriggers = [
-      'сироватка для обличчя', 'сироватка', 'тонік для обличчя', 'тонік', 'міцелярна',
-      'пінка для вмивання', 'гель для вмивання', 'скраб для тіла', 'скраб для обличчя',
-      'скраб', 'маска для обличчя', 'маска-гель', 'патчі', 'лосьйон для тіла', 'лосьйон', 'молочко для тіла',
-      'бальзам для губ', 'гігієнічна помада', 'пілінг'
-    ];
-    const skincareBrands = [
-      'nivea', 'garnier', 'l\'oreal', 'loreal', 'cerave', 'la roche', 'vichy',
-      'bioderma', 'eveline', 'ziaja', 'zaja', 'біокон', 'heimish', 'christina', 'babor', 'elemis'
-    ];
-
-    if (hasWord(text, hairTriggers, hairBrands)) {
-      return { mainCategory: 'Краса та Гігієна', subCategory: 'Волосся', category: 'Волосся' };
+    const isShowerGelOnly = hasWord(text, ['для душу', 'для купання', 'шампунь-гель']);
+    if (!isShowerGelOnly && hasWord(text, hairTriggers, hairBrands)) {
+      return { mainCategory: 'Краса та Гігієна', subCategory: 'Догляд за волоссям', category: 'Догляд за волоссям' };
     }
     if (hasWord(text, makeupTriggers, makeupBrands)) {
-      return { mainCategory: 'Краса та Гігієна', subCategory: 'Косметика', category: 'Косметика' };
+      return { mainCategory: 'Краса та Гігієна', subCategory: 'Декоративна косметика', category: 'Декоративна косметика' };
     }
-    if (hasWord(text, hygieneTriggers, hygieneBrands)) {
-      return { mainCategory: 'Краса та Гігієна', subCategory: 'Гігієна', category: 'Гігієна' };
-    }
-    if (isCosmeticCream || hasWord(text, skincareTriggers, skincareBrands)) {
+    if (!explicitWashOrDeoOrIntimate && (isCosmeticCream || hasWord(text, skincareTriggers) || (hasWord(text, skincareBrands) && !hasWord(text, ['антиперспірант', 'дезодорант', 'для гоління', 'після гоління'])))) {
       return { mainCategory: 'Краса та Гігієна', subCategory: 'Догляд за шкірою', category: 'Догляд за шкірою' };
     }
-    if (isBeautyStore) {
-      return { mainCategory: 'Краса та Гігієна', subCategory: 'Гігієна', category: 'Гігієна' };
+    if (explicitWashOrDeoOrIntimate || hasWord(text, ['для гоління', 'після гоління', 'лосьйон', 'депіляці'], hygieneBrands) || isBeautyStore) {
+      return { mainCategory: 'Краса та Гігієна', subCategory: 'Особиста гігієна', category: 'Особиста гігієна' };
     }
   }
 
   // STAGE 5: Groceries Subcategories (mainCategory: 'Продукти')
-  // 0. Prepared / Savory Grocery Guard (Chips, Popcorn, Spices, Dumplings, Breakfast Cereals, Purees) -> Бакалія
+  // 0. Prepared / Savory Grocery Guard (Chips, Crackers, Noodles, Spices, Frozen Meals, Canned) -> Бакалія
   const savoryGroceryTriggers = [
-    'приправа', 'перець чорний', 'перець духмяний', 'перець горошок', 'лист лавровий', 'часник сушений', 'паприка',
-    'чипси', 'чіпси', 'попкорн', 'сухарики', 'грінки', 'брускети', 'крекери',
+    'приправа', 'перець чорний', 'перець духмяний', 'перець горошок', 'лист лавровий', 'часник сушений', 'гранульован', 'паприка',
+    'чипси', 'чіпси', 'попкорн', 'сухарики', 'грінки', 'брускети', 'крекер', 'бурито',
     'вареники', 'пельмені', 'равіолі', 'ньокі', 'хінкалі', 'млинці', 'пампушка',
     'хумус', 'оливки', 'маслини', 'ікра кабачкова', 'ікра баклажанна',
     'готові сніданки', 'сніданок готовий', 'каша ', 'пюре ', 'піца', 'тісто ', 'борошно',
-    'макарон', 'спагет', 'крупа', 'булгур', 'кукурудза цукрова', 'кукурудза ', 'горошок ',
-    'олія ', 'майонез', 'кетчуп'
+    'макарон', 'спагет', 'локшин', 'рамен', 'вермішель', 'бульйон', 'крупа', 'булгур',
+    'кукурудза цукрова', 'кукурудза ', 'горошок ', 'олія ', 'майонез', 'кетчуп', 'заправка', 'консерв',
+    'картопля фрі', 'крем-суп', 'по-корейськ', 'по-корейски', 'буряк варений', 'стерилізов', 'різані', 'очищені', 'насіння'
   ];
   if (hasWord(text, savoryGroceryTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Бакалія', category: 'Бакалія' };
@@ -534,7 +550,7 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
   const meatFishTriggers = [
     'м\'яс', 'мяс', 'курк', 'куряч', 'індич', 'свинин', 'свиняч', 'яловичин', 'ялович', 'телятин', 'качк', 'гуск',
     'фарш', 'стейк', 'вирізк', 'корейк', 'хамон', 'прошуто', 'філе', 'крильця', 'гомілк', 'стегно', 'ковбас', 'сосиск', 'сардельк',
-    'шинк', 'бекон', 'балик', 'салямі', 'паштет', 'буженин', 'реберц', 'риба', 'лосос',
+    'шинк', 'бекон', 'балик', 'салямі', 'паштет ', 'буженин', 'реберц', 'риба', 'лосос',
     'сьомг', 'форел', 'тунец', 'тунець', 'оселедец', 'оселедець', 'скумбрі', 'хек', 'мінтай', 'дорадо', 'лящ', 'палтус', 'судак', 'сібас', 'сибас', 'короп',
     'креветк', 'мідії', 'кальмар', 'ікра', 'крабові', 'наша ряба', 'ранчо', 'бащинський',
     'глобино', 'м\'ясна гільдія', 'алан', 'водний світ', 'санта бремор'
@@ -543,12 +559,23 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     return { mainCategory: 'Продукти', subCategory: 'М\'ясо та Риба', category: 'М\'ясо та Риба' };
   }
 
-  // 2. Солодощі (Bakery desserts with cream checked BEFORE Dairy; alcohol guarded out unless candy)
+  // 2. Кава та Чай (checked BEFORE Sweets so flavored coffee/tea with chocolate or honey notes stay Coffee & Tea)
+  const isBakeOrCandyNotDrink = hasWord(text, ['цукерк', 'печиво', 'вафл', 'торт', 'тістечк', 'морозив', 'круасан', 'донат', 'рулет', 'батончик', 'паста ', 'горіхов', 'фундук', 'milka', 'nutella', 'нутелла', 'джем', 'варення']);
+  const coffeeTeaTriggers = [
+    'кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'цикорій', 'матча', 'какао',
+    'гарячий шоколад', 'дріп', 'jacobs', 'lavazza', 'greenfield', 'tess', 'curtis', 'lovare',
+    'ліптон', 'lipton', 'paulig', 'чорна карта', 'жокей', 'idealist'
+  ];
+  if (!isBakeOrCandyNotDrink && hasWord(text, coffeeTeaTriggers)) {
+    return { mainCategory: 'Продукти', subCategory: 'Кава та Чай', category: 'Кава та Чай' };
+  }
+
+  // 3. Солодощі (Bakery desserts with cream checked BEFORE Dairy; alcohol guarded out unless candy)
   const isCandyOrConfection = hasWord(text, ['цукерк', 'шоколад', 'батончик', 'торт', 'тістечко', 'праліне']);
   const isAlcoholDrink = !isCandyOrConfection && hasWord(text, ['настоянк', 'вермут', 'віскі', 'горілка', 'лікер', 'вино ', 'вин ', 'ігристе', 'шампанське', 'пиво', 'ром ', 'бренді', 'джин ', 'текіл']);
   const sweetsTriggers = [
     'донат', 'донатс', 'пончик', 'тістечко', 'торт', 'еклер', 'профітролі', 'круасан', 'кекс', 'мафін',
-    'рулет', 'штрудель', 'сирник', 'пампухи зі згущ', 'булочка з корицею', 'вафельний лист', 'з фундуком та какао', 'горіхово-шоколадна', 'бат рис',
+    'рулет', 'штрудель', 'сирник', 'пиріж', 'пампухи зі згущ', 'булочка з корицею', 'вафельний лист', 'з фундуком та какао', 'горіхово-шоколадна', 'бат рис',
     'печиво', 'вафлі', 'вафл', 'пряник', 'зефір', 'мармелад', 'пастила',
     'цукерк', 'шоколад', 'батончик', 'халва', 'козинак', 'драже', 'льодяник', 'жувальна гумка',
     'морозиво', 'десерт', 'мед ', 'крем-мед', 'джем', 'варення', 'згущене молоко', 'згущене',
@@ -559,9 +586,9 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     return { mainCategory: 'Продукти', subCategory: 'Солодощі', category: 'Солодощі' };
   }
 
-  // 3. Молочні та Сири
+  // 4. Молочні та Сири
   const dairyTriggers = [
-    'молоко', 'масло солодковершкове', 'масло вершкове', 'масло селянське', 'масло екстра',
+    'молоко', 'масло солодковершкове', 'масло вершкове', 'масло селянське', 'масло екстра', 'масло бутербродне',
     'солодковершкове масло', 'вершкове масло', 'селянське масло', 'маргарин', 'спред',
     'сир ', 'крем-сир', 'крем сир', 'сирок ', 'моцарела', 'гауда', 'пармезан', 'чеддер',
     'сулугуні', 'бринза', 'фета', 'сметана', 'вершки', 'йогурт', 'кефір', 'ряжанка',
@@ -569,19 +596,9 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
     'ферма', 'активіа', 'актимель', 'данон', 'danone', 'президент', 'president',
     'mlekovita', 'spomlek', 'простонаше', 'камамбер', 'брі '
   ];
-  const isDairyButter = hasWord(text, ['масло']) && hasWord(text, ['солодковершков', 'вершков', 'селянськ', 'екстра', 'кисловершков']);
+  const isDairyButter = hasWord(text, ['масло']) && hasWord(text, ['солодковершков', 'вершков', 'селянськ', 'екстра', 'кисловершков', 'бутербродн']);
   if (isDairyButter || hasWord(text, dairyTriggers)) {
     return { mainCategory: 'Продукти', subCategory: 'Молочні та Сири', category: 'Молочні та Сири' };
-  }
-
-  // 4. Кава та Чай
-  const coffeeTeaTriggers = [
-    'кава', 'кавові', 'еспресо', 'капучино', 'лате', 'американо', 'чай ', 'цикорій', 'матча', 'какао',
-    'гарячий шоколад', 'дріп', 'jacobs', 'lavazza', 'greenfield', 'tess', 'curtis', 'lovare',
-    'ліптон', 'lipton', 'paulig', 'чорна карта', 'жокей', 'idealist'
-  ];
-  if (hasWord(text, coffeeTeaTriggers)) {
-    return { mainCategory: 'Продукти', subCategory: 'Кава та Чай', category: 'Кава та Чай' };
   }
 
   // 5. Напої
@@ -598,8 +615,9 @@ function categorizeProduct(title = '', store = '', apiCategory = '') {
 
   // 6. Овочі та Фрукти (excludes sauces, chips, spices, canned/pickled goods, and purees)
   const isProcessedFoodNotFreshProduce = hasWord(text, [
-    'томатна паста', 'паста томатна', 'кетчуп', 'соус', 'чипс', 'чіпс',
-    'сухарик', 'сушен', 'приправ', 'спеці', 'маринован', 'консерв', 'пюре', 'квашен'
+    'томатна паста', 'паста томатна', 'кетчуп', 'соус', 'чипс', 'чіпс', 'крекер', 'пиріж',
+    'сухарик', 'сушен', 'приправ', 'спеці', 'маринован', 'консерв', 'пюре', 'квашен',
+    'по-корейськ', 'по-корейски', 'заморожен', 'картопля фрі', 'варений', 'стерилізов', 'очищені', 'різані', 'гранульован', 'насіння', 'заправка'
   ]) || (hasWord(text, 'томат') && hasWord(text, 'паста'));
   const produceTriggers = [
     'яблук', 'банан', 'апельсин', 'лимон', 'мандарин', 'виноград', 'ківі', 'авокадо',
@@ -735,45 +753,75 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT) 
   }
 }
 
+const DEPARTMENT_SEARCH_SHARDS = [
+  'кава', 'шоколад', 'сир', 'масло', 'молоко', 'сметана', 'олія', 'чай',
+  'філе', 'ковбаса', 'макарони', 'гель', 'шампунь', 'корм',
+  'йогурт', 'сосиски', 'печиво', 'вода', 'сік', 'пиво', 'вино', 'порошок', 'цукор', 'крупа'
+];
+
 /* ─── 1. SILPO Public Catalog Scraper ────────────────────────────────────── */
 async function fetchSilpoAllPromotions(branchInput) {
   const defaultBranch = '1edb6b5a-55fb-6864-9a0f-d54e0a9fe643';
   const branchIds = (Array.isArray(branchInput) ? branchInput : [branchInput || defaultBranch]).filter(Boolean);
   const uniqueBranches = [...new Set(branchIds.length > 0 ? branchIds : [defaultBranch])].slice(0, 3);
-  const urls = [];
 
-  const stapleQueries = ['кава', 'шоколад', 'сир', 'масло', 'молоко', 'сметана', 'олія', 'чай', 'філе', 'ковбаса', 'макарони', 'гель', 'шампунь', 'корм'];
+  const SILPO_BATCH_SIZE = 6;
+  const SILPO_WAVES = [
+    [0, 100, 200, 300],
+    [400, 500, 600, 700],
+    [800, 900, 1000, 1100]
+  ];
 
-  uniqueBranches.forEach((activeBranch, idx) => {
-    const baseUrl = `https://sf-ecom-api.silpo.ua/v1/uk/branches/${activeBranch}/products`;
-    [0, 100, 200, 300].forEach(offset => {
-      urls.push(`${baseUrl}?limit=100&offset=${offset}&deliveryType=DeliveryHome&mustHavePromotion=true`);
-    });
-    if (idx === 0) {
-      stapleQueries.forEach(q => {
-        urls.push(`${baseUrl}?search=${encodeURIComponent(q)}&limit=50&deliveryType=DeliveryHome`);
-      });
-    }
-  });
-
-  const promises = urls.map(async url => {
+  const fetchSilpoUrl = async (url) => {
     try {
       const res = await fetchWithTimeout(url);
-      if (!res.ok) return [];
+      if (!res.ok) return null;
       const data = await res.json();
       return data.items || data.products || data.results || [];
     } catch (_) {
-      return [];
+      return null;
     }
-  });
+  };
 
-  const settled = await Promise.allSettled(promises);
   const rawItems = [];
-  settled.forEach(r => {
-    if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-      rawItems.push(...r.value);
+
+  for (const activeBranch of uniqueBranches) {
+    const baseUrl = `https://sf-ecom-api.silpo.ua/v1/uk/branches/${activeBranch}/products`;
+    for (const waveOffsets of SILPO_WAVES) {
+      const settled = await Promise.allSettled(
+        waveOffsets.map(offset =>
+          fetchSilpoUrl(`${baseUrl}?limit=100&offset=${offset}&deliveryType=DeliveryHome&mustHavePromotion=true`)
+        )
+      );
+      let waveItemCount = 0;
+      let lastOffsetCount = 0;
+      settled.forEach((r, idx) => {
+        const list = r.status === 'fulfilled' && Array.isArray(r.value) ? r.value : [];
+        rawItems.push(...list);
+        waveItemCount += list.length;
+        if (idx === settled.length - 1) {
+          lastOffsetCount = list.length;
+        }
+      });
+      if (waveItemCount === 0 || lastOffsetCount < 50) break;
     }
-  });
+  }
+
+  const primaryBranch = uniqueBranches[0];
+  const primaryBaseUrl = `https://sf-ecom-api.silpo.ua/v1/uk/branches/${primaryBranch}/products`;
+  const shardUrls = DEPARTMENT_SEARCH_SHARDS.map(
+    q => `${primaryBaseUrl}?search=${encodeURIComponent(q)}&limit=50&deliveryType=DeliveryHome`
+  );
+
+  for (let i = 0; i < shardUrls.length; i += SILPO_BATCH_SIZE) {
+    const batch = shardUrls.slice(i, i + SILPO_BATCH_SIZE);
+    const settled = await Promise.allSettled(batch.map(fetchSilpoUrl));
+    settled.forEach(r => {
+      if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+        rawItems.push(...r.value);
+      }
+    });
+  }
 
   const seenKeys = new Set();
   const validItems = [];
@@ -908,46 +956,60 @@ async function fetchZakazStoreMulti(storeKey, storeName, storeIds) {
       error: 'Мережа відсутня в цьому місті'
     };
   }
-  const urls = [];
+  const BATCH_SIZE = 6;
+  const fetchZakazUrl = async (url) => {
+    try {
+      const res = await fetchWithTimeout(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.results || data.items || [];
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const rawItems = [];
 
   for (let idx = 0; idx < ids.length; idx++) {
     const storeId = ids[idx];
     const baseUrl = `https://stores-api.zakaz.ua/stores/${storeId}/products`;
+    const pageWaves = idx === 0
+      ? [
+          [1, 2, 3, 4, 5],
+          [6, 7, 8, 9, 10],
+          [11, 12, 13, 14, 15]
+        ]
+      : [[1, 2, 3, 4]];
 
-    const maxPages = idx === 0 ? 5 : 3;
-    for (let p = 1; p <= maxPages; p++) {
-      urls.push(`${baseUrl}/promotion/?page=${p}`);
+    for (const wave of pageWaves) {
+      const settled = await Promise.allSettled(
+        wave.map(p => fetchZakazUrl(`${baseUrl}/promotion/?page=${p}`))
+      );
+      let anyNonNull = false;
+      let shouldStop = false;
+      settled.forEach(r => {
+        const pageList = r.status === 'fulfilled' ? r.value : null;
+        if (Array.isArray(pageList)) {
+          anyNonNull = true;
+          rawItems.push(...pageList);
+          if (pageList.length < 15) shouldStop = true;
+        }
+      });
+      if (!anyNonNull || shouldStop) break;
     }
 
     if (idx === 0) {
-      const stapleQueries = ['кава', 'шоколад', 'сир', 'масло', 'молоко', 'сметана', 'олія', 'чай', 'філе', 'ковбаса', 'макарони', 'гель', 'шампунь', 'корм'];
-      stapleQueries.forEach(q => {
-        urls.push(`${baseUrl}/search/?q=${encodeURIComponent(q)}`);
-      });
-    }
-  }
-
-  const rawItems = [];
-  const BATCH_SIZE = 6;
-  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
-    const batch = urls.slice(i, i + BATCH_SIZE);
-    const settled = await Promise.allSettled(
-      batch.map(async url => {
-        try {
-          const res = await fetchWithTimeout(url);
-          if (!res.ok) return [];
-          const data = await res.json();
-          return data.results || data.items || [];
-        } catch (_) {
-          return [];
-        }
-      })
-    );
-    settled.forEach(r => {
-      if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-        rawItems.push(...r.value);
+      const shardUrls = DEPARTMENT_SEARCH_SHARDS.map(q => `${baseUrl}/search/?q=${encodeURIComponent(q)}`);
+      for (let i = 0; i < shardUrls.length; i += BATCH_SIZE) {
+        const batch = shardUrls.slice(i, i + BATCH_SIZE);
+        const settled = await Promise.allSettled(batch.map(fetchZakazUrl));
+        settled.forEach(r => {
+          if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+            rawItems.push(...r.value);
+          }
+        });
       }
-    });
+    }
   }
 
   const seenKeys = new Set();
@@ -1189,18 +1251,22 @@ async function fetchRukavychkaPromotions() {
   const seenUrls = new Set();
 
   try {
-    const pages = [1, 2, 3];
-    const fetchResults = await Promise.allSettled(
-      pages.map(p =>
-        fetchWithTimeout(`https://market.rukavychka.ua/specials/?page=${p}`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml',
-            'Accept-Language': 'uk-UA,uk;q=0.9'
-          }
-        }, 4500).then(res => (res.ok ? res.text() : null))
-      )
-    );
+    const rukHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'uk-UA,uk;q=0.9'
+    };
+    const fetchRukPage = (p) => fetchWithTimeout(`https://market.rukavychka.ua/specials/?page=${p}`, {
+      headers: rukHeaders
+    }, 4500).then(res => (res.ok ? res.text() : null)).catch(() => null);
+
+    const wave1 = await Promise.allSettled([1, 2, 3].map(fetchRukPage));
+    const fetchResults = [...wave1];
+    const page3Html = wave1[2]?.status === 'fulfilled' ? wave1[2].value : null;
+    if (page3Html && (page3Html.includes('fm-module-item') || page3Html.includes('product-layout'))) {
+      const wave2 = await Promise.allSettled([4, 5].map(fetchRukPage));
+      fetchResults.push(...wave2);
+    }
 
     for (const settled of fetchResults) {
       if (settled.status !== 'fulfilled' || !settled.value) continue;
@@ -1276,28 +1342,34 @@ async function fetchForaPromotions() {
       { ...baseData, From: 301, To: 450 },
       { ...baseData, From: 451, To: 600 },
       { ...baseData, From: 601, To: 750 },
-      { ...baseData, From: 1, To: 60, customFilter: 'promo' }
+      { ...baseData, From: 751, To: 900 },
+      { ...baseData, From: 901, To: 1050 },
+      { ...baseData, From: 1051, To: 1200 },
+      { ...baseData, From: 1, To: 80, customFilter: 'promo' }
     ];
-    ['кава', 'шоколад', 'сир', 'масло', 'молоко', 'олія'].forEach(q => {
+    DEPARTMENT_SEARCH_SHARDS.slice(0, 12).forEach(q => {
       payloads.push({ ...baseData, From: 1, To: 60, FindText: q });
     });
 
-    const settled = await Promise.allSettled(
-      payloads.map(data =>
-        fetchWithTimeout(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ method: 'GetSimpleCatalogItems', data })
-        }, 5500).then(res => (res.ok ? res.json() : null))
-      )
-    );
-
+    const FORA_BATCH_SIZE = 6;
     const rawItems = [];
-    settled.forEach(r => {
-      if (r.status === 'fulfilled' && Array.isArray(r.value?.items)) {
-        rawItems.push(...r.value.items);
-      }
-    });
+    for (let i = 0; i < payloads.length; i += FORA_BATCH_SIZE) {
+      const batch = payloads.slice(i, i + FORA_BATCH_SIZE);
+      const settled = await Promise.allSettled(
+        batch.map(data =>
+          fetchWithTimeout(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method: 'GetSimpleCatalogItems', data })
+          }, 5500).then(res => (res.ok ? res.json() : null)).catch(() => null)
+        )
+      );
+      settled.forEach(r => {
+        if (r.status === 'fulfilled' && Array.isArray(r.value?.items)) {
+          rawItems.push(...r.value.items);
+        }
+      });
+    }
 
     for (const item of rawItems) {
       const slug = item.slug ? String(item.slug).trim() : '';
@@ -1361,7 +1433,10 @@ async function fetchProstorPromotions() {
     const pageUrls = [
       'https://prostor.ua/ua/aktsii/supertseny/',
       'https://prostor.ua/ua/aktsii/supertseny/?p=2',
-      'https://prostor.ua/ua/aktsii/supertseny/?p=3'
+      'https://prostor.ua/ua/aktsii/supertseny/?p=3',
+      'https://prostor.ua/ua/aktsii/supertseny/?p=4',
+      'https://prostor.ua/ua/aktsii/supertseny/?p=5',
+      'https://prostor.ua/ua/aktsii/supertseny/?p=6'
     ];
     const settled = await Promise.allSettled(
       pageUrls.map(u =>
@@ -1615,11 +1690,20 @@ function findLocalBrowserExecutable() {
   return null;
 }
 
-async function scrapeStealthBrowserStores(fastScraperStats = []) {
+async function scrapeStealthBrowserStores(fastScraperStats = [], cityId = 'ivano-frankivsk', options = {}) {
   const browserResults = {
     atb: { store: 'atb', storeName: 'АТБ-Маркет', status: 0, items: [], error: null },
     eva: { store: 'eva', storeName: 'EVA', status: 0, items: [], error: null }
   };
+
+  const thrashStat = fastScraperStats.find(s => s.store === 'thrash');
+  const avroraStat = fastScraperStats.find(s => s.store === 'avrora');
+  const needThrashFallback = !thrashStat || (thrashStat.error !== 'Немає в цьому місті' && (!thrashStat.items || thrashStat.items.length === 0));
+  const needAvroraFallback = !avroraStat || (avroraStat.error !== 'Немає в цьому місті' && (!avroraStat.items || avroraStat.items.length === 0));
+
+  if (options.skipAtb && options.skipEva && !needThrashFallback && !needAvroraFallback) {
+    return browserResults;
+  }
 
   if (!puppeteer) {
     console.log('[Puppeteer] Модуль puppeteer-core не знайдено, пропускаємо браузерні скрапери.');
@@ -1663,156 +1747,161 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
     });
 
     // ── a) АТБ-МАРКЕТ (Обхід Cloudflare та вилучення .catalog-item) ──
-    try {
-      console.log('[Puppeteer] [АТБ-Маркет] Отримання акційних пропозицій (economy, sale_tovari, znyzhky)...');
-      const atbUrls = [
-        'https://www.atbmarket.com/promo/economy',
-        'https://www.atbmarket.com/promo/sale_tovari',
-        'https://www.atbmarket.com/promo/znyzhky'
-      ];
-      const seenAtb = new Set();
-      const atbItems = [];
+    if (!options.skipAtb) {
+      try {
+        console.log('[Puppeteer] [АТБ-Маркет] Отримання акційних пропозицій (economy, sale_tovari, znyzhky)...');
+        const atbUrls = [
+          'https://www.atbmarket.com/promo/economy',
+          'https://www.atbmarket.com/promo/economy?page=2',
+          'https://www.atbmarket.com/promo/sale_tovari',
+          'https://www.atbmarket.com/promo/sale_tovari?page=2',
+          'https://www.atbmarket.com/promo/znyzhky'
+        ];
+        const seenAtb = new Set();
+        const atbItems = [];
 
-      for (const u of atbUrls) {
-        try {
-          await page.goto(u, { waitUntil: 'domcontentloaded', timeout: 15000 });
-          await page.waitForSelector('.catalog-item', { timeout: 4000 }).catch(() => {});
-          const extracted = await page.evaluate(() => {
-            const list = [];
-            document.querySelectorAll('.catalog-item').forEach(el => {
-              const titleEl = el.querySelector('.catalog-item__title a');
-              const topPrice = el.querySelector('.product-price__top');
-              const btmPrice = el.querySelector('.product-price__bottom');
-              if (titleEl && topPrice) {
-                const title = titleEl.textContent.trim();
-                const pClean = topPrice.textContent.replace(/[^\d.]/g, '');
-                const oldClean = btmPrice ? btmPrice.textContent.replace(/[^\d.]/g, '') : null;
-                const price = parseFloat(pClean);
-                const oldPrice = oldClean ? parseFloat(oldClean) : null;
-                let href = titleEl.getAttribute('href') || '';
-                if (href && !href.startsWith('http')) href = 'https://www.atbmarket.com' + href;
-                if (title && price > 0 && oldPrice > price && href) {
-                  list.push({ title, price, oldPrice, sourceUrl: href });
+        for (const u of atbUrls) {
+          try {
+            await page.goto(u, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await page.waitForSelector('.catalog-item', { timeout: 4000 }).catch(() => {});
+            const extracted = await page.evaluate(() => {
+              const list = [];
+              document.querySelectorAll('.catalog-item').forEach(el => {
+                const titleEl = el.querySelector('.catalog-item__title a');
+                const topPrice = el.querySelector('.product-price__top');
+                const btmPrice = el.querySelector('.product-price__bottom');
+                if (titleEl && topPrice) {
+                  const title = titleEl.textContent.trim();
+                  const pClean = topPrice.textContent.replace(/[^\d.]/g, '');
+                  const oldClean = btmPrice ? btmPrice.textContent.replace(/[^\d.]/g, '') : null;
+                  const price = parseFloat(pClean);
+                  const oldPrice = oldClean ? parseFloat(oldClean) : null;
+                  let href = titleEl.getAttribute('href') || '';
+                  if (href && !href.startsWith('http')) href = 'https://www.atbmarket.com' + href;
+                  if (title && price > 0 && oldPrice > price && href) {
+                    list.push({ title, price, oldPrice, sourceUrl: href });
+                  }
                 }
+              });
+              return list;
+            });
+
+            extracted.forEach(it => {
+              if (!seenAtb.has(it.sourceUrl) && it.sourceUrl.includes('atbmarket.com') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
+                seenAtb.add(it.sourceUrl);
+                const catInfo = categorizeProduct(it.title, 'atb');
+                const atbTitle = it.title.replace(/\s+/g, ' ').trim();
+                const atbBrand = extractBrandFromTitle(atbTitle, null);
+                atbItems.push({
+                  sourceStore: 'atb',
+                  sourceStoreName: 'АТБ-Маркет',
+                  title: atbTitle,
+                  brand: atbBrand,
+                  producerBrand: atbBrand,
+                  ean: null,
+                  mainCategory: catInfo.mainCategory,
+                  subCategory: catInfo.subCategory,
+                  category: catInfo.category,
+                  unit: 'шт',
+                  price: Number(it.price.toFixed(2)),
+                  oldPrice: Number(it.oldPrice.toFixed(2)),
+                  promoTag: 'Економія АТБ',
+                  sourceUrl: it.sourceUrl
+                });
               }
             });
-            return list;
-          });
-
-          extracted.forEach(it => {
-            if (!seenAtb.has(it.sourceUrl) && it.sourceUrl.includes('atbmarket.com') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
-              seenAtb.add(it.sourceUrl);
-              const catInfo = categorizeProduct(it.title, 'atb');
-              const atbTitle = it.title.replace(/\s+/g, ' ').trim();
-              const atbBrand = extractBrandFromTitle(atbTitle, null);
-              atbItems.push({
-                sourceStore: 'atb',
-                sourceStoreName: 'АТБ-Маркет',
-                title: atbTitle,
-                brand: atbBrand,
-                producerBrand: atbBrand,
-                ean: null,
-                mainCategory: catInfo.mainCategory,
-                subCategory: catInfo.subCategory,
-                category: catInfo.category,
-                unit: 'шт',
-                price: Number(it.price.toFixed(2)),
-                oldPrice: Number(it.oldPrice.toFixed(2)),
-                promoTag: 'Економія АТБ',
-                sourceUrl: it.sourceUrl
-              });
-            }
-          });
-        } catch (err) {
-          console.warn(`[Puppeteer] [АТБ] Помилка на ${u}:`, err.message);
+          } catch (err) {
+            console.warn(`[Puppeteer] [АТБ] Помилка на ${u}:`, err.message);
+          }
         }
-      }
 
-      console.log(`[LIVE SYNC] [АТБ-Маркет] Отримано ${atbItems.length} акційних позицій через Puppeteer-обхід Cloudflare.`);
-      browserResults.atb = {
-        store: 'atb',
-        storeName: 'АТБ-Маркет',
-        status: atbItems.length > 0 ? 200 : 0,
-        items: atbItems,
-        error: atbItems.length > 0 ? null : 'Не знайдено карток'
-      };
-    } catch (err) {
-      console.warn('[Puppeteer] [АТБ-Маркет] Загальна помилка:', err.message);
-      browserResults.atb.error = err.message;
+        console.log(`[LIVE SYNC] [АТБ-Маркет] Отримано ${atbItems.length} акційних позицій через Puppeteer-обхід Cloudflare.`);
+        browserResults.atb = {
+          store: 'atb',
+          storeName: 'АТБ-Маркет',
+          status: atbItems.length > 0 ? 200 : 0,
+          items: atbItems,
+          error: atbItems.length > 0 ? null : 'Не знайдено карток'
+        };
+      } catch (err) {
+        console.warn('[Puppeteer] [АТБ-Маркет] Загальна помилка:', err.message);
+        browserResults.atb.error = err.message;
+      }
     }
 
     // ── b) EVA (Вилучення реальних акційних позицій [data-testid="product-card"]) ──
-    try {
-      console.log('[Puppeteer] [EVA] Отримання акційних пропозицій (cat-garage-sale)...');
-      await page.goto('https://eva.ua/ua/cat-garage-sale/', { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await new Promise(r => setTimeout(r, 4000));
-      const evaExtracted = await page.evaluate(() => {
-        const cards = document.querySelectorAll('[data-testid*="product-card"]');
-        const res = [];
-        cards.forEach(c => {
-          const brand = c.querySelector('[data-testid="product-brand"]')?.textContent.trim() || '';
-          const name = c.querySelector('[data-testid="product-name"]')?.textContent.trim() || '';
-          const oldPriceText = c.querySelector('[data-testid="product-price"]')?.textContent.trim() || '';
-          const priceText = c.querySelector('[data-testid="product-final-price"]')?.textContent.trim() || '';
-          const link = c.querySelector('a[href*="/ua/pr"]')?.getAttribute('href') || '';
-          
-          const cleanNum = t => parseFloat(t.replace(/\s+/g, '').replace(',', '.').replace(/[^\d.]/g, ''));
-          const oldPrice = cleanNum(oldPriceText);
-          const price = cleanNum(priceText);
-          const title = (brand ? brand + ' ' + name : name).trim();
-          let sourceUrl = link;
-          if (sourceUrl && !sourceUrl.startsWith('http')) sourceUrl = 'https://eva.ua' + sourceUrl;
+    if (!options.skipEva) {
+      try {
+        console.log('[Puppeteer] [EVA] Отримання акційних пропозицій (cat-garage-sale)...');
+        await page.goto('https://eva.ua/ua/cat-garage-sale/', { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await new Promise(r => setTimeout(r, 4000));
+        const evaExtracted = await page.evaluate(() => {
+          const cards = document.querySelectorAll('[data-testid*="product-card"]');
+          const res = [];
+          cards.forEach(c => {
+            const brand = c.querySelector('[data-testid="product-brand"]')?.textContent.trim() || '';
+            const name = c.querySelector('[data-testid="product-name"]')?.textContent.trim() || '';
+            const oldPriceText = c.querySelector('[data-testid="product-price"]')?.textContent.trim() || '';
+            const priceText = c.querySelector('[data-testid="product-final-price"]')?.textContent.trim() || '';
+            const link = c.querySelector('a[href*="/ua/pr"]')?.getAttribute('href') || '';
+            
+            const cleanNum = t => parseFloat(t.replace(/\s+/g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+            const oldPrice = cleanNum(oldPriceText);
+            const price = cleanNum(priceText);
+            const title = (brand ? brand + ' ' + name : name).trim();
+            let sourceUrl = link;
+            if (sourceUrl && !sourceUrl.startsWith('http')) sourceUrl = 'https://eva.ua' + sourceUrl;
 
-          if (title && price > 0 && oldPrice > price && sourceUrl && sourceUrl.includes('eva.ua')) {
-            res.push({ title, brand, price, oldPrice, sourceUrl });
+            if (title && price > 0 && oldPrice > price && sourceUrl && sourceUrl.includes('eva.ua')) {
+              res.push({ title, brand, price, oldPrice, sourceUrl });
+            }
+          });
+          return res;
+        });
+
+        const seenEva = new Set();
+        const evaItems = [];
+        evaExtracted.forEach(it => {
+          if (!seenEva.has(it.sourceUrl) && it.sourceUrl.includes('eva.ua') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
+            seenEva.add(it.sourceUrl);
+            const evaTitle = it.title.replace(/\s+/g, ' ').trim();
+            const evaBrand = extractBrandFromTitle(evaTitle, it.brand || null);
+            const catInfo = categorizeProduct(evaTitle, 'eva');
+            evaItems.push({
+              sourceStore: 'eva',
+              sourceStoreName: 'EVA',
+              title: evaTitle,
+              brand: evaBrand,
+              producerBrand: evaBrand,
+              ean: null,
+              mainCategory: catInfo.mainCategory,
+              subCategory: catInfo.subCategory,
+              category: catInfo.category,
+              unit: 'шт',
+              price: Number(it.price.toFixed(2)),
+              oldPrice: Number(it.oldPrice.toFixed(2)),
+              promoTag: 'Зіркові знахідки EVA',
+              sourceUrl: it.sourceUrl
+            });
           }
         });
-        return res;
-      });
 
-      const seenEva = new Set();
-      const evaItems = [];
-      evaExtracted.forEach(it => {
-        if (!seenEva.has(it.sourceUrl) && it.sourceUrl.includes('eva.ua') && isValidProductPrice(it.title, it.price, it.oldPrice)) {
-          seenEva.add(it.sourceUrl);
-          const evaTitle = it.title.replace(/\s+/g, ' ').trim();
-          const evaBrand = extractBrandFromTitle(evaTitle, it.brand || null);
-          const catInfo = categorizeProduct(evaTitle, 'eva');
-          evaItems.push({
-            sourceStore: 'eva',
-            sourceStoreName: 'EVA',
-            title: evaTitle,
-            brand: evaBrand,
-            producerBrand: evaBrand,
-            ean: null,
-            mainCategory: catInfo.mainCategory,
-            subCategory: catInfo.subCategory,
-            category: catInfo.category,
-            unit: 'шт',
-            price: Number(it.price.toFixed(2)),
-            oldPrice: Number(it.oldPrice.toFixed(2)),
-            promoTag: 'Зіркові знахідки EVA',
-            sourceUrl: it.sourceUrl
-          });
-        }
-      });
-
-      console.log(`[LIVE SYNC] [EVA] Отримано ${evaItems.length} акційних позицій через Puppeteer-обхід Cloudflare.`);
-      browserResults.eva = {
-        store: 'eva',
-        storeName: 'EVA',
-        status: evaItems.length > 0 ? 200 : 0,
-        items: evaItems,
-        error: evaItems.length > 0 ? null : 'Не знайдено карток'
-      };
-    } catch (err) {
-      console.warn('[Puppeteer] [EVA] Загальна помилка:', err.message);
-      browserResults.eva.error = err.message;
+        console.log(`[LIVE SYNC] [EVA] Отримано ${evaItems.length} акційних позицій через Puppeteer-обхід Cloudflare.`);
+        browserResults.eva = {
+          store: 'eva',
+          storeName: 'EVA',
+          status: evaItems.length > 0 ? 200 : 0,
+          items: evaItems,
+          error: evaItems.length > 0 ? null : 'Не знайдено карток'
+        };
+      } catch (err) {
+        console.warn('[Puppeteer] [EVA] Загальна помилка:', err.message);
+        browserResults.eva.error = err.message;
+      }
     }
 
     // ── c) Траш! Fallback (якщо GraphQL не повернув акцій) ──
-    const thrashStat = fastScraperStats.find(s => s.store === 'thrash');
-    if (!thrashStat || !thrashStat.items || thrashStat.items.length === 0) {
+    if (needThrashFallback) {
       try {
         console.log('[Puppeteer] [Траш!] Запуск fallback браузерного парсингу https://thrash.ua/promotions/campaigns ...');
         await page.goto('https://thrash.ua/promotions/campaigns', { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -1874,8 +1963,7 @@ async function scrapeStealthBrowserStores(fastScraperStats = []) {
     }
 
     // ── d) Аврора Fallback (якщо Cheerio HTML повернув 0) ──
-    const avroraStat = fastScraperStats.find(s => s.store === 'avrora');
-    if (!avroraStat || !avroraStat.items || avroraStat.items.length === 0) {
+    if (needAvroraFallback) {
       try {
         console.log('[Puppeteer] [Аврора] Запуск fallback браузерного парсингу https://avrora.ua/ ...');
         await page.goto('https://avrora.ua/', { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -2114,12 +2202,14 @@ function mergeCatalogProducts(products = [], activeStores = null) {
 }
 
 let latestSyncStats = [];
+const storeSyncCache = new Map();
+const STORE_CACHE_TTL_MS = 10 * 60 * 1000;
 
 /**
  * Main live promotion sync coordinator with City-Specific Local Store Price Sync.
  * Prioritizes Western Ukraine (default: ivano-frankivsk)
  */
-async function syncLivePromotions(cityId = 'ivano-frankivsk') {
+async function syncLivePromotions(cityId = 'ivano-frankivsk', options = {}) {
   const cityConfig = getCityConfig(cityId);
   console.log(`>>> [LIVE SYNC] Початок синхронізації цін для міста: ${cityConfig.name} (${cityConfig.region})...`);
   latestSyncStats = [];
@@ -2235,39 +2325,39 @@ async function syncLivePromotions(cityId = 'ivano-frankivsk') {
   });
 
   const settled = await Promise.allSettled(storeTasks);
-  const liveScraped = [];
 
   settled.forEach(res => {
-    if (res.status === 'fulfilled') {
-      const outcome = res.value;
-      if (outcome) {
-        latestSyncStats.push(outcome);
-        if (Array.isArray(outcome.items) && outcome.items.length > 0) {
-          liveScraped.push(...outcome.items);
-        }
-      }
+    if (res.status === 'fulfilled' && res.value) {
+      latestSyncStats.push(res.value);
     }
   });
 
-  // 10. Stealth Browser Context (Cloudflare Bypass for АТБ, EVA, and fallbacks)
-  const browserResults = await scrapeStealthBrowserStores(latestSyncStats, cityId);
+  const fastMode = Boolean(options && options.fastMode);
+  const nowTs = Date.now();
+  const cachedAtb = storeSyncCache.get(`${cityId}:atb`);
+  const cachedEva = storeSyncCache.get(`${cityId}:eva`);
+  const hasFreshAtb = Boolean(fastMode && cachedAtb && Array.isArray(cachedAtb.items) && cachedAtb.items.length > 0 && (nowTs - cachedAtb.ts) < STORE_CACHE_TTL_MS);
+  const hasFreshEva = Boolean(fastMode && cachedEva && Array.isArray(cachedEva.items) && cachedEva.items.length > 0 && (nowTs - cachedEva.ts) < STORE_CACHE_TTL_MS);
+  const skipAtb = !cityConfig.activeStores.includes('atb') || hasFreshAtb;
+  const skipEva = !cityConfig.activeStores.includes('eva') || hasFreshEva;
 
-  if (cityConfig.activeStores.includes('atb') && browserResults.atb) {
-    latestSyncStats.push(browserResults.atb);
-    if (browserResults.atb.items.length > 0) {
-      liveScraped.push(...browserResults.atb.items);
-    }
-  } else if (!cityConfig.activeStores.includes('atb')) {
+  // 10. Stealth Browser Context (Cloudflare Bypass for АТБ, EVA, and fallbacks)
+  const browserResults = await scrapeStealthBrowserStores(latestSyncStats, cityId, { skipAtb, skipEva });
+
+  if (!cityConfig.activeStores.includes('atb')) {
     latestSyncStats.push({ store: 'atb', storeName: 'АТБ-Маркет', status: 0, items: [], error: 'Немає в цьому місті' });
+  } else if (hasFreshAtb) {
+    latestSyncStats.push({ store: 'atb', storeName: 'АТБ-Маркет', status: 200, items: cachedAtb.items, error: null, fromCache: true });
+  } else if (browserResults.atb) {
+    latestSyncStats.push(browserResults.atb);
   }
 
-  if (cityConfig.activeStores.includes('eva') && browserResults.eva) {
-    latestSyncStats.push(browserResults.eva);
-    if (browserResults.eva.items.length > 0) {
-      liveScraped.push(...browserResults.eva.items);
-    }
-  } else if (!cityConfig.activeStores.includes('eva')) {
+  if (!cityConfig.activeStores.includes('eva')) {
     latestSyncStats.push({ store: 'eva', storeName: 'EVA', status: 0, items: [], error: 'Немає в цьому місті' });
+  } else if (hasFreshEva) {
+    latestSyncStats.push({ store: 'eva', storeName: 'EVA', status: 200, items: cachedEva.items, error: null, fromCache: true });
+  } else if (browserResults.eva) {
+    latestSyncStats.push(browserResults.eva);
   }
 
   if (browserResults.thrashFallback && browserResults.thrashFallback.items.length > 0 && cityConfig.activeStores.includes('thrash')) {
@@ -2277,7 +2367,6 @@ async function syncLivePromotions(cityId = 'ivano-frankivsk') {
     } else {
       latestSyncStats.push(browserResults.thrashFallback);
     }
-    liveScraped.push(...browserResults.thrashFallback.items);
   }
 
   if (browserResults.avroraFallback && browserResults.avroraFallback.items.length > 0 && cityConfig.activeStores.includes('avrora')) {
@@ -2287,8 +2376,30 @@ async function syncLivePromotions(cityId = 'ivano-frankivsk') {
     } else {
       latestSyncStats.push(browserResults.avroraFallback);
     }
-    liveScraped.push(...browserResults.avroraFallback.items);
   }
+
+  // Reconcile per-store cache: save fresh >0 results and fall back to fresh cache if an active store returns 0
+  const liveScraped = [];
+  const cacheTs = Date.now();
+  latestSyncStats.forEach(stat => {
+    if (!stat || !stat.store) return;
+    const cacheKey = `${cityId}:${stat.store}`;
+    if (Array.isArray(stat.items) && stat.items.length > 0) {
+      if (!stat.fromCache) {
+        storeSyncCache.set(cacheKey, { items: stat.items, ts: cacheTs });
+      }
+      liveScraped.push(...stat.items);
+    } else if (cityConfig.activeStores.includes(stat.store)) {
+      const cached = storeSyncCache.get(cacheKey);
+      if (cached && Array.isArray(cached.items) && cached.items.length > 0 && (cacheTs - cached.ts) < STORE_CACHE_TTL_MS) {
+        stat.items = cached.items;
+        stat.status = 200;
+        stat.fromCache = true;
+        stat.error = null;
+        liveScraped.push(...cached.items);
+      }
+    }
+  });
 
   console.log(`>>> [LIVE SYNC] [${cityConfig.name}] Загалом отримано ${liveScraped.length} живих акційних пропозицій.`);
 

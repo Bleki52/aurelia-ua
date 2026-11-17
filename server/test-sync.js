@@ -238,19 +238,24 @@ async function runTest() {
       throw new Error('❌ Не вдалося отримати жодного товару з публічних ендпоінтів і локальний резерв порожній.');
     }
 
-    // Перевірка що в Івано-Франківську немає NOVUS (немає відділень)
+    // Перевірка що в Івано-Франківську присутній NOVUS та виключено відсутні мережі (АШАН)
     const novusInIf = verifiedCatalog.filter(p => (p.prices || []).some(pr => String(pr.store).toLowerCase() === 'novus'));
-    if (novusInIf.length > 0) {
-      throw new Error(`❌ Помилка: товари NOVUS знайдені у вибірці Івано-Франківська (NOVUS відсутній у цьому місті)!`);
+    const auchanInIf = verifiedCatalog.filter(p => (p.prices || []).some(pr => String(pr.store).toLowerCase() === 'auchan'));
+    if (auchanInIf.length > 0) {
+      throw new Error('❌ Помилка: товари АШАН знайдені у вибірці Івано-Франківська (АШАН відсутній у цьому місті)!');
     }
-    console.log('✅ ПІДТВЕРДЖЕНО: у вибірці Івано-Франківська немає мереж, відсутніх у місті (NOVUS/Auchan виключені).');
+    console.log(`✅ ПІДТВЕРДЖЕНО: у вибірці Івано-Франківська NOVUS доступний (${novusInIf.length} товарів), а відсутні мережі (АШАН/МегаМаркет) виключені.`);
 
     // 5. Перевірка статусу мереж для міста (GET /api/products/stores-status?city=ivano-frankivsk)
     console.log('\n📊 [5/6] ПЕРЕВІРКА СТАТУСІВ МЕРЕЖ ДЛЯ ІВАНО-ФРАНКІВСЬКА ТА ЛЬВОВА:');
     console.log('========================================================================================');
     const ifStatuses = getStoresStatus('ivano-frankivsk');
     const notInIfCount = ifStatuses.filter(s => s.status === 'not_in_city').length;
-    console.log(`✅ Івано-Франківськ: ${ifStatuses.length} мереж перевірено, ${notInIfCount} позначено як "not_in_city" (наприклад NOVUS).`);
+    const novusIfStatus = ifStatuses.find(s => s.store === 'novus');
+    if (!novusIfStatus || !novusIfStatus.inCity) {
+      throw new Error('❌ Помилка: NOVUS має бути доступний у місті Івано-Франківськ!');
+    }
+    console.log(`✅ Івано-Франківськ: ${ifStatuses.length} мереж перевірено, ${notInIfCount} відсутні в місті (NOVUS статус: ${novusIfStatus.status}).`);
 
     const lvivStatuses = getStoresStatus('lviv');
     const novusLviv = lvivStatuses.find(s => s.store === 'novus');

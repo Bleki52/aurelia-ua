@@ -79,15 +79,15 @@
   const CORE_STORE_IDS = ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan'];
 
   const CITIES = Object.fromEntries([
-    ['ivano-frankivsk', 'Івано-Франківськ', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'eko', 'arsen', 'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['lviv', 'Львів', 'Західна Україна', ['silpo', 'atb', 'metro', 'auchan', 'epicentrk_food', 'ultramarket', 'arsen', 'rukavychka', 'blyzenko', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'novus']],
-    ['ternopil', 'Тернопіль', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['lutsk', 'Луцьк', 'Західна Україна', ['silpo', 'atb', 'epicentrk_food', 'eko', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['chernivtsi', 'Чернівці', 'Західна Україна', ['silpo', 'atb', 'metro', 'epicentrk_food', 'eko', 'rukavychka', 'taistra', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['rivne', 'Рівне', 'Західна Україна', ['silpo', 'atb', 'metro', 'novus', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['uzhhorod', 'Ужгород', 'Західна Україна', ['silpo', 'atb', 'fora', 'epicentrk_food', 'rukavychka', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['khmelnytskyi', 'Хмельницький', 'Західна Україна', ['silpo', 'atb', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'taistra', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora']],
-    ['kyiv', 'Київ', 'Центральна Україна', ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket', 'thrash', 'simi', 'eva', 'prostor', 'avrora', 'epicentr']]
+    ['ivano-frankivsk', 'Івано-Франківськ', 'Західна Україна', ['silpo', 'atb', 'novus', 'metro', 'velmart', 'epicentrk_food', 'eko', 'arsen', 'rukavychka', 'thrash', 'simi', 'blyzenko', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['lviv', 'Львів', 'Західна Україна', ['silpo', 'atb', 'novus', 'metro', 'auchan', 'epicentrk_food', 'ultramarket', 'arsen', 'rukavychka', 'blyzenko', 'simi', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['ternopil', 'Тернопіль', 'Західна Україна', ['silpo', 'atb', 'novus', 'metro', 'epicentrk_food', 'arsen', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'taistra', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['lutsk', 'Луцьк', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'eko', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'torba', 'sviy_market', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['chernivtsi', 'Чернівці', 'Західна Україна', ['silpo', 'atb', 'metro', 'velmart', 'epicentrk_food', 'eko', 'rukavychka', 'taistra', 'thrash', 'torba', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['rivne', 'Рівне', 'Західна Україна', ['silpo', 'atb', 'metro', 'novus', 'velmart', 'fora', 'eko', 'epicentrk_food', 'arsen', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'torba', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['uzhhorod', 'Ужгород', 'Західна Україна', ['silpo', 'atb', 'velmart', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'thrash', 'torba', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['khmelnytskyi', 'Хмельницький', 'Західна Україна', ['silpo', 'atb', 'fora', 'eko', 'epicentrk_food', 'rukavychka', 'simi', 'blyzenko', 'taistra', 'thrash', 'torba', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']],
+    ['kyiv', 'Київ', 'Центральна Україна', ['silpo', 'atb', 'novus', 'metro', 'varus', 'auchan', 'epicentrk_food', 'velmart', 'fora', 'eko', 'ultramarket', 'megamarket', 'thrash', 'nash_kray', 'spar', 'eva', 'prostor', 'avrora', 'epicentr']]
   ].map(([id, name, region, activeStores]) => [id, { id, name, region, activeStores }]));
 
   function getSelectedCity() {

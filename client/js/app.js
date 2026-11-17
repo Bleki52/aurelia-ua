@@ -202,6 +202,7 @@
     catalogSubCategory: 'all',
     catalogCategory: 'all',
     catalogStore: 'all',
+    catalogSelectedStores: [],
     catalogSort: 'default',
     catalogSearch: '',
     catalogPriceMin: null,
@@ -736,39 +737,76 @@
   function updateStoresModalForCity(cityId) {
     const currentCity = cityId || AppState.selectedCity || 'ivano-frankivsk';
     const storeCards = document.querySelectorAll('.store-toggle-card');
+    let totalInCity = 0;
 
     storeCards.forEach(card => {
       const input = card.querySelector('.store-toggle-input');
       if (!input) return;
       const storeId = input.value;
       const metaContainer = card.querySelector('.store-toggle-meta');
-      const subrow = ensureStoreToggleSubrow(metaContainer);
 
       const inCity = (window.AureliaAPI && typeof window.AureliaAPI.isStoreInCity === 'function')
         ? window.AureliaAPI.isStoreInCity(storeId, currentCity)
         : true;
 
-      let notInCityBadge = metaContainer ? metaContainer.querySelector('.store-not-in-city-badge') : null;
+      const notInCityBadge = metaContainer ? metaContainer.querySelector('.store-not-in-city-badge') : null;
+      if (notInCityBadge) notInCityBadge.remove();
 
       if (!inCity) {
-        card.classList.add('is-not-in-city');
+        card.classList.add('is-not-in-city', 'is-hidden');
         input.disabled = true;
         input.checked = false;
-        if (!notInCityBadge && subrow) {
-          notInCityBadge = document.createElement('span');
-          notInCityBadge.className = 'store-not-in-city-badge';
-          notInCityBadge.textContent = 'Немає в місті';
-          subrow.appendChild(notInCityBadge);
-        }
+        const statusBadge = metaContainer ? metaContainer.querySelector('.store-status-badge') : null;
+        if (statusBadge) statusBadge.remove();
       } else {
-        card.classList.remove('is-not-in-city');
+        totalInCity++;
+        card.classList.remove('is-not-in-city', 'is-hidden');
         input.disabled = false;
         input.checked = AppState.selectedStores.includes(storeId);
-        if (notInCityBadge) {
-          notInCityBadge.remove();
-        }
       }
     });
+
+    // Update cluster visibility and counts in #stores-modal
+    document.querySelectorAll('#stores-modal .stores-cluster').forEach(cluster => {
+      const visibleCount = cluster.querySelectorAll('.store-toggle-card:not(.is-hidden)').length;
+      const clusterBadge = cluster.querySelector('.cluster-badge');
+      if (clusterBadge) {
+        clusterBadge.textContent = `${visibleCount} ${pluralizeUk(visibleCount, 'мережа', 'мережі', 'мереж')}`;
+      }
+      cluster.classList.toggle('is-hidden', visibleCount === 0);
+    });
+
+    if (DOM.btnStoresSelectAll) {
+      DOM.btnStoresSelectAll.textContent = `Обрати всі (${totalInCity})`;
+    }
+
+    // Filter loyalty card store selector dropdown by city availability
+    if (DOM.cardStoreSelect) {
+      Array.from(DOM.cardStoreSelect.options).forEach(opt => {
+        const val = String(opt.value || '').trim();
+        if (!val || val === 'other') {
+          opt.hidden = false;
+          opt.disabled = false;
+          return;
+        }
+        const inCity = (window.AureliaAPI && typeof window.AureliaAPI.isStoreInCity === 'function')
+          ? window.AureliaAPI.isStoreInCity(val, currentCity)
+          : true;
+        opt.hidden = !inCity;
+        opt.disabled = !inCity;
+      });
+      DOM.cardStoreSelect.querySelectorAll('optgroup').forEach(group => {
+        const hasVisibleOption = Array.from(group.children).some(opt => !opt.hidden);
+        group.hidden = !hasVisibleOption;
+      });
+      const currentVal = DOM.cardStoreSelect.value;
+      if (currentVal) {
+        const selectedOpt = DOM.cardStoreSelect.options[DOM.cardStoreSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.hidden) {
+          DOM.cardStoreSelect.value = '';
+        }
+      }
+    }
 
     // Re-synchronize selected stores filtering out stores that are not in this city
     if (window.AureliaAPI && typeof window.AureliaAPI.getSelectedStores === 'function') {
@@ -792,9 +830,10 @@
     // Refresh active page data for the newly selected city
     if (DOM.catalogContainer) {
       if (window.AureliaAPI && typeof window.AureliaAPI.getProducts === 'function') {
-        AppState.products = await window.AureliaAPI.getProducts(cityId);
+        AppState.products = prepareCatalogIndex(await window.AureliaAPI.getProducts(cityId));
       }
       resetCatalogPagination();
+      renderSubCategories(AppState.catalogMainCategory);
       renderCatalogStoreFilters();
       renderCatalog();
     }
@@ -803,7 +842,7 @@
     }
     if (DOM.basketItemsContainer) {
       if (window.AureliaAPI && typeof window.AureliaAPI.getProducts === 'function') {
-        AppState.products = await window.AureliaAPI.getProducts(cityId);
+        AppState.products = prepareCatalogIndex(await window.AureliaAPI.getProducts(cityId));
       }
       renderBasket();
     }
@@ -865,6 +904,7 @@
     // Trigger page-specific re-renders based on active page
     if (DOM.catalogContainer) {
       resetCatalogPagination();
+      renderSubCategories(AppState.catalogMainCategory);
       renderCatalogStoreFilters();
       renderCatalog();
     }
@@ -885,12 +925,24 @@
           statuses.forEach(item => {
             const input = document.querySelector(`.store-toggle-input[value="${item.store}"]`);
             if (!input) return;
+            const card = input.closest('.store-toggle-card');
             const metaContainer = input.parentElement ? input.parentElement.querySelector('.store-toggle-meta') : null;
             if (!metaContainer) return;
             const subrow = ensureStoreToggleSubrow(metaContainer);
             const legacyNotInCity = metaContainer.querySelector('.store-not-in-city-badge');
             if (legacyNotInCity) legacyNotInCity.remove();
             let badge = metaContainer.querySelector('.store-status-badge');
+
+            if (item.status === 'not_in_city' || item.inCity === false) {
+              if (card) card.classList.add('is-not-in-city', 'is-hidden');
+              input.disabled = true;
+              input.checked = false;
+              if (badge) badge.remove();
+              return;
+            }
+
+            if (card) card.classList.remove('is-not-in-city', 'is-hidden');
+            input.disabled = false;
             if (!badge && subrow) {
               badge = document.createElement('span');
               badge.className = 'store-status-badge';
@@ -898,10 +950,7 @@
             } else if (badge && subrow && badge.parentElement !== subrow) {
               subrow.appendChild(badge);
             }
-            if (item.status === 'not_in_city') {
-              badge.className = 'store-status-badge store-offline-badge';
-              badge.textContent = 'Немає в місті';
-            } else if (item.count > 0) {
+            if (item.count > 0) {
               badge.className = 'store-status-badge store-live-badge';
               badge.textContent = `${item.count} акцій`;
             } else {
@@ -1564,18 +1613,102 @@
     AppState.catalogVisibleCount = CATALOG_PAGE_SIZE;
   }
 
+  function prepareCatalogIndex(products) {
+    if (!Array.isArray(products)) return [];
+    const resolver = window.AureliaAPI && typeof window.AureliaAPI.resolveCategories === 'function'
+      ? window.AureliaAPI.resolveCategories
+      : null;
+
+    products.forEach((p) => {
+      if (!p || typeof p !== 'object') return;
+      const titleStr = String(p.title || p.name || '');
+      const needsResolved = (!p.mainCategory && !p.main_category) || (!p.subCategory && !p.sub_category && !p.category);
+      const resolvedCats = needsResolved && resolver ? resolver(p) : null;
+
+      const mainCat = p.mainCategory || p.main_category || resolvedCats?.mainCategory || '';
+      const rawSub = p.subCategory || p.sub_category || p.category || resolvedCats?.subCategory || '';
+
+      p._titleLower = titleStr.toLowerCase();
+      p._titleNorm = normalizeUkText(titleStr);
+      p._searchWords = tokenizeUkWords(titleStr);
+      p._mainCat = mainCat;
+      p._subCat = rawSub;
+      p._subNormKey = normalizeSubCategoryKey(rawSub);
+      p._catNormKey = normalizeSubCategoryKey(p.category || '');
+      p._resolvedSubKey = normalizeSubCategoryKey(resolvedCats?.subCategory || '') || p._subNormKey || p._catNormKey;
+      p._subNormText = normalizeUkText(rawSub).replace(/'/g, '');
+      p._subWords = tokenizeUkWords(rawSub);
+
+      const rawEntries = Array.isArray(p.prices) && p.prices.length > 0
+        ? p.prices
+        : Object.entries(p.storePrices || {}).map(([store, val]) => ({ store, ...val }));
+      p._positivePrices = rawEntries.filter((e) => {
+        const pr = parseFloat(e?.price);
+        return !isNaN(pr) && pr > 0;
+      });
+    });
+
+    return products;
+  }
+
   function renderSubCategories(macroCat) {
     if (!DOM.subCategoriesBar) return;
     const items = CATEGORY_HIERARCHY[macroCat] || CATEGORY_HIERARCHY['all'] || [];
 
-    DOM.subCategoriesBar.innerHTML = items.map(sub => {
+    // Compute live product counts per subcategory for active city & selected stores
+    const activeSelectedStores = AppState.selectedStores.length > 0 ? AppState.selectedStores : STORES;
+    const subCounts = new Map();
+    let macroTotal = 0;
+    const hasLoadedProducts = Array.isArray(AppState.products) && AppState.products.length > 0;
+
+    if (hasLoadedProducts) {
+      AppState.products.forEach((p) => {
+        const posEntries = Array.isArray(p._positivePrices)
+          ? p._positivePrices
+          : (Array.isArray(p.prices) && p.prices.length > 0
+              ? p.prices
+              : Object.entries(p.storePrices || {}).map(([store, val]) => ({ store, ...val })))
+            .filter(e => parseFloat(e?.price) > 0);
+
+        const hasVisiblePrice = posEntries.some(e => activeSelectedStores.includes(e.store));
+        if (!hasVisiblePrice) return;
+
+        const pMain = p._mainCat || p.mainCategory || p.main_category
+          || (window.AureliaAPI && typeof window.AureliaAPI.resolveCategories === 'function' ? window.AureliaAPI.resolveCategories(p).mainCategory : '');
+        if (macroCat !== 'all' && pMain !== macroCat) return;
+
+        macroTotal++;
+        const subKey = p._subNormKey || normalizeSubCategoryKey(
+          p.subCategory || p.sub_category || p.category
+          || (window.AureliaAPI && typeof window.AureliaAPI.resolveCategories === 'function' ? window.AureliaAPI.resolveCategories(p).subCategory : '')
+        );
+        if (subKey) {
+          subCounts.set(subKey, (subCounts.get(subKey) || 0) + 1);
+        }
+      });
+
+      if (AppState.catalogSubCategory !== 'all') {
+        const activeSubCount = subCounts.get(normalizeSubCategoryKey(AppState.catalogSubCategory)) || 0;
+        if (activeSubCount === 0) {
+          AppState.catalogSubCategory = 'all';
+        }
+      }
+    }
+
+    const visibleItems = hasLoadedProducts
+      ? items.filter(sub => sub.id === 'all' || (subCounts.get(normalizeSubCategoryKey(sub.id)) || 0) > 0)
+      : items;
+
+    DOM.subCategoriesBar.innerHTML = visibleItems.map(sub => {
       const isActive = AppState.catalogSubCategory === sub.id;
+      const count = sub.id === 'all' ? macroTotal : (subCounts.get(normalizeSubCategoryKey(sub.id)) || 0);
+      const countText = hasLoadedProducts ? ` (${count})` : '';
       return `
         <button type="button" class="sub-cat-chip ${isActive ? 'is-active' : ''}" data-sub="${sub.id}">
           <svg class="icon icon-stroke" aria-hidden="true">
             <use href="assets/sprite.svg#${sub.icon}"></use>
           </svg>
-          <span>${sub.title}</span>
+          <span>${sub.title}${countText}</span>
         </button>
       `;
     }).join('');
@@ -1632,16 +1765,27 @@
     return word.startsWith(q) || word.startsWith(stem);
   }
 
-  function matchesUkrainianSearch(productName, subCategory, rawQuery) {
+  function matchesUkrainianSearch(prodOrTitle, subCategoryOrQuery, maybeQuery) {
+    const isProdObj = prodOrTitle && typeof prodOrTitle === 'object';
+    const rawQuery = isProdObj ? subCategoryOrQuery : maybeQuery;
     const queryTokens = normalizeUkText(rawQuery)
       .split(/\s+/)
       .map((t) => t.replace(/'/g, ''))
       .filter(Boolean);
     if (queryTokens.length === 0) return true;
 
-    const productWords = tokenizeUkWords(productName);
-    const subNorm = normalizeUkText(subCategory).replace(/'/g, '');
-    const subWords = tokenizeUkWords(subCategory);
+    const productWords = isProdObj && Array.isArray(prodOrTitle._searchWords)
+      ? prodOrTitle._searchWords
+      : tokenizeUkWords(isProdObj ? (prodOrTitle.title || prodOrTitle.name || '') : prodOrTitle);
+    const subRaw = isProdObj
+      ? (prodOrTitle._subCat || prodOrTitle.subCategory || prodOrTitle.sub_category || prodOrTitle.category || '')
+      : subCategoryOrQuery;
+    const subNorm = isProdObj && typeof prodOrTitle._subNormText === 'string'
+      ? prodOrTitle._subNormText
+      : normalizeUkText(subRaw).replace(/'/g, '');
+    const subWords = isProdObj && Array.isArray(prodOrTitle._subWords)
+      ? prodOrTitle._subWords
+      : tokenizeUkWords(subRaw);
 
     return queryTokens.every((q) => {
       const isShort = q.length <= 4;
@@ -1657,7 +1801,7 @@
     });
   }
 
-  function getUkrainianSearchRank(productName, rawQuery) {
+  function getUkrainianSearchRank(prodOrTitle, rawQuery) {
     const queryTokens = normalizeUkText(rawQuery)
       .split(/\s+/)
       .map((t) => t.replace(/'/g, ''))
@@ -1666,7 +1810,10 @@
 
     const firstQ = queryTokens[0];
     const isShort = firstQ.length <= 4;
-    const productWords = tokenizeUkWords(productName);
+    const isProdObj = prodOrTitle && typeof prodOrTitle === 'object';
+    const productWords = isProdObj && Array.isArray(prodOrTitle._searchWords)
+      ? prodOrTitle._searchWords
+      : tokenizeUkWords(isProdObj ? (prodOrTitle.title || prodOrTitle.name || '') : prodOrTitle);
     if (productWords.length === 0) return 2;
 
     const firstWord = productWords[0];
@@ -1676,22 +1823,30 @@
     return 2;
   }
 
-  function getProductMetricsForCatalog(prod, activeSelectedStores, selectedStore) {
-    const rawEntries = Array.isArray(prod.prices) && prod.prices.length > 0
-      ? prod.prices
-      : Object.entries(prod.storePrices || {}).map(([store, val]) => ({ store, ...val }));
+  function getProductMetricsForCatalog(prod, activeSelectedStores, selectedStore, catalogSelectedStores = AppState.catalogSelectedStores) {
+    const posEntries = Array.isArray(prod._positivePrices)
+      ? prod._positivePrices
+      : (Array.isArray(prod.prices) && prod.prices.length > 0
+          ? prod.prices
+          : Object.entries(prod.storePrices || {}).map(([store, val]) => ({ store, ...val })))
+        .filter((entry) => {
+          const p = parseFloat(entry?.price);
+          return !isNaN(p) && p > 0;
+        });
 
-    const validPrices = rawEntries.filter((entry) => {
-      const p = parseFloat(entry.price);
-      const inSelected = activeSelectedStores.includes(entry.store);
-      return !isNaN(p) && p > 0 && inSelected;
-    });
+    const validPrices = posEntries.filter((entry) => activeSelectedStores.includes(entry.store));
 
-    const matchesStoreFilter = !selectedStore || selectedStore === 'all'
-      ? validPrices.length > 0
-      : (selectedStore === 'multi-store'
-        ? validPrices.length >= 2
-        : validPrices.some((entry) => entry.store === selectedStore));
+    const multiStores = Array.isArray(catalogSelectedStores) && catalogSelectedStores.length > 0
+      ? catalogSelectedStores
+      : null;
+
+    const matchesStoreFilter = multiStores
+      ? validPrices.some((entry) => multiStores.includes(entry.store))
+      : (!selectedStore || selectedStore === 'all'
+        ? validPrices.length > 0
+        : (selectedStore === 'multi-store'
+          ? validPrices.length >= 2
+          : validPrices.some((entry) => entry.store === selectedStore)));
 
     if (validPrices.length === 0) {
       return { validPrices: [], matchesStoreFilter: false, minPrice: 0, maxDiscount: 0, maxSavingsUah: 0, spreadSavings: 0 };
@@ -1734,6 +1889,7 @@
       AppState.catalogPriceMin !== null ||
       AppState.catalogPriceMax !== null ||
       AppState.catalogMinDiscount > 0 ||
+      (Array.isArray(AppState.catalogSelectedStores) && AppState.catalogSelectedStores.length > 0) ||
       (AppState.catalogStore && AppState.catalogStore !== 'all') ||
       (AppState.catalogSort && AppState.catalogSort !== 'default') ||
       (AppState.catalogMainCategory && AppState.catalogMainCategory !== 'all') ||
@@ -1758,13 +1914,34 @@
   }
 
   function syncStoreFilterControls() {
+    const selectedMulti = Array.isArray(AppState.catalogSelectedStores) ? AppState.catalogSelectedStores : [];
+    const hasMulti = selectedMulti.length > 0;
+
     if (DOM.storeFilterBar) {
       DOM.storeFilterBar.querySelectorAll('.filter-btn').forEach((btn) => {
-        btn.classList.toggle('is-active', (btn.dataset.store || 'all') === AppState.catalogStore);
+        const key = btn.dataset.store || 'all';
+        const isActive = hasMulti
+          ? selectedMulti.includes(key)
+          : key === (AppState.catalogStore || 'all');
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
     }
+
     if (DOM.filterStore) {
-      DOM.filterStore.value = AppState.catalogStore;
+      let customOpt = DOM.filterStore.querySelector('option[value="custom"]');
+      if (selectedMulti.length > 1) {
+        if (!customOpt) {
+          customOpt = document.createElement('option');
+          customOpt.value = 'custom';
+          DOM.filterStore.appendChild(customOpt);
+        }
+        customOpt.textContent = `Обрано мереж: ${selectedMulti.length}`;
+        DOM.filterStore.value = 'custom';
+      } else {
+        if (customOpt) customOpt.remove();
+        DOM.filterStore.value = selectedMulti.length === 1 ? selectedMulti[0] : (AppState.catalogStore || 'all');
+      }
     }
   }
 
@@ -1774,6 +1951,7 @@
     AppState.catalogPriceMax = null;
     AppState.catalogMinDiscount = 0;
     AppState.catalogStore = 'all';
+    AppState.catalogSelectedStores = [];
     AppState.catalogSort = 'default';
     AppState.catalogMainCategory = 'all';
     AppState.catalogSubCategory = 'all';
@@ -1784,6 +1962,7 @@
     if (DOM.filterDiscount) DOM.filterDiscount.value = '0';
     if (DOM.filterStore) DOM.filterStore.value = 'all';
     if (DOM.filterSort) DOM.filterSort.value = 'default';
+    if (DOM.catalogSortSelect) DOM.catalogSortSelect.value = 'default';
 
     document.querySelectorAll('.macro-cat-btn').forEach((b) => {
       const isAll = (b.dataset.main || 'all') === 'all';
@@ -1800,38 +1979,88 @@
 
   function renderCatalogStoreFilters() {
     const activeStores = AppState.selectedStores.length > 0 ? AppState.selectedStores : STORES;
+    const hasLoadedProducts = Array.isArray(AppState.products) && AppState.products.length > 0;
+    const storeCounts = new Map();
+    let multiStoreCount = 0;
+
+    if (hasLoadedProducts) {
+      AppState.products.forEach((p) => {
+        const posEntries = Array.isArray(p._positivePrices)
+          ? p._positivePrices
+          : (Array.isArray(p.prices) && p.prices.length > 0
+              ? p.prices
+              : Object.entries(p.storePrices || {}).map(([store, val]) => ({ store, ...val })))
+            .filter(e => parseFloat(e?.price) > 0);
+        const visibleSet = new Set();
+        posEntries.forEach((e) => {
+          if (activeStores.includes(e.store)) {
+            visibleSet.add(e.store);
+          }
+        });
+        if (visibleSet.size >= 2) multiStoreCount++;
+        visibleSet.forEach((s) => {
+          storeCounts.set(s, (storeCounts.get(s) || 0) + 1);
+        });
+      });
+    }
+
+    const visibleStores = hasLoadedProducts
+      ? activeStores.filter((s) => (storeCounts.get(s) || 0) > 0)
+      : activeStores;
+
+    AppState.catalogSelectedStores = Array.isArray(AppState.catalogSelectedStores)
+      ? AppState.catalogSelectedStores.filter((s) => visibleStores.includes(s))
+      : [];
+
     if (
       AppState.catalogStore !== 'all' &&
       AppState.catalogStore !== 'multi-store' &&
-      !activeStores.includes(AppState.catalogStore)
+      AppState.catalogStore !== 'custom' &&
+      !visibleStores.includes(AppState.catalogStore)
     ) {
-      AppState.catalogStore = 'all';
+      AppState.catalogStore = AppState.catalogSelectedStores.length > 1
+        ? 'custom'
+        : (AppState.catalogSelectedStores[0] || 'all');
+    } else if (AppState.catalogStore === 'custom' && AppState.catalogSelectedStores.length <= 1) {
+      AppState.catalogStore = AppState.catalogSelectedStores[0] || 'all';
     }
 
     if (DOM.filterStore) {
       const selectOptions = [
         '<option value="all">Усі мережі міста</option>',
-        '<option value="multi-store">Тільки порівняння (2+ мережі)</option>',
-        ...activeStores.map((s) => {
+        `<option value="multi-store">Тільки порівняння (2+ мережі)${hasLoadedProducts ? ` (${multiStoreCount})` : ''}</option>`,
+        ...visibleStores.map((s) => {
           const meta = STORE_META[s] || { name: s.toUpperCase() };
-          return `<option value="${s}">${meta.name}</option>`;
+          const countTxt = hasLoadedProducts ? ` (${storeCounts.get(s) || 0})` : '';
+          return `<option value="${s}">${meta.name}${countTxt}</option>`;
         })
       ];
       DOM.filterStore.innerHTML = selectOptions.join('');
-      DOM.filterStore.value = AppState.catalogStore;
     }
 
-    if (!DOM.storeFilterBar) return;
+    if (!DOM.storeFilterBar) {
+      syncStoreFilterControls();
+      return;
+    }
+
+    const hasMulti = AppState.catalogSelectedStores.length > 0;
+    const isAllActive = !hasMulti && AppState.catalogStore === 'all';
+    const isMultiActive = !hasMulti && AppState.catalogStore === 'multi-store';
+    const multiBadge = hasLoadedProducts ? ` (${multiStoreCount})` : '';
+
     const buttons = [
-      `<button type="button" class="filter-btn ${AppState.catalogStore === 'all' ? 'is-active' : ''}" data-store="all">Всі мережі</button>`,
-      `<button type="button" class="filter-btn ${AppState.catalogStore === 'multi-store' ? 'is-active' : ''}" data-store="multi-store">2+ мережі</button>`
+      `<button type="button" class="filter-btn ${isAllActive ? 'is-active' : ''}" data-store="all" aria-pressed="${isAllActive ? 'true' : 'false'}">Всі мережі</button>`,
+      `<button type="button" class="filter-btn ${isMultiActive ? 'is-active' : ''}" data-store="multi-store" aria-pressed="${isMultiActive ? 'true' : 'false'}">2+ мережі${multiBadge}</button>`
     ];
 
-    activeStores.forEach(s => {
+    visibleStores.forEach(s => {
       const meta = STORE_META[s] || { name: s.toUpperCase() };
-      const isActive = AppState.catalogStore === s;
+      const isActive = hasMulti
+        ? AppState.catalogSelectedStores.includes(s)
+        : AppState.catalogStore === s;
+      const countTxt = hasLoadedProducts ? ` (${storeCounts.get(s) || 0})` : '';
       buttons.push(
-        `<button type="button" class="filter-btn ${isActive ? 'is-active' : ''}" data-store="${s}">${meta.name}</button>`
+        `<button type="button" class="filter-btn ${isActive ? 'is-active' : ''}" data-store="${s}" aria-pressed="${isActive ? 'true' : 'false'}">${meta.name}${countTxt}</button>`
       );
     });
 
@@ -1843,13 +2072,33 @@
         btn.addEventListener('click', () => {
           triggerSwitchBlur(btn);
           triggerSwitchBlur(DOM.catalogContainer);
-          AppState.catalogStore = btn.dataset.store || 'all';
+          const clickedStore = btn.dataset.store || 'all';
+          if (clickedStore === 'all' || clickedStore === 'multi-store') {
+            AppState.catalogSelectedStores = [];
+            AppState.catalogStore = clickedStore;
+          } else {
+            const idx = AppState.catalogSelectedStores.indexOf(clickedStore);
+            if (idx >= 0) {
+              AppState.catalogSelectedStores.splice(idx, 1);
+            } else {
+              AppState.catalogSelectedStores.push(clickedStore);
+            }
+            if (AppState.catalogSelectedStores.length === 0) {
+              AppState.catalogStore = 'all';
+            } else if (AppState.catalogSelectedStores.length === 1) {
+              AppState.catalogStore = AppState.catalogSelectedStores[0];
+            } else {
+              AppState.catalogStore = 'custom';
+            }
+          }
           syncStoreFilterControls();
           resetCatalogPagination();
           renderCatalog();
         });
       });
     }
+
+    syncStoreFilterControls();
   }
 
   function updateCatalogBreadcrumbs(totalCount) {
@@ -1881,7 +2130,7 @@
     if (!DOM.catalogContainer) return;
 
     if (window.AureliaAPI) {
-      AppState.products = await window.AureliaAPI.getProducts();
+      AppState.products = prepareCatalogIndex(await window.AureliaAPI.getProducts());
       AppState.basket = await window.AureliaAPI.getBasket();
     }
 
@@ -1902,7 +2151,7 @@
     // Filter by Level 1 Macro Category
     if (AppState.catalogMainCategory !== 'all') {
       list = list.filter(p => {
-        const cat = p.mainCategory || p.main_category;
+        const cat = p._mainCat || p.mainCategory || p.main_category;
         if (cat) return cat === AppState.catalogMainCategory;
         if (window.AureliaAPI && typeof window.AureliaAPI.resolveCategories === 'function') {
           return window.AureliaAPI.resolveCategories(p).mainCategory === AppState.catalogMainCategory;
@@ -1915,6 +2164,9 @@
     if (AppState.catalogSubCategory !== 'all') {
       const targetSubKey = normalizeSubCategoryKey(AppState.catalogSubCategory);
       list = list.filter(p => {
+        if (p._subNormKey === targetSubKey || p._catNormKey === targetSubKey || p._resolvedSubKey === targetSubKey) {
+          return true;
+        }
         const sub = p.subCategory || p.sub_category;
         if (sub && normalizeSubCategoryKey(sub) === targetSubKey) return true;
         if (p.category && normalizeSubCategoryKey(p.category) === targetSubKey) return true;
@@ -1932,7 +2184,10 @@
     const metricsCache = new Map();
     const getMetrics = (prod) => {
       if (!metricsCache.has(prod.id)) {
-        metricsCache.set(prod.id, getProductMetricsForCatalog(prod, activeSelectedStores, AppState.catalogStore));
+        metricsCache.set(
+          prod.id,
+          getProductMetricsForCatalog(prod, activeSelectedStores, AppState.catalogStore, AppState.catalogSelectedStores)
+        );
       }
       return metricsCache.get(prod.id);
     };
@@ -1957,13 +2212,7 @@
 
     // Smart Ukrainian word-boundary search filter
     if (AppState.catalogSearch) {
-      list = list.filter((p) =>
-        matchesUkrainianSearch(
-          p.title || p.name || '',
-          p.subCategory || p.sub_category || p.category || '',
-          AppState.catalogSearch
-        )
-      );
+      list = list.filter((p) => matchesUkrainianSearch(p, AppState.catalogSearch));
     }
 
     // Sort
@@ -1971,8 +2220,8 @@
       const mA = getMetrics(a);
       const mB = getMetrics(b);
       const searchRankDiff = AppState.catalogSearch
-        ? getUkrainianSearchRank(a.title || a.name || '', AppState.catalogSearch) -
-          getUkrainianSearchRank(b.title || b.name || '', AppState.catalogSearch)
+        ? getUkrainianSearchRank(a, AppState.catalogSearch) -
+          getUkrainianSearchRank(b, AppState.catalogSearch)
         : 0;
 
       if (AppState.catalogSort === 'price-asc' || AppState.catalogSort === 'cheap') {
@@ -2288,12 +2537,17 @@
       });
     }
 
-    // Live search
+    // Live search with 120ms debounce
     if (DOM.productSearchInput) {
+      let searchDebounceTimer = null;
       DOM.productSearchInput.addEventListener('input', (e) => {
-        AppState.catalogSearch = e.target.value.trim();
-        resetCatalogPagination();
-        renderCatalog();
+        const nextVal = e.target.value.trim();
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          AppState.catalogSearch = nextVal;
+          resetCatalogPagination();
+          renderCatalog();
+        }, 120);
       });
     }
 
@@ -2355,7 +2609,14 @@
     // Store & comparison select
     if (DOM.filterStore) {
       DOM.filterStore.addEventListener('change', (e) => {
-        AppState.catalogStore = e.target.value || 'all';
+        const val = e.target.value || 'all';
+        if (val === 'all' || val === 'multi-store') {
+          AppState.catalogSelectedStores = [];
+          AppState.catalogStore = val;
+        } else if (val !== 'custom') {
+          AppState.catalogSelectedStores = [val];
+          AppState.catalogStore = val;
+        }
         syncStoreFilterControls();
         resetCatalogPagination();
         renderCatalog();
@@ -2387,7 +2648,7 @@
     initOptimizerTabs();
 
     if (window.AureliaAPI) {
-      AppState.products = await window.AureliaAPI.getProducts(AppState.selectedCity);
+      AppState.products = prepareCatalogIndex(await window.AureliaAPI.getProducts(AppState.selectedCity));
       AppState.basket = await window.AureliaAPI.getBasket();
     }
 
